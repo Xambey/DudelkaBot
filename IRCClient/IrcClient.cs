@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Net.Sockets;
 using System.Net;
+using System.Threading;
 
 namespace IRCClient
 {
@@ -15,7 +16,8 @@ namespace IRCClient
         private StreamWriter outputStream;
         private StreamReader inputStream;
         private int port;
-        private string ipHost, userName, password, channel; 
+        private string ipHost, userName, password, channel;
+        private string senderName;
 
         public IrcClient(string ipHost, int port, string userName, string password)
         {
@@ -65,6 +67,7 @@ namespace IRCClient
             catch (SocketException ex)
             {
                 Console.WriteLine("Error, client is shutdown...\n" +  ex.Message);
+                Console.ReadLine();
                 return;
             }
         }
@@ -88,13 +91,45 @@ namespace IRCClient
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.ReadLine();
+                return;
+            }
+        }
+
+        private void sendIrcMessage(List<string> messages)
+        {
+            try
+            {
+                if (outputStream == null)
+                    throw new Exception("Output stream is empty...");
+                foreach (var item in messages)
+                {
+                    outputStream.WriteLine(item);
+                }
+                outputStream.Flush();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
                 return;
             }
         }
 
         public void sendChatMessage(string message)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :" + message);
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :@" + senderName + " " + message);
+        }
+
+        public void sendChatBroadcastChatMessage(string message)
+        {
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " : " + message);
+        }
+
+        public void sendChatBroadcastChatMessage(List<string> messages)
+        {
+            messages.Insert(0, ":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " : ");
+            sendIrcMessage(messages);
         }
 
         public void pingResponse()
@@ -102,9 +137,28 @@ namespace IRCClient
             sendIrcMessage("PONG twi.twitch.tv\r\n");
         }
 
-        public string readMessage()
+        public async Task<string> readMessage()
         {
-            return inputStream.ReadLine();
+            try {
+                string result;
+                while (true)
+                {
+                    result = await Task.Factory.StartNew(() => inputStream.ReadLine());
+                    if (string.IsNullOrEmpty(result))
+                        continue;
+                    int pos = result.IndexOf('!');
+                    senderName = result.Substring(1, pos < 0 ? 1 : pos - 1);
+                    break;
+                }
+                Console.WriteLine(result);
+                return result;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+                return string.Empty;
+            }
         }
     }
 }

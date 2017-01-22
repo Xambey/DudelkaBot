@@ -7,7 +7,7 @@ using IRCClient;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace DudelkaBot
+namespace DudelkaBot.system
 { 
 
     class Program
@@ -19,8 +19,15 @@ namespace DudelkaBot
         static IrcClient ircClient = new IrcClient("irc.chat.twitch.tv", 6667, userName, password);
         static NetworkStream serverStream = ircClient.tcpClient.GetStream();
         static string readData = "";
+        static string channelName = "dudelka_krasnaya";
         #endregion
 
+        static List<string> commands = new List<string>()
+        {
+            "!hi - приветствие",
+            "!date - дата и время сервера",
+            "!commands - список команд"
+        };
 
         static void Main(string[] args)
         {
@@ -29,7 +36,7 @@ namespace DudelkaBot
             byte[] buff = new byte[10025];
             buffsize = ircClient.tcpClient.ReceiveBufferSize;
 
-            ircClient.joinRoom("xiixalex");
+            ircClient.joinRoom(channelName);
             chatThread = new Thread(new ThreadStart(Process));
             chatThread.Start();
         }
@@ -40,25 +47,34 @@ namespace DudelkaBot
             {
                 try
                 {
-                    readData = ircClient.readMessage();
+                    readData = ircClient.readMessage().Result;
+                    if (string.IsNullOrEmpty(readData))
+                        continue;
+                    if (readData == "PING :tmi.twitch.tv")
+                    {
+                        ircClient.pingResponse();
+                        continue;
+                    }
                     int pos = readData.LastIndexOf(':');
                     readData = new string(readData.Skip(pos + 1).ToArray());
+
 
                     switch (readData)
                     {
                         case "!hi":
-                            ircClient.sendChatMessage("ДуделкаБот работает!");
+                            ircClient.sendChatMessage("Hello, I'm bot");
                             break;
                         case "!date":
                             ircClient.sendChatMessage(DateTime.Now.ToString());
                             break;
-                        case "!просыпайся тварь":
-                            ircClient.sendChatMessage("Да, хозяин!");
-                            break;
-                        case "!умри":
-                            ircClient.sendChatMessage("умываю руки");
+                        case "!die":
+                            ircClient.sendChatMessage("Destroying...");
                             ircClient.tcpClient.Close();
                             return;
+                        case "!commands":
+                            ircClient.sendChatBroadcastChatMessage(commands);
+                            break;
+                        
                         default:
                             break;
                     }
@@ -66,6 +82,7 @@ namespace DudelkaBot
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
+                    Console.ReadLine();
                     return;
                 }
             }
