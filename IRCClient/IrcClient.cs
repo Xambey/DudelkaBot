@@ -17,7 +17,11 @@ namespace IRCClient
         private StreamReader inputStream;
         private int port;
         private string ipHost, userName, password, channel;
-        private string senderName;
+
+        /// <summary>
+        /// current userName
+        /// </summary>
+        public string senderName { get; private set; }
 
         public IrcClient(string ipHost, int port, string userName, string password)
         {
@@ -51,7 +55,7 @@ namespace IRCClient
 
             outputStream.WriteLine("PASS " + password);
             outputStream.WriteLine("NICK " + userName);
-            outputStream.WriteLine("USER" + userName);
+            outputStream.WriteLine("USER " + userName);
             outputStream.WriteLine("CAP REQ :twitch.tv/membership");
             outputStream.WriteLine("CAP REQ :twitch.tv/commands");
             outputStream.Flush();
@@ -118,19 +122,35 @@ namespace IRCClient
 
         public void sendChatMessage(string message)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :@" + senderName + " " + message);
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :@" + senderName + " " + message + "\r\n");
         }
 
         public void sendChatBroadcastChatMessage(string message)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " : " + message);
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
         }
 
-        public void sendChatBroadcastChatMessage(List<string> messages)
+        public void sendChatBroadcastChatMessage(List<string> commands)
         {
-            messages.Insert(0, ":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " : ");
-            sendIrcMessage(messages);
+            const int widthChat = 43;
+            StringBuilder builder = new StringBuilder();
+
+            builder.Append(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :");
+
+            foreach (var item in commands)
+            {
+                builder.Append(item);
+                builder.Append('_', 31 - (item.Length) % 31);
+                builder.Append("  ");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine(builder.ToString());
+
+            sendIrcMessage(builder.ToString());
         }
+
 
         public void pingResponse()
         {

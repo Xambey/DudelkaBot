@@ -1,0 +1,3 @@
+База данных: db_dudelka_bot
+Username: xambey
+E-mail: Xambey@yandex.ru
