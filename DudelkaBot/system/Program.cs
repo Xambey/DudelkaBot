@@ -1,89 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IRCClient;
-using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
+using DudelkaBot.ircClient;
+using System.Net.Sockets;
+using DudelkaBot.dataBase;
+using System.Text;
 
 namespace DudelkaBot.system
-{ 
+{
 
-    class Program
+    public class Program
     {
         #region Variables
         static string userName = "DudelkaBot";
         static string password = "oauth:x2ha2yusryy5dir8xlhkg90rqfpkld";
-        static string channelName = "opexalex";
+        static string host = "irc.chat.twitch.tv";
+        static int port = 6667;
 
-        
-        static Thread chatThread;
-        static IrcClient ircClient = new IrcClient("irc.chat.twitch.tv", 6667, userName, password);
-        static NetworkStream serverStream = ircClient.tcpClient.GetStream();
-        static string readData = "";
-        #endregion
-
-        static List<string> commands = new List<string>()
+        static List<string> channels_names = new List<string>()
         {
-            "!hi-приветствие",
-            "!date-дата и время сервера",
-            "!commands-список команд"
+            "garenatw",
+            "blackufa_twitch",
+            "dariya_willis"
         };
+
+        #endregion
 
         static void Main(string[] args)
         {
-            ircClient.joinRoom(channelName);
-            chatThread = new Thread(new ThreadStart(Process));
-            chatThread.Start();
-        }
+            Console.OutputEncoding = Encoding.Unicode;
 
-        private static void Process()
-        {
+            foreach (var item in channels_names)
+            {
+                Channel channel = new Channel(item, host, port, userName, password);
+                channel.Join();
+            }
+            Channel.channels.First().Value.startShow();
+
             while (true)
             {
-                try
+                string cmd = Console.ReadLine();
+                if (!Channel.ircClient.tcpClient.Connected)
+                    Channel.ircClient.tcpClient.ConnectAsync(host, int.Parse(password)).Wait();
+                switch (cmd)
                 {
-                    readData = ircClient.readMessage().Result;
-
-                    if (string.IsNullOrEmpty(readData))
-                        continue;
-
-                    if (readData == "PING :tmi.twitch.tv")
-                    {
-                        ircClient.pingResponse();
-                        continue;
-                    }
-                    else if (ircClient.senderName == "moobot" || ircClient.senderName == "nightbot") 
-                        continue;
-
-                    int pos = readData.LastIndexOf(':');
-                    readData = new string(readData.Skip(pos + 1).ToArray()); //get message
-
-
-                    switch (readData)
-                    {
-                        case "!hi":
-                            ircClient.sendChatMessage("Hello, I'm DudelkaBot");
-                            break;
-                        case "!date":
-                            ircClient.sendChatMessage(DateTime.Now.ToString());
-                            break;
-                        case "!commands":
-                            ircClient.sendChatBroadcastChatMessage(commands);
-                            break;
-                        
-                        default:
-                            break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    Console.ReadLine();
-                    return;
+                    case "!Dariya":
+                        Channel.channels["dariya_willis"].startShow();
+                        break;
+                    case "!Black":
+                        Channel.channels["blackufa_twitch"].startShow();
+                        break;
+                    case "!members":
+                        Channel.ircClient.updateMembers();
+                        break;
+                    default:
+                        break;
                 }
             }
         }
     }
 }
+
