@@ -278,9 +278,14 @@ namespace DudelkaBot.dataBase
                         }
                         else if (VoteActive)
                         {
-                            if(voteResult.ContainsKey(msg.Msg) && isUserVote(msg) == false)
+                            if((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && isUserVote(msg) == false)
                             {
-                                voteResult[msg.Msg].Add(new User(msg.UserName));
+                                if (msg.Msg.All(char.IsDigit))
+                                {
+                                    voteResult[voteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
+                                }
+                                else
+                                    voteResult[msg.Msg].Add(new User(msg.UserName));
                             }
                         }
                         
@@ -297,10 +302,10 @@ namespace DudelkaBot.dataBase
                                             for(int i = 0; i < msg.variants.Count; i++)
                                             {
                                                 voteResult.Add(msg.variants[i], new List<User>());
-                                                msg.variants[i] += " |";
+                                                msg.variants[i] = (i+1).ToString() + ")" + msg.variants[i];
                                             }
                                             msg.variants.Insert(0, "/me Начинается голосование по теме: '" + msg.Theme + "' Время: " + msg.Time.ToString() + "мин." + " Варианты: ");
-                                            msg.variants.Add(" Пишите выбранный вами вариант.");
+                                            msg.variants.Add(" Пишите НОМЕР варианта или САМ вариант!.");
                                         }
                                         ircClient.sendChatBroadcastChatMessage(msg.variants, msg);
                                         VoteActive = true;
