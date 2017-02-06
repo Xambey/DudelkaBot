@@ -7,8 +7,8 @@ namespace DudelkaBot.ircClient
 {
     public enum Command
     {
+        vote,
         help,
-        time,
         members,
         mystat,
         toplist,
@@ -16,4 +16,5 @@ namespace DudelkaBot.ircClient
         unknown,
         date
     };
+
 }

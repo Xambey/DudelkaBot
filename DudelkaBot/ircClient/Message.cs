@@ -16,6 +16,9 @@ namespace DudelkaBot.ircClient
         private static string namesPattern = @":\S+ (\d*) \S+\w+ = #(?<channel>\w+) :(?<user1>\w+) (?<user2>\w+) (?<user3>\w+)";
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
         private static string usernoticePattern = @":.* #(?<channel>\w+) :(?<username>\w+) has subscribed for (?<sub>\d+) months in row!";
+        private static string subscribePattern = @"(?<username>\w+) just subscribed!";
+        private static string resubscribePattern = @"(?<username>\w+) subscribed for (?<sub>\d+) months in a row!";
+        private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
 
         private static Regex typeReg = new Regex(typePattern);
         private static Regex joinOrpartReg = new Regex(patternPARTorJOIN);
@@ -25,10 +28,13 @@ namespace DudelkaBot.ircClient
         private static Regex namesReg = new Regex(namesPattern);
         private static Regex modeReg = new Regex(modePattern);
         private static Regex usernoticeReg = new Regex(usernoticePattern);
-
+        private static Regex subscribeReg = new Regex(subscribePattern);
+        private static Regex resubscribeReg = new Regex(resubscribePattern);
+        private static Regex voteReg = new Regex(votePattern);
 
         public string Data { get; private set; }
         public string UserName { get; private set; }
+        public string SubscriberName { get; private set; }
         public string Host { get; private set; }
         public TypeMessage Type = TypeMessage.UNKNOWN;
         public Command command = Command.unknown;
@@ -40,137 +46,187 @@ namespace DudelkaBot.ircClient
         public string User2 { get; private set; }
         public string User3 { get; private set; }
         public string Sign { get; private set; }
-        public int Subscription;
+        public int Subscription = 0;
+        public bool VoteActive = false;
+        public string Theme;
+        public List<string> variants;
+        public int Time = 0;
 
 
         public Message(string data)
         {
-            Data = data;
-
-            var math = typeReg.Match(data);
-            if (math.Success)
-                Success = Enum.TryParse(math.Groups["type"].Value, out Type);
-            else
+            lock (data)
             {
-                Success = false;
-                math = pingReg.Match(data);
+                Data = data;
+
+                var math = typeReg.Match(data);
                 if (math.Success)
-                {
-                    Type = TypeMessage.PING;
-                    Success = true;
-                }
+                    Success = Enum.TryParse(math.Groups["type"].Value, out Type);
                 else
                 {
-                    math = namesReg.Match(data);
+                    Success = false;
+                    math = pingReg.Match(data);
                     if (math.Success)
                     {
-                        Type = TypeMessage.NAMES;
+                        Type = TypeMessage.PING;
                         Success = true;
                     }
-                }
-            }
-
-            if (Success == false)
-            {
-                return;
-            }
-            switch (Type)
-            {
-                case TypeMessage.PING:
-                    Ping = true;
-                    break;
-                case TypeMessage.JOIN:
-                    math = joinOrpartReg.Match(data);
-                    if (!math.Success)
-                    {
-                        Success = false;
-                        break;
-                    }
-                    Channel = math.Groups["channel"].Value;
-                    UserName = math.Groups["username"].Value;
-                    break;
-                case TypeMessage.PART:
-                    math = joinOrpartReg.Match(data);
-                    if (!math.Success)
-                    {
-                        Success = false;
-                        break;
-                    }
-                    Channel = math.Groups["channel"].Value;
-                    UserName = math.Groups["username"].Value;
-                    break;
-                case TypeMessage.MODE:
-                    math = modeReg.Match(data);
-                    if (math.Success)
-                    {
-                        UserName = math.Groups["username"].Value;
-                        Channel = math.Groups["channel"].Value;
-                        Sign = math.Groups["sign"].Value;
-                    }
-                    break;
-                case TypeMessage.NAMES:
-                    User1 = math.Groups["user1"].Value;
-                    User2 = math.Groups["user2"].Value;
-                    User3 = math.Groups["user3"].Value;
-                    Channel = math.Groups["channel"].Value;
-                    break;
-                case TypeMessage.NOTICE:
-                    Success = false;
-                    break;
-                case TypeMessage.HOSTTARGET:
-                    Success = false;
-                    break;
-                case TypeMessage.CLEARCHAT:
-                    Success = false;
-                    break;
-                case TypeMessage.USERSTATE:
-                    Success = false;
-                    break;
-                case TypeMessage.RECONNECT:
-                    Success = false;
-                    break;
-                case TypeMessage.ROOMSTATE:
-                    Success = false;
-                    break;
-                case TypeMessage.USERNOTICE:
-                    math = usernoticeReg.Match(data);
-                    if (math.Success)
-                    {
-                        UserName = math.Groups["username"].Value;
-                        Channel = math.Groups["channel"].Value;
-                        Success = int.TryParse(math.Groups["sub"].Value, out Subscription);
-                    }
                     else
-                        Success = false;
-                    break;
-                case TypeMessage.Tags:
-                    Success = false;
-                    break;
-                case TypeMessage.PRIVMSG:
-                    math = joinOrpartReg.Match(data);
-
-                    if (!math.Success)
                     {
+                        math = namesReg.Match(data);
+                        if (math.Success)
+                        {
+                            Type = TypeMessage.NAMES;
+                            Success = true;
+                        }
+                    }
+                }
+
+                if (Success == false)
+                {
+                    return;
+                }
+                switch (Type)
+                {
+                    case TypeMessage.PING:
+                        Ping = true;
+                        break;
+                    case TypeMessage.JOIN:
+                        math = joinOrpartReg.Match(data);
+                        if (!math.Success)
+                        {
+                            Success = false;
+                            break;
+                        }
+                        Channel = math.Groups["channel"].Value;
+                        UserName = math.Groups["username"].Value;
+                        break;
+                    case TypeMessage.PART:
+                        math = joinOrpartReg.Match(data);
+                        if (!math.Success)
+                        {
+                            Success = false;
+                            break;
+                        }
+                        Channel = math.Groups["channel"].Value;
+                        UserName = math.Groups["username"].Value;
+                        break;
+                    case TypeMessage.MODE:
+                        math = modeReg.Match(data);
+                        if (math.Success)
+                        {
+                            UserName = math.Groups["username"].Value;
+                            Channel = math.Groups["channel"].Value;
+                            Sign = math.Groups["sign"].Value;
+                        }
+                        break;
+                    case TypeMessage.NAMES:
+                        User1 = math.Groups["user1"].Value;
+                        User2 = math.Groups["user2"].Value;
+                        User3 = math.Groups["user3"].Value;
+                        Channel = math.Groups["channel"].Value;
+                        break;
+                    case TypeMessage.NOTICE:
                         Success = false;
                         break;
-                    }
+                    case TypeMessage.HOSTTARGET:
+                        Success = false;
+                        break;
+                    case TypeMessage.CLEARCHAT:
+                        Success = false;
+                        break;
+                    case TypeMessage.USERSTATE:
+                        Success = false;
+                        break;
+                    case TypeMessage.RECONNECT:
+                        Success = false;
+                        break;
+                    case TypeMessage.ROOMSTATE:
+                        Success = false;
+                        break;
+                    case TypeMessage.USERNOTICE:
+                        Success = false;
+                        break;
+                    case TypeMessage.Tags:
+                        Success = false;
+                        break;
+                    case TypeMessage.PRIVMSG:
+                        math = pvmsgReg.Match(data);
 
-                    UserName = math.Groups["username"].Value;
-                    Msg = math.Groups["msg"].Value;
-                    Channel = math.Groups["channel"].Value;
+                        if (!math.Success)
+                        {
+                            Success = false;
+                            break;
+                        }
 
-                    math = commandReg.Match(data);
-                    if (math.Success)
-                        Success = Enum.TryParse(math.Groups["command"].Value, out command);
+                        UserName = math.Groups["username"].Value;
+                        Msg = math.Groups["msg"].Value;
+                        Channel = math.Groups["channel"].Value;
 
-                    break;
-                case TypeMessage.GLOBALUSERSTATE:
-                    break;
-                case TypeMessage.UNKNOWN:
-                    break;
-                default:
-                    Success = false;
-                    break;
+                        if (UserName == "twitchnotify")
+                        {
+                            math = subscribeReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                SubscriberName = math.Groups["username"].Value;
+                            }
+                            else
+                            {
+                                math = resubscribeReg.Match(Msg);
+                                if (math.Success)
+                                {
+                                    SubscriberName = math.Groups["username"].Value;
+                                    Success = int.TryParse(math.Groups["sub"].Value, out Subscription);
+                                }
+                                else
+                                    Success = false;
+                            }
+                            break;
+                        }
+
+                        math = commandReg.Match(data);
+                        if (math.Success)
+                            Success = Enum.TryParse(math.Groups["command"].Value, out command);
+
+                        if (Msg.Contains("!vote"))
+                        {
+                            math = voteReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                variants = new List<string>();
+                                string buf = "";
+                                foreach (var c in math.Groups["variants"].Value)
+                                {
+                                    if (c == ',')
+                                    {
+                                        variants.Add(buf);
+                                        buf = "";
+                                    }
+                                    else
+                                    {
+                                        buf += c;
+                                    }
+                                }
+                                variants.Add(buf);
+                                Theme = math.Groups["theme"].Value;
+                                Success = int.TryParse(math.Groups["time"].Value, out Time);
+                                command = Command.vote;
+                                VoteActive = true;
+                            }
+                            else
+                                Success = false;
+
+                        }
+
+                        break;
+                    case TypeMessage.GLOBALUSERSTATE:
+                        break;
+                    case TypeMessage.UNKNOWN:
+                        break;
+                    default:
+                        Success = false;
+                        break;
+                }
             }
         }
     }

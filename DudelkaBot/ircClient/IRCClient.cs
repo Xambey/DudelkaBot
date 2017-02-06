@@ -37,7 +37,7 @@ namespace DudelkaBot.ircClient
         {
             try
             {
-                Timer timer = new Timer(timerTick, null, 30000, 30000);
+                Timer timer = new Timer(timerTick, null, 0, 30000);
                 this.ipHost = ipHost;
                 this.port = port;
                 this.userName = userName;
@@ -102,6 +102,7 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
+                Timer timer = new Timer(timerTick, null, 0, 30000);
             }
             else
             {
@@ -128,9 +129,13 @@ namespace DudelkaBot.ircClient
             sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message + "\r\n");
         }
 
+        public void sendChatBroadcastMessage(string message, string channel)
+        {
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
+        }
+
         public void sendChatBroadcastChatMessage(List<string> commands, Message requestMsg)
         {
-            const int widthChat = 43;
             StringBuilder builder = new StringBuilder();
 
             builder.Append(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :");

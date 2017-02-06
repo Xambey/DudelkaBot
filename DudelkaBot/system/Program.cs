@@ -7,6 +7,7 @@ using DudelkaBot.ircClient;
 using System.Net.Sockets;
 using DudelkaBot.dataBase;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DudelkaBot.system
 {
@@ -21,12 +22,15 @@ namespace DudelkaBot.system
 
         static List<string> channels_names = new List<string>()
         {
-            "garenatw",
+            "dudelka_krasnaya",
+            "imaqtpie",
             "blackufa_twitch",
-            "dariya_willis"
+            "dariya_willis",
         };
 
         #endregion
+        static string pattern = @"!(?<channel>\w+)";
+        static Regex reg = new Regex(pattern);
 
         static void Main(string[] args)
         {
@@ -56,6 +60,11 @@ namespace DudelkaBot.system
                         Channel.ircClient.updateMembers();
                         break;
                     default:
+                        var math = reg.Match(cmd);
+                        if (math.Success)
+                        {
+                            Channel.channels[math.Groups["channel"].Value].startShow();
+                        }
                         break;
                 }
             }
