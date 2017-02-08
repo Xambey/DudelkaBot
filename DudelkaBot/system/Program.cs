@@ -36,6 +36,18 @@ namespace DudelkaBot.system
         {
             Console.OutputEncoding = Encoding.Unicode;
 
+            //var db = new dataBase.model.ChatContext();
+
+            //string name = "asdasd";
+            //lock (db.Users)
+            //{
+            //    int userID = db.Users.Single(u => u.username == name).Id;
+            //    foreach (var ch in db.ChannelsUsers.Where(c => c.id == userID))
+            //        ch.countmessage = 0;
+            //}
+
+            //db.SaveChanges();
+
             foreach (var item in channels_names)
             {
                 Channel channel = new Channel(item, host, port, userName, password);

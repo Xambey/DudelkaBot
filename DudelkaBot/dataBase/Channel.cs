@@ -37,7 +37,6 @@ namespace DudelkaBot.dataBase
         private string password;
 
         private int port;
-        private Message lastMessage;
 
         private static List<Message> queueMessages = new List<Message>();
         private static List<Message> errorListMessages = new List<Message>();
