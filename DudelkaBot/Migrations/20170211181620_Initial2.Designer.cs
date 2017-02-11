@@ -8,8 +8,8 @@ using DudelkaBot.dataBase.model;
 namespace DudelkaBot.Migrations
 {
     [DbContext(typeof(ChatContext))]
-    [Migration("20170210184932_Initial")]
-    partial class Initial
+    [Migration("20170211181620_Initial2")]
+    partial class Initial2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -45,11 +45,6 @@ namespace DudelkaBot.Migrations
                     b.Property<bool>("Moderator");
 
                     b.HasKey("User_id", "Channel_id");
-
-                    b.HasAlternateKey("User_id");
-
-
-                    b.HasAlternateKey("Channel_id", "User_id");
 
                     b.ToTable("ChannelsUsers");
                 });

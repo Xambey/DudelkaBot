@@ -51,8 +51,7 @@ namespace DudelkaBot.dataBase
 
 
         public Channel(string channelName, string iphost, int port, string userName, string password)
-        {
-            db.ChangeTracker.AutoDetectChangesEnabled = true;
+        { 
             channels.Add(channelName, this);
             Name = channelName;
             this.iphost = iphost;
@@ -206,10 +205,10 @@ namespace DudelkaBot.dataBase
                                 {
                                     var chus = new ChannelsUsers(user.Id, id) { Active = true };
                                     db.ChannelsUsers.Add(chus);
-                                    db.SaveChanges();
                                 }
                                 else
                                     db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = true;
+                                db.SaveChanges();
                             }
                         }
                         else
@@ -217,14 +216,15 @@ namespace DudelkaBot.dataBase
                             var Id = db.Users.Single(b => b.Username == msg.UserName).Id;
                             lock (db.ChannelsUsers)
                             {
-                                if (db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
-                                    db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id).Active = true;
-                                else
+                                if (!db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
                                 {
                                     db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = true });
-                                    db.SaveChanges();
                                 }
-
+                                else
+                                {
+                                    db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id).Active = true;
+                                }
+                                db.SaveChanges();
                             }
                         }
                     break;
@@ -243,8 +243,8 @@ namespace DudelkaBot.dataBase
                                 else
                                 {
                                     db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = false });
-                                    db.SaveChanges();
                                 }
+                                db.SaveChanges();
                             }
                         }
                         else
@@ -257,10 +257,10 @@ namespace DudelkaBot.dataBase
                                 if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
                                 {
                                     db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = false });
-                                    db.SaveChanges();
                                 }
                                 else
                                     db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = false;
+                                db.SaveChanges();
                             }
                         }
                     }
@@ -295,8 +295,8 @@ namespace DudelkaBot.dataBase
                                     else if (msg.Sign == "-")
                                         chus.Moderator = false;
                                     db.ChannelsUsers.Add(chus);
-                                    db.SaveChanges();
                                 }
+                                db.SaveChanges();
                             }
                         }
                         else {
@@ -322,8 +322,8 @@ namespace DudelkaBot.dataBase
                                     else if (msg.Sign == "-")
                                         chus.Moderator = false;
                                     db.ChannelsUsers.Add(chus);
-                                    db.SaveChanges();
                                 }
+                                db.SaveChanges();
                             }
                         }
                     }
@@ -343,10 +343,10 @@ namespace DudelkaBot.dataBase
                                     if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
                                     {
                                         db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
-                                        db.SaveChanges();
                                     }
                                     else
                                         db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = true;
+                                    db.SaveChanges();
                                 }
                             }
                             else
@@ -358,10 +358,10 @@ namespace DudelkaBot.dataBase
                                     if (!db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
                                     {
                                         db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = true });
-                                        db.SaveChanges();
                                     }
                                     else
                                         db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id).Active = true;
+                                    db.SaveChanges();
                                 }
                             }
                         }
@@ -395,10 +395,10 @@ namespace DudelkaBot.dataBase
                                     if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
                                     {
                                         db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
-                                        db.SaveChanges();
                                     }
                                     else
                                         db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = true;
+                                    db.SaveChanges();
                                 }
                             }
                             else
@@ -410,10 +410,10 @@ namespace DudelkaBot.dataBase
                                     if (!db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
                                     {
                                         db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = true });
-                                        db.SaveChanges();
                                     }
                                     else
                                         db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id).Active = true;
+                                    db.SaveChanges();
                                 }
                             }
                         }
@@ -436,7 +436,6 @@ namespace DudelkaBot.dataBase
                                 if (!db.ChannelsUsers.Any(a => a.User_id == ID && a.Channel_id == id))
                                 {
                                     db.ChannelsUsers.Add(new ChannelsUsers(ID, id) { Active = true, CountMessage = 1 });
-                                    db.SaveChanges();
                                 }
                                 else
                                 {
@@ -444,6 +443,7 @@ namespace DudelkaBot.dataBase
                                     chus.Active = true;
                                     chus.CountMessage += 1;
                                 }
+                                db.SaveChanges();
                             }
                         }
                         else
@@ -454,7 +454,6 @@ namespace DudelkaBot.dataBase
                                 if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
                                 {
                                     db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true, CountMessage = 1 });
-                                    db.SaveChanges();
                                 }
                                 else
                                 {
@@ -462,6 +461,7 @@ namespace DudelkaBot.dataBase
                                     chus.Active = true;
                                     chus.CountMessage += 1;
                                 }
+                                db.SaveChanges();
                             }
                         }
                     }
@@ -483,7 +483,6 @@ namespace DudelkaBot.dataBase
                                     {
                                         var sub = msg.Subscription != 0 ? msg.Subscription : 1;
                                         db.ChannelsUsers.Add(new ChannelsUsers(ID, id) { Active = true, CountSubscriptions = sub});
-                                        db.SaveChanges();
                                     }
                                     else
                                     {
@@ -491,6 +490,7 @@ namespace DudelkaBot.dataBase
                                         chus.Active = true;
                                         chus.CountSubscriptions = msg.Subscription != 0 ? msg.Subscription : 1;
                                     }
+                                    db.SaveChanges();
                                 }
                             }
                             else
@@ -502,7 +502,6 @@ namespace DudelkaBot.dataBase
                                     {
                                         var sub = msg.Subscription != 0 ? msg.Subscription : 1;
                                         db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true, CountMessage = sub });
-                                        db.SaveChanges();
                                     }
                                     else
                                     {
@@ -511,6 +510,7 @@ namespace DudelkaBot.dataBase
                                         chus.Active = true;
                                         chus.CountSubscriptions = msg.Subscription != 0 ? msg.Subscription : 1;
                                     }
+                                    db.SaveChanges();
                                 }
                             }
                         }

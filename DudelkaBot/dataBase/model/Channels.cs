@@ -10,7 +10,7 @@ namespace DudelkaBot.dataBase.model
 {
     public class Channels
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Column(Order = 0)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Channel_id { get; set; }
         public string Channel_name { get; set; }
         public Channels() { }

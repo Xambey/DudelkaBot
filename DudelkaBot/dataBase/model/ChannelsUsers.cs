@@ -9,9 +9,9 @@ namespace DudelkaBot.dataBase.model
 {
     public class ChannelsUsers
     {
-        [Key, Column(Order = 0)]
+        //[Key, Column(Order = 0)]
         public int User_id { get; set; }
-        [Key, Column(Order = 1)]
+        //[Key, Column(Order = 1)]
         public int Channel_id { get; set; }
         public int CountMessage { get; set; }
         public int CountSubscriptions { get; set; }
