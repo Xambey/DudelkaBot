@@ -26,15 +26,18 @@ namespace DudelkaBot.Migrations
                 name: "ChannelsUsers",
                 columns: table => new
                 {
-                    User_id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    User_id = table.Column<int>(nullable: false),
                     Channel_id = table.Column<int>(nullable: false),
+                    Active = table.Column<bool>(nullable: false),
                     CountMessage = table.Column<int>(nullable: false),
-                    CountSubscriptions = table.Column<int>(nullable: false)
+                    CountSubscriptions = table.Column<int>(nullable: false),
+                    Moderator = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChannelsUsers", x => x.User_id);
+                    table.PrimaryKey("PK_ChannelsUsers", x => new { x.User_id, x.Channel_id });
+                    table.UniqueConstraint("AK_ChannelsUsers_User_id", x => x.User_id);
+                    table.UniqueConstraint("AK_ChannelsUsers_Channel_id_User_id", x => new { x.Channel_id, x.User_id });
                 });
 
             migrationBuilder.CreateTable(
@@ -43,7 +46,7 @@ namespace DudelkaBot.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    username = table.Column<string>(nullable: true)
+                    Username = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {

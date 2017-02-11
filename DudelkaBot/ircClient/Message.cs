@@ -13,7 +13,7 @@ namespace DudelkaBot.ircClient
         private static string typePattern = @" (?<type>[A-Z ]+) #";
         private static string commandPattern = @"#(?<channel>\w+) :!(?<command>\w+)$";
         private static string pingPattern = @"PING\s+";
-        private static string namesPattern = @":\S+ (\d*) \S+\w+ = #(?<channel>\w+) :(?<user1>\w+) (?<user2>\w+) (?<user3>\w+)";
+        private static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
         private static string usernoticePattern = @":.* #(?<channel>\w+) :(?<username>\w+) has subscribed for (?<sub>\d+) months in row!";
         private static string subscribePattern = @"(?<username>\w+) just subscribed!";
@@ -42,9 +42,7 @@ namespace DudelkaBot.ircClient
         public bool Success = true;
         public bool Ping = false;
         public string Channel { get; private set; }
-        public string User1 { get; private set; }
-        public string User2 { get; private set; }
-        public string User3 { get; private set; }
+        public List<string> NamesUsers { get; private set; }
         public string Sign { get; private set; }
         public int Subscription = 0;
         public bool VoteActive = false;
@@ -79,6 +77,8 @@ namespace DudelkaBot.ircClient
                             Type = TypeMessage.NAMES;
                             Success = true;
                         }
+                        else
+                            Success = false;
                     }
                 }
 
@@ -121,9 +121,19 @@ namespace DudelkaBot.ircClient
                         }
                         break;
                     case TypeMessage.NAMES:
-                        User1 = math.Groups["user1"].Value;
-                        User2 = math.Groups["user2"].Value;
-                        User3 = math.Groups["user3"].Value;
+                        string users = "";
+                        NamesUsers = new List<string>();
+                        foreach (var item in math.Groups["users"].Value)
+                        {
+                            if (item != ' ')
+                                users += item;
+                            else
+                            {
+                                NamesUsers.Add(users);
+                                users = "";
+                            }
+                        }
+                        NamesUsers.Add(users);
                         Channel = math.Groups["channel"].Value;
                         break;
                     case TypeMessage.NOTICE:
@@ -169,6 +179,7 @@ namespace DudelkaBot.ircClient
                             if (math.Success)
                             {
                                 SubscriberName = math.Groups["username"].Value;
+                                Subscription = 1;
                             }
                             else
                             {

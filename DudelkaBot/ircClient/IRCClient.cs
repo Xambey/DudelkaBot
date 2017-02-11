@@ -83,8 +83,11 @@ namespace DudelkaBot.ircClient
 
         public void joinRoom(string channel)
         {
-            outputStream.WriteLine("JOIN #" + channel);
-            outputStream.Flush();
+            if (outputStream != null)
+            {
+                outputStream.WriteLine("JOIN #" + channel);
+                outputStream.Flush();
+            }
         }
 
         public void leaveRoom(string channel)

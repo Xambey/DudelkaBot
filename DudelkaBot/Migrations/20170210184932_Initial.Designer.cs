@@ -8,7 +8,7 @@ using DudelkaBot.dataBase.model;
 namespace DudelkaBot.Migrations
 {
     [DbContext(typeof(ChatContext))]
-    [Migration("20170207181406_Initial")]
+    [Migration("20170210184932_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,7 +20,8 @@ namespace DudelkaBot.Migrations
             modelBuilder.Entity("DudelkaBot.dataBase.model.Channels", b =>
                 {
                     b.Property<int>("Channel_id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Channel_name");
 
@@ -31,16 +32,24 @@ namespace DudelkaBot.Migrations
 
             modelBuilder.Entity("DudelkaBot.dataBase.model.ChannelsUsers", b =>
                 {
-                    b.Property<int>("User_id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<int>("User_id");
 
                     b.Property<int>("Channel_id");
+
+                    b.Property<bool>("Active");
 
                     b.Property<int>("CountMessage");
 
                     b.Property<int>("CountSubscriptions");
 
-                    b.HasKey("User_id");
+                    b.Property<bool>("Moderator");
+
+                    b.HasKey("User_id", "Channel_id");
+
+                    b.HasAlternateKey("User_id");
+
+
+                    b.HasAlternateKey("Channel_id", "User_id");
 
                     b.ToTable("ChannelsUsers");
                 });
@@ -48,9 +57,10 @@ namespace DudelkaBot.Migrations
             modelBuilder.Entity("DudelkaBot.dataBase.model.Users", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("username");
+                    b.Property<string>("Username");
 
                     b.HasKey("Id");
 

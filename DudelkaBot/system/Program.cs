@@ -23,7 +23,6 @@ namespace DudelkaBot.system
         static List<string> channels_names = new List<string>()
         {
             "dudelka_krasnaya",
-            "imaqtpie",
             "blackufa_twitch",
             "dariya_willis",
         };

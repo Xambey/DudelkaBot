@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +13,16 @@ namespace DudelkaBot.dataBase.model
         public DbSet<Channels> Channels { get; set; }
         public DbSet<ChannelsUsers> ChannelsUsers { get; set; }
 
+        public ChatContext() : base() { }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DudelkaBotBase;Trusted_Connection=True;");
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ChannelsUsers>().HasKey(p => new { p.User_id, p.Channel_id });
         }
     }
 }
