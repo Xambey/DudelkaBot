@@ -33,7 +33,6 @@ namespace DudelkaBot.dataBase
         public Timer VoteTimer;
         public Timer dbtimer;
 
-        private List<ChannelsUsers> channelsusers = new List<ChannelsUsers>();
         private string iphost;
         private string userName;
         private string password;
@@ -577,7 +576,7 @@ namespace DudelkaBot.dataBase
                                 {
                                     if (db.Users.Count() < 5)
                                         break;
-                                    channelsusers = db.ChannelsUsers.OrderByDescending(a => a.CountMessage).ToList();
+                                    var channelsusers = db.ChannelsUsers.Where(a => a.Channel_id == id).OrderByDescending(a => a.CountMessage).ToList();
                                     toplist = new List<string>()
                                     {
                                         "Топ 5 самых общительных(сообщения): " +  db.Users.Single(a => a.Id == channelsusers[0].User_id).Username + " = " + channelsusers[0].CountMessage.ToString() + " ,",

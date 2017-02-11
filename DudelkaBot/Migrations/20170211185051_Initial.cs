@@ -36,8 +36,6 @@ namespace DudelkaBot.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChannelsUsers", x => new { x.User_id, x.Channel_id });
-                    table.UniqueConstraint("AK_ChannelsUsers_User_id", x => x.User_id);
-                    table.UniqueConstraint("AK_ChannelsUsers_Channel_id_User_id", x => new { x.Channel_id, x.User_id });
                 });
 
             migrationBuilder.CreateTable(

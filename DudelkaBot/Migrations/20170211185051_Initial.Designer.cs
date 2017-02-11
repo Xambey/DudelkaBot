@@ -8,8 +8,8 @@ using DudelkaBot.dataBase.model;
 namespace DudelkaBot.Migrations
 {
     [DbContext(typeof(ChatContext))]
-    [Migration("20170211181620_Initial2")]
-    partial class Initial2
+    [Migration("20170211185051_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
