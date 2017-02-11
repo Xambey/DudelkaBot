@@ -16,8 +16,8 @@ namespace DudelkaBot.ircClient
         private static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
         private static string usernoticePattern = @":.* #(?<channel>\w+) :(?<username>\w+) has subscribed for (?<sub>\d+) months in row!";
-        private static string subscribePattern = @"(?<username>\w+) just subscribed!";
-        private static string resubscribePattern = @"(?<username>\w+) subscribed for (?<sub>\d+) months in a row!";
+        private static string subscribePattern = @"(?<username>\w+).+";
+        private static string resubscribePattern = @"(?<username>\w+) .+ (?<sub>\d+) .+";
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
 
         private static Regex typeReg = new Regex(typePattern);

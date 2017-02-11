@@ -68,8 +68,18 @@ namespace DudelkaBot.system
                     case "!Black":
                         Channel.channels["blackufa_twitch"].startShow();
                         break;
-                    case "!members":
+                    case "!update":
                         Channel.ircClient.updateMembers();
+                        break;
+                    case "!errors":
+                        var color = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        foreach (var item in Channel.errorListMessages)
+                        {
+                            Console.WriteLine(item);
+                        }
+                        Console.ForegroundColor = color;
+
                         break;
                     default:
                         var math = reg.Match(cmd);

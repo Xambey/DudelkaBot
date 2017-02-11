@@ -49,10 +49,10 @@ namespace DudelkaBot.ircClient
 
                 tcpClient.ConnectAsync(ipHost, port).Wait();
 
-                if (!tcpClient.Connected)
+                while(!tcpClient.Connected)
                 {
                     Console.WriteLine("Соединение не удалось");
-                    return;
+                    tcpClient.ConnectAsync(ipHost, port).Wait();
                 }
                 inputStream = new StreamReader(tcpClient.GetStream());
                 outputStream = new StreamWriter(tcpClient.GetStream());
