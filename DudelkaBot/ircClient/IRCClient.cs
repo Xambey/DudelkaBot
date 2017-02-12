@@ -19,7 +19,7 @@ namespace DudelkaBot.ircClient
         private Queue<string> queueMessages = new Queue<string>();
 
         private int messageCount;
-        private const int messageLimit = 20;
+        private const int messageLimit = 15;
 
         private void timerTick(object state)
         {
@@ -72,6 +72,7 @@ namespace DudelkaBot.ircClient
             outputStream.WriteLine("USER " + userName);
             outputStream.WriteLine("CAP REQ :twitch.tv/membership");
             outputStream.WriteLine("CAP REQ :twitch.tv/commands");
+            //outputStream.WriteLine("CAP REQ :twitch.tv/tags/usernoticy");
             outputStream.Flush();
         }
 

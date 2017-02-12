@@ -37,6 +37,8 @@ namespace DudelkaBot.dataBase
         private int port;
         private int id;
         private Timer VoteTimer;
+        private Timer StreamTimer;
+        private int countMessageForTwoHours = 0;
 
         public static IrcClient ircClient;
         public static Dictionary<string, Channel> channels = new Dictionary<string, Channel>();
@@ -67,13 +69,26 @@ namespace DudelkaBot.dataBase
                 else
                 {
                     id = db.Channels.Single(a => a.Channel_name == channelName).Channel_id;
-                } 
+                }
+            StreamTimer = new Timer(streamStateUpdate, null, 120 * 60000, 120 * 60000);
+
         }
 
         private static void updateMembers(object obj)
         {
             lock (ircClient)
                 ircClient.updateMembers();
+        }
+
+        private void streamStateUpdate(object obj)
+        {
+            if (countMessageForTwoHours == 0)
+                Status = Status.Offline;
+            else
+            {
+                Status = Status.Online;
+                countMessageForTwoHours = 0;
+            }
         }
 
         public void startShow()
@@ -419,6 +434,7 @@ namespace DudelkaBot.dataBase
                 case TypeMessage.Tags:
                     break;
                 case TypeMessage.PRIVMSG:
+                    countMessageForTwoHours++;
                     lock (db.Users)
                     {
                         if (!db.Users.Any(a => a.Username == msg.UserName))
