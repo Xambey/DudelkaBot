@@ -2,3 +2,28 @@
 Username: xambey
 E-mail: Xambey@yandex.ru
 yutu1337 just subscribed with Twitch Prime. yutu1337 subscribed for 3 months in a row!
+
+Добавить:
+
+ответ DuckerZ на DuckerZ
+Создание объявлений модераторами
+цитаты
+счетчик смертей
+музыка из вк
+reconnection
+
+Unable to read data from the transport connection: Попытка установить соединение была безуспешной, т.к. от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное соединение из-за неверного отклика уже подключенного компьютера.
+
+Unhandled Exception: System.IO.IOException: Unable to write data to the transport connection: ????????? ???? ????????????? ???????? ???????????? ???????????. ---> System.Net.Sockets.SocketException: ????????? ???? ????????????? ???????? ???????????? ???????????
+   at System.Net.Sockets.Socket.Send(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags)
+   at System.Net.Sockets.NetworkStream.Write(Byte[] buffer, Int32 offset, Int32 size)
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.NetworkStream.Write(Byte[] buffer, Int32 offset, Int32 size)
+   at System.IO.StreamWriter.Flush(Boolean flushStream, Boolean flushEncoder)
+   at DudelkaBot.ircClient.IrcClient.updateMembers()
+   at DudelkaBot.dataBase.Channel.updateMembers(Object obj)
+   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.TimerQueueTimer.CallCallback()
+   at System.Threading.TimerQueueTimer.Fire()
+   at System.Threading.TimerQueue.FireNextTimers()
+Press any key to continue . . .

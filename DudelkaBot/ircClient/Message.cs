@@ -3,25 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
 namespace DudelkaBot.ircClient
 {
     public class Message
     {
         private static string patternPVMSG = @":(?<username>\w+)!\w+@\w+.tmi.twitch.tv (?<type>\w+) #(?<channel>\w+) :(?<msg>.*)";
-        private static string patternPARTorJOIN = @":(?<username>\w+)!\w+@\w+.tmi.twitch.tv (?<type>\w+) #(?<channel>\w+)";
-        private static string typePattern = @" (?<type>[A-Z ]+) #";
+        private static string patternPARTorJOIN = @":(?<username>\w+)!.+ (?<type>\w+) #(?<channel>\w+)";
+        private static string typePattern = @" (?<type>[A-Z]+) #";
         private static string commandPattern = @"#(?<channel>\w+) :!(?<command>\w+)$";
         private static string pingPattern = @"PING\s+";
         private static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
-        private static string usernoticePattern = @":.* #(?<channel>\w+) :(?<username>\w+) has subscribed for (?<sub>\d+) months in row!";
+        private static string usernoticePattern = @".+login=(?<username>\w+).+msg-param-months=(?<sub>\d+).* USERNOTICE #(?<channel>\w+)";
         private static string subscribePattern = @"(?<username>\w+).+";
-        private static string resubscribePattern = @"(?<username>\w+) .+ (?<sub>\d+) .+";
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
+
+        private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
 
         private static Regex typeReg = new Regex(typePattern);
         private static Regex joinOrpartReg = new Regex(patternPARTorJOIN);
+        private static Regex pvmsgTagReg = new Regex(patternPRIVMSGtag);
         private static Regex pvmsgReg = new Regex(patternPVMSG);
         private static Regex commandReg = new Regex(commandPattern);
         private static Regex pingReg = new Regex(pingPattern);
@@ -29,7 +30,6 @@ namespace DudelkaBot.ircClient
         private static Regex modeReg = new Regex(modePattern);
         private static Regex usernoticeReg = new Regex(usernoticePattern);
         private static Regex subscribeReg = new Regex(subscribePattern);
-        private static Regex resubscribeReg = new Regex(resubscribePattern);
         private static Regex voteReg = new Regex(votePattern);
 
         public string Data { get; private set; }
@@ -121,20 +121,23 @@ namespace DudelkaBot.ircClient
                         }
                         break;
                     case TypeMessage.NAMES:
-                        string users = "";
-                        NamesUsers = new List<string>();
-                        foreach (var item in math.Groups["users"].Value)
+                        if (math.Success && math.Groups["users"].Success && math.Groups["channel"].Success)
                         {
-                            if (item != ' ')
-                                users += item;
-                            else
+                            string users = "";
+                            NamesUsers = new List<string>();
+                            foreach (var item in math.Groups["users"].Value)
                             {
-                                NamesUsers.Add(users);
-                                users = "";
+                                if (item != ' ')
+                                    users += item;
+                                else
+                                {
+                                    NamesUsers.Add(users);
+                                    users = "";
+                                }
                             }
+                            NamesUsers.Add(users);
+                            Channel = math.Groups["channel"].Value;
                         }
-                        NamesUsers.Add(users);
-                        Channel = math.Groups["channel"].Value;
                         break;
                     case TypeMessage.NOTICE:
                         Success = false;
@@ -155,18 +158,31 @@ namespace DudelkaBot.ircClient
                         Success = false;
                         break;
                     case TypeMessage.USERNOTICE:
-                        Success = false;
+
+                        math = usernoticeReg.Match(Data);
+                        if (math.Success)
+                        {
+                            SubscriberName = math.Groups["username"].Value;
+                            Subscription = int.Parse(math.Groups["sub"].Value);
+                            Channel = math.Groups["channel"].Value;
+                        }
+                        else
+                            Success = false;
                         break;
                     case TypeMessage.Tags:
                         Success = false;
                         break;
                     case TypeMessage.PRIVMSG:
-                        math = pvmsgReg.Match(data);
+                        math = pvmsgTagReg.Match(data);
 
                         if (!math.Success)
                         {
-                            Success = false;
-                            break;
+                            math = pvmsgReg.Match(data);
+                            if (!math.Success)
+                            {
+                                Success = false;
+                                break;
+                            }
                         }
 
                         UserName = math.Groups["username"].Value;
@@ -181,23 +197,13 @@ namespace DudelkaBot.ircClient
                                 SubscriberName = math.Groups["username"].Value;
                                 Subscription = 1;
                             }
-                            else
-                            {
-                                math = resubscribeReg.Match(Msg);
-                                if (math.Success)
-                                {
-                                    SubscriberName = math.Groups["username"].Value;
-                                    Success = int.TryParse(math.Groups["sub"].Value, out Subscription);
-                                }
-                                else
-                                    Success = false;
-                            }
                             break;
                         }
 
                         math = commandReg.Match(data);
                         if (math.Success)
-                            Success = Enum.TryParse(math.Groups["command"].Value, out command);
+                            if (!Enum.TryParse(math.Groups["command"].Value, out command))
+                                command = Command.unknown;
 
                         if (Msg.Contains("!vote"))
                         {

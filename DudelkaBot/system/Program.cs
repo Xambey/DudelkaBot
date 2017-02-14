@@ -22,7 +22,9 @@ namespace DudelkaBot.system
 
         static List<string> channels_names = new List<string>()
         {
-            "p4wnyhof",
+            "fairlight_excalibur",
+            "lck1",
+            "silvername",
             "dudelka_krasnaya",
             "blackufa_twitch",
             "dariya_willis"
@@ -74,9 +76,14 @@ namespace DudelkaBot.system
                     case "!errors":
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        foreach (var item in Channel.errorListMessages)
+                        lock (Channel.errorListMessages)
                         {
-                            Console.WriteLine(item);
+                            var ch = Channel.errorListMessages;
+                            var l = ch.Count;
+                            for (int i = 0; i < l; i++)
+                            { 
+                                Console.WriteLine(ch[i].Data);
+                            }
                         }
                         Console.ForegroundColor = color;
 
@@ -85,7 +92,14 @@ namespace DudelkaBot.system
                         var math = reg.Match(cmd);
                         if (math.Success)
                         {
-                            Channel.channels[math.Groups["channel"].Value].startShow();
+                            if (math.Groups["channel"].Success)
+                            {
+                                var channel = math.Groups["channel"].Value;
+                                if (Channel.channels.Any(p => p.Key == channel))
+                                {
+                                    Channel.channels[channel].startShow();
+                                }
+                            }
                         }
                         break;
                 }

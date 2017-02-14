@@ -19,18 +19,45 @@ namespace DudelkaBot.ircClient
         private Queue<string> queueMessages = new Queue<string>();
 
         private int messageCount;
-        private const int messageLimit = 15;
+        private const int messageLimit = 10;
 
         private void timerTick(object state)
         {
 
             messageCount = 0;
-            while(messageCount < messageLimit && queueMessages.Count != 0)
+            if (isConnect())
             {
-                outputStream.WriteLine(queueMessages.Dequeue());
-                outputStream.Flush();
-                messageCount++;
+                lock (queueMessages)
+                    while (messageCount < messageLimit && queueMessages.Count != 0)
+                    {
+                        lock (outputStream)
+                        {
+                            outputStream.WriteLine(queueMessages.Dequeue());
+                            outputStream.Flush();
+                        }
+                        messageCount++;
+                    }
             }
+        }
+
+        private bool isConnect()
+        {
+            if(tcpClient != null)
+                while (!tcpClient.Connected)
+                {
+                    try
+                    {
+                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                    }
+                    finally
+                    {
+                        var color = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Подключение не удалось");
+                        Thread.Sleep(5000);
+                    }
+                }
+            return true;
         }
 
         public IrcClient(string ipHost, int port, string userName, string password)
@@ -49,15 +76,13 @@ namespace DudelkaBot.ircClient
 
                 tcpClient.ConnectAsync(ipHost, port).Wait();
 
-                while(!tcpClient.Connected)
+                if (isConnect())
                 {
-                    Console.WriteLine("Соединение не удалось");
-                    tcpClient.ConnectAsync(ipHost, port).Wait();
-                }
-                inputStream = new StreamReader(tcpClient.GetStream());
-                outputStream = new StreamWriter(tcpClient.GetStream());
+                    inputStream = new StreamReader(tcpClient.GetStream());
+                    outputStream = new StreamWriter(tcpClient.GetStream());
 
-                signIn();
+                    signIn();
+                }
             }
             catch (Exception ex)
             {
@@ -67,25 +92,62 @@ namespace DudelkaBot.ircClient
 
         public void signIn()
         {
-            outputStream.WriteLine("PASS " + password);
-            outputStream.WriteLine("NICK " + userName);
-            outputStream.WriteLine("USER " + userName);
-            outputStream.WriteLine("CAP REQ :twitch.tv/membership");
-            outputStream.WriteLine("CAP REQ :twitch.tv/commands");
-            //outputStream.WriteLine("CAP REQ :twitch.tv/tags/usernoticy");
-            outputStream.Flush();
+            if (isConnect())
+            {
+                outputStream.WriteLine("PASS " + password);
+                outputStream.WriteLine("NICK " + userName);
+                outputStream.WriteLine("USER " + userName);
+                outputStream.WriteLine("CAP REQ :twitch.tv/membership");
+                outputStream.WriteLine("CAP REQ :twitch.tv/commands");
+                outputStream.WriteLine("CAP REQ :twitch.tv/tags");
+                outputStream.Flush();
+            }
         }
 
         public void updateMembers()
         {
-            outputStream.WriteLine("CAP REQ :twitch.tv/membership");
-            outputStream.Flush();
+            try
+            {
+                while (!tcpClient.Connected)
+                {
+                    try
+                    {
+                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                    }
+                    finally
+                    {
+                        var color = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Подключение не удалось");
+                    }
+                }
+                outputStream.WriteLine("CAP REQ :twitch.tv/membership");
+                outputStream.Flush();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
         }
 
         public void joinRoom(string channel)
         {
             if (outputStream != null)
             {
+                while (!tcpClient.Connected)
+                {
+                    try
+                    {
+                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                    }
+                    finally
+                    {
+                        var color = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Подключение не удалось");
+                    }
+                }
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
             }
@@ -102,6 +164,20 @@ namespace DudelkaBot.ircClient
 
         private void sendIrcMessage(string message)
         {
+            while (!tcpClient.Connected)
+            {
+                try
+                {
+                    tcpClient.ConnectAsync(ipHost, port).Wait();
+                }
+                finally
+                {
+                    var color = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Подключение не удалось");
+                }
+            }
+
             if (messageCount++ < messageLimit)
             {
                 outputStream.WriteLine(message);
@@ -114,18 +190,14 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        //private void sendIrcMessage(List<string> messages)
-        //{
-        //    foreach (var item in messages)
-        //    {
-        //        outputStream.WriteLine(item);
-        //    }
-        //    outputStream.Flush();
-        //}
-
         public void sendChatMessage(string message, Message requestMsg) 
         {
             sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message + "\r\n");
+        }
+
+        public void sendChatMessage(string message, string getter, Message requestMsg)
+        {
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message + "\r\n");
         }
 
         public void sendChatBroadcastMessage(string message, Message requestMsg)
