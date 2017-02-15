@@ -62,7 +62,6 @@ namespace DudelkaBot.ircClient
                     Success = Enum.TryParse(math.Groups["type"].Value, out Type);
                 else
                 {
-                    Success = false;
                     math = pingReg.Match(data);
                     if (math.Success)
                     {

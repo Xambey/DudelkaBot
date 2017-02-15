@@ -23,6 +23,9 @@ namespace DudelkaBot.system
         static List<string> channels_names = new List<string>()
         {
             "fairlight_excalibur",
+            "lirik",
+            "domingo",
+            "imaqtpie",
             "lck1",
             "silvername",
             "dudelka_krasnaya",
