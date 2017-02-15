@@ -17,6 +17,7 @@ namespace DudelkaBot.ircClient
         private static string usernoticePattern = @".+login=(?<username>\w+).+msg-param-months=(?<sub>\d+).* USERNOTICE #(?<channel>\w+)";
         private static string subscribePattern = @"(?<username>\w+).+";
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
+        private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
 
         private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
 
@@ -31,6 +32,7 @@ namespace DudelkaBot.ircClient
         private static Regex usernoticeReg = new Regex(usernoticePattern);
         private static Regex subscribeReg = new Regex(subscribePattern);
         private static Regex voteReg = new Regex(votePattern);
+        private static Regex advertReg = new Regex(advertPattern);
 
         public string Data { get; private set; }
         public string UserName { get; private set; }
@@ -49,6 +51,9 @@ namespace DudelkaBot.ircClient
         public string Theme;
         public List<string> variants;
         public int Time = 0;
+        public int AdvertTime = 0;
+        public int AdvertCount = 0;
+        public string Advert { get; private set; }
 
 
         public Message(string data)
@@ -232,6 +237,17 @@ namespace DudelkaBot.ircClient
                             else
                                 Success = false;
 
+                        }
+                        else if (Msg.Contains("!advert"))
+                        {
+                            math = advertReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                AdvertTime = int.Parse(math.Groups["time"].Value);
+                                AdvertCount = int.Parse(math.Groups["count"].Value);
+                                Advert = math.Groups["advert"].Value;
+                                command = Command.advert;
+                            }
                         }
 
                         break;

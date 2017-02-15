@@ -19,7 +19,7 @@ namespace DudelkaBot.ircClient
         private Queue<string> queueMessages = new Queue<string>();
 
         private int messageCount;
-        private const int messageLimit = 15;
+        private const int messageLimit = 10;
 
         private void timerTick(object state)
         {
@@ -132,6 +132,7 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
+                sendChatBroadcastMessage("/me Смазанный Дуделка Бот входит в чат KappaPride", channel);
             }
         }
 
@@ -151,10 +152,6 @@ namespace DudelkaBot.ircClient
                 outputStream.WriteLine(message);
                 outputStream.Flush();
                 Timer timer = new Timer(timerTick, null, 0, 30000);
-            }
-            else
-            {
-                queueMessages.Enqueue(message);
             }
         }
 

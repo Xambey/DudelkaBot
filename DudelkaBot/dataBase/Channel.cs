@@ -18,11 +18,11 @@ namespace DudelkaBot.dataBase
         private static Random rand = new Random();
         public static List<string> commands = new List<string>()
         {
-            "!vote [Тема голосования]:[время в мин]:[variant1,variant2,variantn] (через , без пробелов) - голосование",
-            "!sexylevel - ваш уровень сексуальности на канале",
+            "Для модераторов: vote [Тема голосования]:[время в мин]:[variant1,variant2,variantn] (через , без пробелов) - голосование; !advert [время] [число повторов] [объявление]",
+            //"!sexylevel - ваш уровень сексуальности на канале",
             "!date - дата и время сервера",
-            "!help - список команд",
-            "!members - кол-во чатеров в зале",
+            //"!help - список команд",
+            "!members - кол-во сексуалов в чате",
             "!mystat - ваша статистика за все время",
             "!toplist - топ общительных за все время",
             "!citytime - время в Уфе"
@@ -42,6 +42,7 @@ namespace DudelkaBot.dataBase
         private Timer VoteTimer;
         private Timer StreamTimer;
         private int countMessageForTenMin = 0;
+        private int countAdvert = 0;
 
         public static IrcClient ircClient;
         public static Dictionary<string, Channel> channels = new Dictionary<string, Channel>();
@@ -422,7 +423,7 @@ namespace DudelkaBot.dataBase
                             }
 
                             lock (ircClient)
-                                ircClient.sendChatMessage("Спасибо за переподписку!!! Добро пожаловать в кровать " + msg.Subscription.ToString() + "-хмесячников KappaPride", msg.SubscriberName, msg);
+                                ircClient.sendChatMessage("Спасибо за переподписку!!! Добро пожаловать в кровать " + msg.Subscription.ToString() + "-месячников KappaPride", msg.SubscriberName, msg);
                             break;
                         case TypeMessage.Tags:
                             break;
@@ -550,6 +551,14 @@ namespace DudelkaBot.dataBase
                                         VoteActive = true;
                                     }
                                     break;
+                                case Command.advert:
+                                    var Id = db.Users.Single(a => a.Username == msg.UserName).Id;
+                                    if ((db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id && a.Moderator) || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name))
+                                    {
+                                        Advert advert = new Advert(msg.AdvertTime, msg.AdvertCount, msg.Advert, Name);
+                                        ircClient.sendChatMessage("Объявление '" + msg.Advert + "' активировано", msg);
+                                    }
+                                        break;
                                 case Command.citytime:
                                     ircClient.sendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).ToString(), msg);
                                     break;
@@ -566,7 +575,7 @@ namespace DudelkaBot.dataBase
                                     break;
                                 case Command.toplist:
                                     List<string> toplist;
-                                    if (db.Users.Where(a => a.Id == id).Count() < 5)
+                                    if (db.ChannelsUsers.Where(a => a.Channel_id == id).Count() < 5)
                                         break;
                                     var channelsusers = db.ChannelsUsers.Where(a => a.Channel_id == id).OrderByDescending(a => a.CountMessage).ToList();
                                     toplist = new List<string>()
@@ -582,7 +591,11 @@ namespace DudelkaBot.dataBase
                                     break;
                                 case Command.sexylevel:
                                     int level = sexyLevel(msg.UserName);
+                                    if (msg.UserName == Name)
+                                        level = 200;
                                     ircClient.sendChatMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), msg);
+                                        //ircClient.sendChatMessage("Ты вор, потому что ты украл мое сердечко. KappaPride , ты слишком сексуален для рейтинга", msg);
+                                   // else
 
                                     break;
                                 case Command.members:
@@ -617,6 +630,11 @@ namespace DudelkaBot.dataBase
                 Console.ResetColor();
                 return;
             }
+        }
+
+        private void stopAdvert(object s)
+        {
+
         }
 
         private void stopVote(object s)
@@ -654,8 +672,8 @@ namespace DudelkaBot.dataBase
                 try
                 {
                     string s = ircClient.readMessage();
-
-                    Task.Run(() => switchMessage(s));
+                    if(s != null)
+                        Task.Run(() => switchMessage(s));
                 }
                 catch (Exception ex)
                 {
