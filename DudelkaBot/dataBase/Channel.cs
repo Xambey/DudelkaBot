@@ -47,7 +47,6 @@ namespace DudelkaBot.dataBase
         public static Dictionary<string, Channel> channels = new Dictionary<string, Channel>();
         public static List<Message> errorListMessages = new List<Message>();
 
-        private static ChatContext db = new ChatContext();
         private static Channel viewChannel;
         private static Timer MembersTimer = new Timer(updateMembers, null, 7 * 60000, 7 * 60000);//time in 10 min
         private static string duckpattern= @"@DudelkaBot, DuckerZ";
@@ -62,7 +61,7 @@ namespace DudelkaBot.dataBase
             this.port = port;
             this.password = password;
             this.userName = userName;
-            lock(db)
+            using (var db = new ChatContext())
                 if(!db.Channels.Any(a => a.Channel_name == channelName))
                 {
                     var channel = new Channels(channelName);
@@ -80,8 +79,7 @@ namespace DudelkaBot.dataBase
 
         private static void updateMembers(object obj)
         {
-            lock(ircClient)
-                ircClient.updateMembers();
+            ircClient.updateMembers();
         }
 
         private void streamStateUpdate(object obj)
@@ -91,7 +89,7 @@ namespace DudelkaBot.dataBase
                 if (countMessageForTenMin == 0)
                 {
                     Status = Status.Offline;
-                    lock (db)
+                    using(var db = new ChatContext())
                         foreach (var item in db.ChannelsUsers.Where(a => a.Active && a.Channel_id == id))
                         {
                             item.Active = false;
@@ -135,7 +133,7 @@ namespace DudelkaBot.dataBase
         private int sexyLevel(string username)
         {
             int level = 0;
-            lock (db)
+            using(var db = new ChatContext())
             {
                 var ID = db.Users.Single(a => a.Username == username).Id;
                 var user = db.ChannelsUsers.Single(a => a.User_id == ID && a.Channel_id == id);
@@ -181,7 +179,7 @@ namespace DudelkaBot.dataBase
         {
             Message currentMessage = new Message(data);
 
-            if (currentMessage.Channel == null || viewChannel.Name == currentMessage.Channel || !currentMessage.Success)
+            if (currentMessage.Channel == null || viewChannel.Name == currentMessage.Channel)
             {
                 Console.WriteLine(data);
             }
@@ -230,11 +228,11 @@ namespace DudelkaBot.dataBase
         {
             try
             {
-                switch (msg.Type)
+                using (var db = new ChatContext())
                 {
-
-                    case TypeMessage.JOIN:
-                        lock (db)
+                    switch (msg.Type)
+                    {
+                        case TypeMessage.JOIN:
                             if (!db.Users.Any(a => a.Username == msg.UserName))
                             {
                                 Users user = new Users(msg.UserName);
@@ -262,10 +260,8 @@ namespace DudelkaBot.dataBase
                                 }
                                 db.SaveChanges();
                             }
-                        break;
-                    case TypeMessage.PART:
-                        lock (db)
-                        {
+                            break;
+                        case TypeMessage.PART:
                             if (db.Users.Any(a => a.Username == msg.UserName))
                             {
                                 var Id = db.Users.Single(a => a.Username == msg.UserName).Id;
@@ -292,12 +288,8 @@ namespace DudelkaBot.dataBase
                                     db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = false;
                                 db.SaveChanges();
                             }
-                        }
-                        break;
-                    case TypeMessage.MODE:
-
-                        lock (db)
-                        {
+                            break;
+                        case TypeMessage.MODE:
                             if (!db.Users.Any(a => a.Username == msg.UserName))
                             {
                                 var user = new Users(msg.UserName);
@@ -348,12 +340,9 @@ namespace DudelkaBot.dataBase
                                 }
                                 db.SaveChanges();
                             }
-                        }
-                        break;
-                    case TypeMessage.NAMES:
-                        foreach (var item in msg.NamesUsers)
-                        {
-                            lock (db)
+                            break;
+                        case TypeMessage.NAMES:
+                            foreach (var item in msg.NamesUsers)
                             {
                                 if (!db.Users.Any(a => a.Username == item))
                                 {
@@ -382,23 +371,20 @@ namespace DudelkaBot.dataBase
                                     db.SaveChanges();
                                 }
                             }
-                        }
-                        break;
-                    case TypeMessage.NOTICE:
-                        break;
-                    case TypeMessage.HOSTTARGET:
-                        break;
-                    case TypeMessage.CLEARCHAT:
-                        break;
-                    case TypeMessage.USERSTATE:
-                        break;
-                    case TypeMessage.RECONNECT:
-                        break;
-                    case TypeMessage.ROOMSTATE:
-                        break;
-                    case TypeMessage.USERNOTICE:
-                        lock (db)
-                        {
+                            break;
+                        case TypeMessage.NOTICE:
+                            break;
+                        case TypeMessage.HOSTTARGET:
+                            break;
+                        case TypeMessage.CLEARCHAT:
+                            break;
+                        case TypeMessage.USERSTATE:
+                            break;
+                        case TypeMessage.RECONNECT:
+                            break;
+                        case TypeMessage.ROOMSTATE:
+                            break;
+                        case TypeMessage.USERNOTICE:
                             if (!db.Users.Any(a => a.Username == msg.SubscriberName))
                             {
                                 var user = new Users(msg.SubscriberName);
@@ -434,17 +420,14 @@ namespace DudelkaBot.dataBase
                                 }
                                 db.SaveChanges();
                             }
-                        }
 
-                        lock (ircClient)
-                            ircClient.sendChatMessage("Спасибо за переподписку!!! Добро пожаловать в кровать " + msg.Subscription.ToString() + "-хмесячников KappaPride", msg.SubscriberName, msg);
-                        break;
-                    case TypeMessage.Tags:
-                        break;
-                    case TypeMessage.PRIVMSG:
-                        countMessageForTenMin++;
-                        lock (db)
-                        {
+                            lock (ircClient)
+                                ircClient.sendChatMessage("Спасибо за переподписку!!! Добро пожаловать в кровать " + msg.Subscription.ToString() + "-хмесячников KappaPride", msg.SubscriberName, msg);
+                            break;
+                        case TypeMessage.Tags:
+                            break;
+                        case TypeMessage.PRIVMSG:
+                            countMessageForTenMin++;
                             if (!db.Users.Any(a => a.Username == msg.UserName))
                             {
                                 Users user = new Users(msg.UserName);
@@ -481,11 +464,8 @@ namespace DudelkaBot.dataBase
                                 }
                                 db.SaveChanges();
                             }
-                        }
 
-                        if (msg.UserName == "twitchnotify")
-                        {
-                            lock (db)
+                            if (msg.UserName == "twitchnotify")
                             {
                                 if (!db.Users.Any(a => a.Username == msg.SubscriberName))
                                 {
@@ -522,39 +502,36 @@ namespace DudelkaBot.dataBase
                                     }
                                     db.SaveChanges();
                                 }
-                            }
-                            lock (ircClient)
-                                ircClient.sendChatMessage("Спасибо за подписку! Добро пожаловать в кровать " + msg.Subscription.ToString() + " месячников KappaPride", msg.SubscriberName, msg);
-                            break;
-                        }
-                        else if (VoteActive)
-                        {
-                            if ((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && isUserVote(msg) == false)
-                            {
-                                if (msg.Msg.All(char.IsDigit))
-                                {
-                                    voteResult[voteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
-                                }
-                                else
-                                    voteResult[msg.Msg].Add(new User(msg.UserName));
-                            }
-                            break;
-                        }
-                        else
-                        {
-                            var math = duckReg.Match(msg.Msg);
-                            if (math.Success)
-                            {
-                                ircClient.sendChatMessage("DuckerZ",msg);
+                                lock (ircClient)
+                                    ircClient.sendChatMessage("Спасибо за подписку! Добро пожаловать в кровать " + msg.Subscription.ToString() + " месячников KappaPride", msg.SubscriberName, msg);
                                 break;
                             }
-                        }
-
-                        switch (msg.command)
-                        {
-                            case Command.vote:
-                                lock (db)
+                            else if (VoteActive)
+                            {
+                                if ((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && isUserVote(msg) == false)
                                 {
+                                    if (msg.Msg.All(char.IsDigit))
+                                    {
+                                        voteResult[voteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
+                                    }
+                                    else
+                                        voteResult[msg.Msg].Add(new User(msg.UserName));
+                                }
+                                break;
+                            }
+                            else
+                            {
+                                var math = duckReg.Match(msg.Msg);
+                                if (math.Success)
+                                {
+                                    ircClient.sendChatMessage("DuckerZ", msg);
+                                    break;
+                                }
+                            }
+
+                            switch (msg.command)
+                            {
+                                case Command.vote:
                                     var ID = db.Users.Single(a => a.Username == msg.UserName).Id;
                                     if ((db.ChannelsUsers.Any(a => a.User_id == ID && a.Channel_id == id && a.Moderator) || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && msg.VoteActive && !VoteActive)
                                     {
@@ -572,29 +549,23 @@ namespace DudelkaBot.dataBase
                                         ircClient.sendChatBroadcastChatMessage(msg.variants, msg);
                                         VoteActive = true;
                                     }
-                                }
-                                break;
-                            case Command.citytime:
-                                ircClient.sendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).ToString(), msg);
-                                break;
-                            case Command.help:
-                                ircClient.sendChatBroadcastChatMessage(commands, msg);
-                                break;
-                            case Command.date:
-                                ircClient.sendChatMessage(DateTime.Now.ToString(), msg);
-                                break;
-                            case Command.mystat:
-                                lock (db)
-                                {
+                                    break;
+                                case Command.citytime:
+                                    ircClient.sendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).ToString(), msg);
+                                    break;
+                                case Command.help:
+                                    ircClient.sendChatBroadcastChatMessage(commands, msg);
+                                    break;
+                                case Command.date:
+                                    ircClient.sendChatMessage(DateTime.Now.ToString(), msg);
+                                    break;
+                                case Command.mystat:
                                     var user = db.Users.Single(a => a.Username == msg.UserName);
                                     var chus = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
                                     ircClient.sendChatMessage("Вы написали " + chus.CountMessage.ToString() + " сообщений на канале" + (chus.CountSubscriptions > 0 ? ", также вы сексуальны уже " + chus.CountSubscriptions.ToString() + "месяцев KappaPride" : ""), msg);
-                                }
-                                break;
-                            case Command.toplist:
-                                List<string> toplist;
-                                lock (db)
-                                {
+                                    break;
+                                case Command.toplist:
+                                    List<string> toplist;
                                     if (db.Users.Where(a => a.Id == id).Count() < 5)
                                         break;
                                     var channelsusers = db.ChannelsUsers.Where(a => a.Channel_id == id).OrderByDescending(a => a.CountMessage).ToList();
@@ -606,44 +577,43 @@ namespace DudelkaBot.dataBase
                                         db.Users.Single(a => a.Id == channelsusers[3].User_id).Username + " = " + channelsusers[3].CountMessage.ToString() + " ,",
                                         db.Users.Single(a => a.Id == channelsusers[4].User_id).Username + " = " + channelsusers[4].CountMessage.ToString(),
                                     };
-                                }
-                                ircClient.sendChatBroadcastChatMessage(toplist, msg);
+                                    ircClient.sendChatBroadcastChatMessage(toplist, msg);
 
-                                break;
-                            case Command.sexylevel:
-                                int level = sexyLevel(msg.UserName);
-                                ircClient.sendChatMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), msg);
+                                    break;
+                                case Command.sexylevel:
+                                    int level = sexyLevel(msg.UserName);
+                                    ircClient.sendChatMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), msg);
 
-                                break;
-                            case Command.members:
-                                lock (db)
+                                    break;
+                                case Command.members:
                                     ircClient.sendChatBroadcastMessage("Сейчас в чате " + db.ChannelsUsers.Where(a => a.Active && a.Channel_id == id).Count().ToString() + " сексуалов и не только KappaPride ", msg);
-                                break;
-                            case Command.unknown:
-                                lock(errorListMessages)
-                                    errorListMessages.Add(msg);
-                                break;
-                            default:
-                                lock (errorListMessages)
-                                    errorListMessages.Add(msg);
-                                break;
-                        }
-                        break;
-                    case TypeMessage.GLOBALUSERSTATE:
-                        break;
-                    case TypeMessage.UNKNOWN:
-                        break;
-                    case TypeMessage.PING:
-                        ircClient.pingResponse();
-                        break;
-                    default:
-                        break;
+                                    break;
+                                case Command.unknown:
+                                    lock (errorListMessages)
+                                        errorListMessages.Add(msg);
+                                    break;
+                                default:
+                                    lock (errorListMessages)
+                                        errorListMessages.Add(msg);
+                                    break;
+                            }
+                            break;
+                        case TypeMessage.GLOBALUSERSTATE:
+                            break;
+                        case TypeMessage.UNKNOWN:
+                            break;
+                        case TypeMessage.PING:
+                            ircClient.pingResponse();
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             catch(InvalidOperationException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.Source + ex.Message + ex.Data);
+                Console.WriteLine(ex.Source + " "+ ex.Message + " " + ex.Data);
                 Console.ResetColor();
                 return;
             }
@@ -683,9 +653,7 @@ namespace DudelkaBot.dataBase
             {
                 try
                 {
-
                     string s = ircClient.readMessage();
-
 
                     Task.Run(() => switchMessage(s));
                 }

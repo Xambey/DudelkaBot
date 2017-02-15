@@ -54,7 +54,6 @@ namespace DudelkaBot.ircClient
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("Подключение не удалось");
-                        Thread.Sleep(5000);
                     }
                 }
             return true;
@@ -62,8 +61,6 @@ namespace DudelkaBot.ircClient
 
         public IrcClient(string ipHost, int port, string userName, string password)
         {
-            try
-            {
                 Timer timer = new Timer(timerTick, null, 0, 30000);
                 this.ipHost = ipHost;
                 this.port = port;
@@ -83,11 +80,6 @@ namespace DudelkaBot.ircClient
 
                     signIn();
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
         }
 
         public void signIn()
@@ -108,21 +100,24 @@ namespace DudelkaBot.ircClient
         {
             try
             {
-                while (!tcpClient.Connected)
+                lock (tcpClient)
                 {
-                    try
+                    while (!tcpClient.Connected)
                     {
-                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                        try
+                        {
+                            tcpClient.ConnectAsync(ipHost, port).Wait();
+                        }
+                        finally
+                        {
+                            var color = Console.ForegroundColor;
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Подключение не удалось");
+                        }
                     }
-                    finally
-                    {
-                        var color = Console.ForegroundColor;
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Подключение не удалось");
-                    }
+                    outputStream.WriteLine("CAP REQ :twitch.tv/membership");
+                    outputStream.Flush();
                 }
-                outputStream.WriteLine("CAP REQ :twitch.tv/membership");
-                outputStream.Flush();
             }
             catch(Exception ex)
             {
@@ -133,21 +128,8 @@ namespace DudelkaBot.ircClient
 
         public void joinRoom(string channel)
         {
-            if (outputStream != null)
+            if (isConnect())
             {
-                while (!tcpClient.Connected)
-                {
-                    try
-                    {
-                        tcpClient.ConnectAsync(ipHost, port).Wait();
-                    }
-                    finally
-                    {
-                        var color = Console.ForegroundColor;
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Подключение не удалось");
-                    }
-                }
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
             }
@@ -155,7 +137,7 @@ namespace DudelkaBot.ircClient
 
         public void leaveRoom(string channel)
         {
-            if(outputStream != null)
+            if(isConnect())
             {
                 outputStream.WriteLine("PART #" + channel);
                 outputStream.Flush();
@@ -163,29 +145,11 @@ namespace DudelkaBot.ircClient
         }
 
         private void sendIrcMessage(string message)
-        {
-            while (!tcpClient.Connected)
+        { 
+            if (messageCount++ < messageLimit && isConnect())
             {
-                try
-                {
-                    tcpClient.ConnectAsync(ipHost, port).Wait();
-                }
-                finally
-                {
-                    var color = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Подключение не удалось");
-                }
-            }
-
-
-            if (messageCount++ < messageLimit)
-            {
-                lock (outputStream)
-                {
-                    outputStream.WriteLine(message);
-                    outputStream.Flush();
-                }
+                outputStream.WriteLine(message);
+                outputStream.Flush();
                 Timer timer = new Timer(timerTick, null, 0, 30000);
             }
             else

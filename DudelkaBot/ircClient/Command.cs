@@ -15,7 +15,8 @@ namespace DudelkaBot.ircClient
         sexylevel,
         unknown,
         date,
-        citytime
+        citytime,
+        advert
     };
 
 }
