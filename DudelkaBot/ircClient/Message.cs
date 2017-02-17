@@ -18,6 +18,7 @@ namespace DudelkaBot.ircClient
         private static string subscribePattern = @"(?<username>\w+).+";
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
         private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
+        private static string deathPattern = @"!death (?<command>v|[+-]|\d+)$";
 
         private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
 
@@ -33,6 +34,7 @@ namespace DudelkaBot.ircClient
         private static Regex subscribeReg = new Regex(subscribePattern);
         private static Regex voteReg = new Regex(votePattern);
         private static Regex advertReg = new Regex(advertPattern);
+        private static Regex deathReg = new Regex(deathPattern);
 
         public string Data { get; private set; }
         public string UserName { get; private set; }
@@ -54,6 +56,7 @@ namespace DudelkaBot.ircClient
         public int AdvertTime = 0;
         public int AdvertCount = 0;
         public string Advert { get; private set; }
+        public string DeathCommand { get; private set; }
 
 
         public Message(string data)
@@ -248,7 +251,21 @@ namespace DudelkaBot.ircClient
                                 Advert = math.Groups["advert"].Value;
                                 command = Command.advert;
                             }
+                            else
+                                Success = false;
                         }
+                        else if (Msg.Contains("!death"))
+                        {
+                            math = deathReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                DeathCommand = math.Groups["command"].Value;
+                                command = Command.death;
+                            }
+                            else
+                                Success = false;
+                        }
+
 
                         break;
                     case TypeMessage.GLOBALUSERSTATE:

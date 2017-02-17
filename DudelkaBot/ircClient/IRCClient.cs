@@ -42,7 +42,8 @@ namespace DudelkaBot.ircClient
 
         private bool isConnect()
         {
-            if(tcpClient != null)
+            if (tcpClient != null)
+            {
                 while (!tcpClient.Connected)
                 {
                     try
@@ -56,7 +57,10 @@ namespace DudelkaBot.ircClient
                         Console.WriteLine("Подключение не удалось");
                     }
                 }
-            return true;
+                return true;
+            }
+            else
+                return false;
         }
 
         public IrcClient(string ipHost, int port, string userName, string password)
@@ -132,7 +136,7 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
-                sendChatBroadcastMessage("/me Смазанный Дуделка Бот входит в чат KappaPride", channel);
+                //sendChatBroadcastMessage("/me Смазанный Дуделка Бот входит в чат KappaPride", channel);
             }
         }
 

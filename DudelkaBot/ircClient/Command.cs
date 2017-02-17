@@ -16,7 +16,8 @@ namespace DudelkaBot.ircClient
         unknown,
         date,
         citytime,
-        advert
+        advert,
+        death
     };
 
 }

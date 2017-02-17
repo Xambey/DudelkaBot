@@ -24,6 +24,7 @@ namespace DudelkaBot.system
         {
             "dudelka_krasnaya",
             //"c9sneaky",
+            //"nl_kripp",
             //"fairlight_excalibur",
             //"lirik",
             //"domingo",
@@ -78,7 +79,6 @@ namespace DudelkaBot.system
                         Channel.ircClient.updateMembers();
                         break;
                     case "!errors":
-                        var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         lock (Channel.errorListMessages)
                         {
@@ -89,8 +89,34 @@ namespace DudelkaBot.system
                                 Console.WriteLine(ch[i].Data);
                             }
                         }
-                        Console.ForegroundColor = color;
+                        Console.ResetColor();
 
+                        break;
+                    case "!list":
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        Console.WriteLine("List channels:");
+                        foreach (var item in Channel.channels)
+                        {
+                            Console.WriteLine(item.Key);
+                        }
+                        Console.ResetColor();
+                        Thread.Sleep(2000);
+                        break;
+                    case "!add":
+                        string chname = Console.ReadLine();
+                        if (!Channel.channels.Any(a => a.Key == chname))
+                        {
+                            var chan = new Channel(chname, host, port, userName, password);
+                            chan.Join();
+                            chan.startShow();
+                        }
+                        break;
+                    case "!remove":
+                        string name = Console.ReadLine();
+                        if (Channel.channels.Any(a => a.Key == name))
+                        {
+                            Channel.channels.Remove(name);
+                        }
                         break;
                     default:
                         var math = reg.Match(cmd);
