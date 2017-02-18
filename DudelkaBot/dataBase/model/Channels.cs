@@ -16,6 +16,7 @@ namespace DudelkaBot.dataBase.model
         public string Channel_name { get; set; }
         [DefaultValue(0)]
         public int DeathCount { get; set; }
+        public int VkId { get; set; }
         public Channels() { }
         public Channels(string channelName)
         {

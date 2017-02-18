@@ -136,7 +136,7 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
-                //sendChatBroadcastMessage("/me Смазанный Дуделка Бот входит в чат KappaPride", channel);
+                sendChatBroadcastMessage("/me Свеженький Дуделка Бот входит в чат *Обнимашки* KappaPride ", channel);
             }
         }
 

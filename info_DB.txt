@@ -5,12 +5,15 @@ yutu1337 just subscribed with Twitch Prime. yutu1337 subscribed for 3 months in 
 
 Добавить:
 
-ответ DuckerZ на DuckerZ
 Создание объявлений модераторами
 цитаты
 счетчик смертей
 музыка из вк
 reconnection
+сообщения в лс
+
+https://oauth.vk.com/authorize?client_id=5882984&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=status&offline&response_type=token&v=5.62&state=123456
+
 
 Unable to read data from the transport connection: Попытка установить соединение была безуспешной, т.к. от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное соединение из-за неверного отклика уже подключенного компьютера.
 
@@ -27,3 +30,25 @@ Unhandled Exception: System.IO.IOException: Unable to write data to the transpor
    at System.Threading.TimerQueueTimer.Fire()
    at System.Threading.TimerQueue.FireNextTimers()
 Press any key to continue . . .
+
+
+System.InvalidOperationException не обработано пользовательским кодом
+  HResult=-2146233079
+  Message=A second operation started on this context before a previous operation completed. Any instance members are not guaranteed to be thread safe.
+  StackTrace:
+       в Microsoft.EntityFrameworkCore.Internal.ConcurrencyDetector.EnterCriticalSection()
+       в Microsoft.EntityFrameworkCore.Query.Internal.LinqOperatorProvider.ExceptionInterceptor`1.EnumeratorExceptionInterceptor.MoveNext()
+       в System.Linq.Enumerable.First[TSource](IEnumerable`1 source)
+       в Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.<>c__DisplayClass20_0`1.<CompileQueryCore>b__0(QueryContext qc)
+       в DudelkaBot.dataBase.Channel.handler(Message msg) в C:\Users\Andrey\Documents\GitHub\DudelkaBot\DudelkaBot\dataBase\Channel.cs:строка 488
+       в DudelkaBot.dataBase.Channel.switchMessage(String data) в C:\Users\Andrey\Documents\GitHub\DudelkaBot\DudelkaBot\dataBase\Channel.cs:строка 194
+       в DudelkaBot.dataBase.Channel.<>c__DisplayClass32_0.<Process>b__0() в C:\Users\Andrey\Documents\GitHub\DudelkaBot\DudelkaBot\dataBase\Channel.cs:строка 702
+       в System.Threading.Tasks.Task.Execute()
+  InnerException: 
+  
+  Error = Для вычисления метода System.Linq.SystemCore_EnumerableDebugView`1[[DudelkaBot.dataBase.model.Users, DudelkaBot, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].get_Items требуется вызвать метод System.RuntimeType.IsEnumDefined, который невозможно в...
+
+  
+  
+  
+  Local = Вычисление функции отменено из-за истечения времени ожидания при выполнении предыдущей функции. Для возобновления вычисления функции необходимо продолжить выполнение программы.

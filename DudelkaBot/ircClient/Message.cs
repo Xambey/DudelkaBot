@@ -19,6 +19,7 @@ namespace DudelkaBot.ircClient
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
         private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
         private static string deathPattern = @"!death (?<command>v|[+-]|\d+)$";
+        private static string vkidPattern = @"!vkid (?<id>\w+)$";
 
         private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
 
@@ -35,6 +36,7 @@ namespace DudelkaBot.ircClient
         private static Regex voteReg = new Regex(votePattern);
         private static Regex advertReg = new Regex(advertPattern);
         private static Regex deathReg = new Regex(deathPattern);
+        private static Regex vkidReg = new Regex(vkidPattern);
 
         public string Data { get; private set; }
         public string UserName { get; private set; }
@@ -57,6 +59,7 @@ namespace DudelkaBot.ircClient
         public int AdvertCount = 0;
         public string Advert { get; private set; }
         public string DeathCommand { get; private set; }
+        public string vkid;
 
 
         public Message(string data)
@@ -241,6 +244,17 @@ namespace DudelkaBot.ircClient
                                 Success = false;
 
                         }
+                        else if (Msg.Contains("!death"))
+                        {
+                            math = deathReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                DeathCommand = math.Groups["command"].Value;
+                                command = Command.death;
+                            }
+                            else
+                                Success = false;
+                        }
                         else if (Msg.Contains("!advert"))
                         {
                             math = advertReg.Match(Msg);
@@ -254,13 +268,13 @@ namespace DudelkaBot.ircClient
                             else
                                 Success = false;
                         }
-                        else if (Msg.Contains("!death"))
+                        else if (Msg.Contains("!vkid"))
                         {
-                            math = deathReg.Match(Msg);
+                            math = vkidReg.Match(Msg);
                             if (math.Success)
                             {
-                                DeathCommand = math.Groups["command"].Value;
-                                command = Command.death;
+                                command = Command.vkid;
+                                vkid = math.Groups["id"].Value;
                             }
                             else
                                 Success = false;

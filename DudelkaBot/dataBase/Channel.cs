@@ -11,6 +11,7 @@ using DudelkaBot.dataBase.model;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using DudelkaBot.vk; 
 
 namespace DudelkaBot.dataBase
 {
@@ -312,7 +313,10 @@ namespace DudelkaBot.dataBase
                                     var chus = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
 
                                     if (msg.Sign == "+")
+                                    {
                                         chus.Moderator = true;
+                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
+                                    }
                                     else if (msg.Sign == "-")
                                         chus.Moderator = false;
                                 }
@@ -320,7 +324,10 @@ namespace DudelkaBot.dataBase
                                 {
                                     var chus = new ChannelsUsers(user.Id, id);
                                     if (msg.Sign == "+")
+                                    {
+                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
                                         chus.Moderator = true;
+                                    }
                                     else if (msg.Sign == "-")
                                         chus.Moderator = false;
                                     db.ChannelsUsers.Add(chus);
@@ -336,7 +343,10 @@ namespace DudelkaBot.dataBase
                                     var chus = db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id);
 
                                     if (msg.Sign == "+")
+                                    {
+                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
                                         chus.Moderator = true;
+                                    }
                                     else if (msg.Sign == "-")
                                         chus.Moderator = false;
 
@@ -345,7 +355,10 @@ namespace DudelkaBot.dataBase
                                 {
                                     var chus = new ChannelsUsers(Id, id);
                                     if (msg.Sign == "+")
+                                    {
+                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
                                         chus.Moderator = true;
+                                    }
                                     else if (msg.Sign == "-")
                                         chus.Moderator = false;
                                     db.ChannelsUsers.Add(chus);
@@ -631,6 +644,47 @@ namespace DudelkaBot.dataBase
                                     lock (errorListMessages)
                                         errorListMessages.Add(msg);
                                     break;
+                                case Command.music:
+                                    var ch = db.Channels.Single(a => a.Channel_id == id);
+                                    if (ch.VkId as object != null)
+                                    {
+                                        string trackname = Vkontakte.getNameTrack(ch.VkId);
+                                        if (string.IsNullOrEmpty(trackname))
+                                            ircClient.sendChatMessage("Информация не доступна :(", msg);
+                                        else
+                                            ircClient.sendChatMessage("Сейчас играет: " + trackname + " Kreygasm", msg);
+                                    }
+                                    break;
+                                case Command.vkid:
+                                    var mat = Regex.Match(msg.vkid, @"id(?<id>\d+)$");
+                                    if (msg.vkid.Contains("id"))
+                                    {
+                                        mat = Regex.Match(msg.vkid, @"id(?<id>\d+)$");
+
+                                        if(mat.Success)
+                                        {
+                                            var d = long.Parse(mat.Groups["id"].Value);
+                                            if (Vkontakte.userExist(d))
+                                                db.Channels.Single(a => a.Channel_name == Name).VkId = (int)d;
+                                            else break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        mat = Regex.Match(msg.vkid, @"(?<screenname>\w+)$");
+                                        if (mat.Success)
+                                        {
+                                            long? vkid = Vkontakte.getUserId(mat.Groups["screenname"].Value);
+                                            if (vkid != null)
+                                                db.Channels.Single(a => a.Channel_name == Name).VkId = (int)vkid;
+                                            else
+                                                break;
+                                        }
+                                        else
+                                            break;
+                                    }
+                                    db.SaveChanges();
+                                    break;
                                 case Command.death:
                                     var iduser = db.Users.Single(a => a.Username == msg.UserName).Id;
                                     if (db.ChannelsUsers.Any(a => a.Channel_id == id && a.User_id == iduser && a.Moderator) || msg.UserName == "dudelka_krasnaya")
@@ -648,7 +702,7 @@ namespace DudelkaBot.dataBase
                                                     channel.DeathCount--;
                                                 break;
                                             case "v":
-                                                ircClient.sendChatBroadcastMessage("/me Умерли " + channel.DeathCount.ToString() + " раз LUL", Name);
+                                                ircClient.sendChatBroadcastMessage("/me Умерли " + channel.DeathCount.ToString() + " раза LUL", Name);
                                                 break;
                                             default:
                                                 int val;
@@ -658,8 +712,8 @@ namespace DudelkaBot.dataBase
                                                 }
                                                 break;
                                         }
-                                        //if (current != channel.DeathCount)
-                                        //    ircClient.sendChatBroadcastMessage("/me Умерли " + channel.DeathCount.ToString() + " раз LUL", Name);
+                                        if (current != channel.DeathCount)
+                                            ircClient.sendChatBroadcastMessage("/me Умерли " + channel.DeathCount.ToString() + " раза LUL", Name);
                                         db.SaveChanges();
                                     }
                                     break;
