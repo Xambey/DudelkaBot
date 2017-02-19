@@ -20,14 +20,20 @@ namespace DudelkaBot.dataBase
         private static Random rand = new Random();
         public static List<string> commands = new List<string>()
         {
-            "Для модераторов: vote [Тема голосования]:[время в мин]:[variant1,variant2,variantn] (через , без пробелов) - голосование; !advert [время] [число повторов] [объявление]",
-            //"!sexylevel - ваш уровень сексуальности на канале",
+            "ТОЛЬКО ДЛЯ МОДЕРАТОРОВ: ",
+            "!vote [Тема голосования]:[время в мин]:[variant1,variant2,variantn] (через , без пробелов) - голосование",
+            "!advert [время в мин] [кол-во повторов] [объявление] - объявление",
+            "!death [+|-|v|value] - счетчик смертей + - добавить/убавить, v - показать, value - установить значение",
+            "!vkid id[номер страницы в вк] ИЛИ !vkid [сокращение страницы в вк] - установка странницы в вк стриммера, необходимо для работы !music",
+            "ДЛЯ ВСЕХ: ",
+            "!sexylevel - ваш уровень сексуальности на канале",
             "!date - дата и время сервера",
-            //"!help - список команд",
+            "!help - список команд",
             "!members - кол-во сексуалов в чате",
             "!mystat - ваша статистика за все время",
             "!toplist - топ общительных за все время",
-            "!citytime - время в Уфе"
+            "!citytime - время в Уфе",
+            "!music - вывести текущую музыку из страницы в вк стриммера"
         };
 
         public string Name;
@@ -587,7 +593,7 @@ namespace DudelkaBot.dataBase
                                     ircClient.sendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).ToString(), msg);
                                     break;
                                 case Command.help:
-                                    ircClient.sendChatBroadcastChatMessage(commands, msg);
+                                    ircClient.sendChatWhisperMessage(commands, msg);
                                     break;
                                 case Command.date:
                                     ircClient.sendChatMessage(DateTime.Now.ToString(), msg);
@@ -632,9 +638,7 @@ namespace DudelkaBot.dataBase
 
                                     if (msg.UserName == Name)
                                         level = 200;
-                                    //ircClient.sendChatMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), msg);
-                                        //ircClient.sendChatMessage("Ты вор, потому что ты украл мое сердечко. KappaPride , ты слишком сексуален для рейтинга", msg);
-                                   // else
+                                    ircClient.sendChatWhisperMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), msg);
 
                                     break;
                                 case Command.members:
@@ -648,9 +652,14 @@ namespace DudelkaBot.dataBase
                                     var ch = db.Channels.Single(a => a.Channel_id == id);
                                     if (ch.VkId as object != null)
                                     {
+                                        if(ch.VkId == 0)
+                                        {
+                                            ircClient.sendChatMessage("Не установлен Vk Id для канала, см. !help", msg);
+                                            break;
+                                        }
                                         string trackname = Vkontakte.getNameTrack(ch.VkId);
                                         if (string.IsNullOrEmpty(trackname))
-                                            ircClient.sendChatMessage("Информация не доступна :(", msg);
+                                            ircClient.sendChatMessage("В данный момент музыка не играет :(", msg);
                                         else
                                             ircClient.sendChatMessage("Сейчас играет: " + trackname + " Kreygasm", msg);
                                     }

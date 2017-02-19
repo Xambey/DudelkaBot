@@ -136,7 +136,7 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
-                sendChatBroadcastMessage("/me Свеженький Дуделка Бот входит в чат *Обнимашки* KappaPride ", channel);
+                //sendChatBroadcastMessage("/me Свеженький Дуделка Бот входит в чат *Обнимашки* KappaPride ", channel);
             }
         }
 
@@ -159,31 +159,60 @@ namespace DudelkaBot.ircClient
             }
         }
 
+        private void sendIrcWhisperMessage(string message)
+        {
+            if (isConnect())
+            {
+                outputStream.WriteLine(message);
+                outputStream.Flush();
+            }
+        }
+
         public void sendChatMessage(string message, Message requestMsg) 
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message + "\r\n");
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message + "\r\n");
         }
 
         public void sendChatMessage(string message, string getter, Message requestMsg)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message + "\r\n");
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message + "\r\n");
         }
 
         public void sendChatBroadcastMessage(string message, Message requestMsg)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message + "\r\n");
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message + "\r\n");
         }
 
         public void sendChatBroadcastMessage(string message, string channel)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
+        }
+
+        public void sendChatWhisperMessage(string message, Message requestMsg)
+        {
+            sendIrcWhisperMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message + "\r\n");
+        }
+        public void sendChatWhisperMessage(List<string> commands, Message requestMsg)
+        {
+            string send = ":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " ";
+
+            foreach (var item in commands)
+            {
+                sendIrcWhisperMessage(send + item);
+                Thread.Sleep(500);
+            }
+        }
+
+        public void sendChatWhisperMessage(string message, string username)
+        {
+            sendIrcWhisperMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + username + " " + message + "\r\n");
         }
 
         public void sendChatBroadcastChatMessage(List<string> commands, Message requestMsg)
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append(":" + userName + "!" + userName + "@" + userName + "twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :");
+            builder.Append(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :");
 
             foreach (var item in commands)
             {
