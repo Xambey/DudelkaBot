@@ -156,6 +156,9 @@ namespace DudelkaBot.ircClient
                 outputStream.WriteLine(message);
                 outputStream.Flush();
                 Timer timer = new Timer(timerTick, null, 0, 30000);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(message);
+                Console.ResetColor();
             }
         }
 
@@ -165,6 +168,9 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(message);
+                Console.ResetColor();
             }
         }
 

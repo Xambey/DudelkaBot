@@ -43,17 +43,6 @@ namespace DudelkaBot.system
         {
             Console.OutputEncoding = Encoding.Unicode;
 
-            //var db = new dataBase.model.ChatContext();
-
-            //string name = "asdasd";
-            //lock (db.Users)
-            //{
-            //    int userID = db.Users.Single(u => u.username == name).Id;
-            //    foreach (var ch in db.ChannelsUsers.Where(c => c.id == userID))
-            //        ch.countmessage = 0;
-            //}
-
-            //db.SaveChanges();
 
             foreach (var item in channels_names)
             {
@@ -93,11 +82,11 @@ namespace DudelkaBot.system
 
                         break;
                     case "!list":
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("List channels:");
                         foreach (var item in Channel.channels)
                         {
-                            Console.WriteLine(item.Key);
+                            Console.WriteLine(item.Key + " " + item.Value.Status.ToString());
                         }
                         Console.ResetColor();
                         Thread.Sleep(2000);

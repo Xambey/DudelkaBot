@@ -25,6 +25,7 @@ namespace DudelkaBot.dataBase
             "!advert [время в мин] [кол-во повторов] [объявление] - объявление",
             "!death [+|-|v|value] - счетчик смертей + - добавить/убавить, v - показать, value - установить значение",
             "!vkid id[номер страницы в вк] ИЛИ !vkid [сокращение страницы в вк] - установка странницы в вк стриммера, необходимо для работы !music",
+            "@DudelkaBot, /color [Цвет, по стандарту] - установить цвет бота",
             "ДЛЯ ВСЕХ: ",
             "!sexylevel - ваш уровень сексуальности на канале",
             "!date - дата и время сервера",
@@ -197,10 +198,7 @@ namespace DudelkaBot.dataBase
         {
             Message currentMessage = new Message(data);
 
-            if (currentMessage.Channel == null || viewChannel.Name == currentMessage.Channel)
-            {
-                Console.WriteLine(data);
-            }
+            Console.WriteLine(data);
 
             if (!currentMessage.Success)
             {
@@ -552,11 +550,23 @@ namespace DudelkaBot.dataBase
                             }
                             else
                             {
-                                var math = answerReg.Match(msg.Msg);
+                                var math = Regex.Match(msg.Msg, @"/color (?<color>\w+)$");
                                 if (math.Success)
                                 {
-                                    ircClient.sendChatMessage(math.Groups["text"].Value, msg);
+                                    var u = db.Users.Single(a => a.Username == msg.UserName).Id;
+                                    if(db.ChannelsUsers.Single(a => a.Channel_id == id && a.User_id == u).Moderator)
+                                        ircClient.sendChatBroadcastMessage("/color " + math.Groups["color"].Value, msg);
                                     break;
+                                }
+                                else
+                                {
+
+                                    math = answerReg.Match(msg.Msg);
+                                    if (math.Success)
+                                    {
+                                        ircClient.sendChatMessage(math.Groups["text"].Value, msg);
+                                        break;
+                                    }
                                 }
                             }
 
