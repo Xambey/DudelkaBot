@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DudelkaBot.dataBase
+namespace DudelkaBot.system
 {
     public class Advert
     {

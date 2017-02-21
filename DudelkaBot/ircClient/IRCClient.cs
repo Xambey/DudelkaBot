@@ -11,7 +11,7 @@ namespace DudelkaBot.ircClient
 {
     public class IrcClient
     {
-        public TcpClient tcpClient;
+        private TcpClient tcpClient;
         private StreamWriter outputStream;
         private StreamReader inputStream;
         private int port;
@@ -20,6 +20,41 @@ namespace DudelkaBot.ircClient
 
         private int messageCount;
         private const int messageLimit = 10;
+        private Task process;
+        private CancellationTokenSource token;
+
+        public void reconnect(Action func)
+        {
+            stopProcess();
+            inputStream.Dispose();
+            outputStream.Dispose();
+            tcpClient.Dispose();
+            tcpClient = new TcpClient();
+            
+            if (isConnect())
+            {
+                inputStream = new StreamReader(tcpClient.GetStream());
+                outputStream = new StreamWriter(tcpClient.GetStream());
+
+                signIn();
+            }
+            startProcess(func);
+        }
+
+        public void startProcess(Action func)
+        {
+            token = new CancellationTokenSource();
+            process = new Task(func, token.Token);
+            process.Start();
+        }
+
+        public void stopProcess()
+        {
+            if (process != null && !process.IsCompleted)
+            {
+                token.Cancel();
+            }
+        }
 
         private void timerTick(object state)
         {
@@ -40,7 +75,7 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        private bool isConnect()
+        public bool isConnect()
         {
             if (tcpClient != null)
             {
@@ -50,11 +85,12 @@ namespace DudelkaBot.ircClient
                     {
                         tcpClient.ConnectAsync(ipHost, port).Wait();
                     }
-                    finally
+                    catch(Exception ex)
                     {
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Подключение не удалось");
+                        Console.WriteLine("Подключение не удалось \n" + ex.Message);
+                        Console.ResetColor();
                     }
                 }
                 return true;
@@ -65,25 +101,23 @@ namespace DudelkaBot.ircClient
 
         public IrcClient(string ipHost, int port, string userName, string password)
         {
-                Timer timer = new Timer(timerTick, null, 0, 30000);
-                this.ipHost = ipHost;
-                this.port = port;
-                this.userName = userName;
-                this.password = password;
+            Timer timer = new Timer(timerTick, null, 0, 30000);
+            this.ipHost = ipHost;
+            this.port = port;
+            this.userName = userName;
+            this.password = password;
 
-                Console.OutputEncoding = Encoding.Unicode;
+            Console.OutputEncoding = Encoding.Unicode;
 
-                tcpClient = new TcpClient();
+            tcpClient = new TcpClient();
 
-                tcpClient.ConnectAsync(ipHost, port).Wait();
+            if (isConnect())
+            {
+                inputStream = new StreamReader(tcpClient.GetStream());
+                outputStream = new StreamWriter(tcpClient.GetStream());
 
-                if (isConnect())
-                {
-                    inputStream = new StreamReader(tcpClient.GetStream());
-                    outputStream = new StreamWriter(tcpClient.GetStream());
-
-                    signIn();
-                }
+                signIn();
+            }
         }
 
         public void signIn()
@@ -140,6 +174,7 @@ namespace DudelkaBot.ircClient
             }
         }
 
+
         public void leaveRoom(string channel)
         {
             if(isConnect())
@@ -156,18 +191,7 @@ namespace DudelkaBot.ircClient
                 outputStream.WriteLine(message);
                 outputStream.Flush();
                 Timer timer = new Timer(timerTick, null, 0, 30000);
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(message);
-                Console.ResetColor();
-            }
-        }
 
-        private void sendIrcWhisperMessage(string message)
-        {
-            if (isConnect())
-            {
-                outputStream.WriteLine(message);
-                outputStream.Flush();
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(message);
                 Console.ResetColor();
@@ -194,26 +218,6 @@ namespace DudelkaBot.ircClient
             sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
         }
 
-        public void sendChatWhisperMessage(string message, Message requestMsg)
-        {
-            sendIrcWhisperMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message + "\r\n");
-        }
-        public void sendChatWhisperMessage(List<string> commands, Message requestMsg)
-        {
-            string send = ":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " ";
-
-            foreach (var item in commands)
-            {
-                sendIrcWhisperMessage(send + item);
-                Thread.Sleep(500);
-            }
-        }
-
-        public void sendChatWhisperMessage(string message, string username)
-        {
-            sendIrcWhisperMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + username + " " + message + "\r\n");
-        }
-
         public void sendChatBroadcastChatMessage(List<string> commands, Message requestMsg)
         {
             StringBuilder builder = new StringBuilder();
@@ -225,13 +229,31 @@ namespace DudelkaBot.ircClient
                 builder.Append(item + " ");
             }
 
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine(builder.ToString());
-
             sendIrcMessage(builder.ToString());
         }
 
+        //whispers
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public void sendChatWhisperMessage(string message, Message requestMsg)
+        {
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message + "\r\n");
+        }
+
+        public void sendChatWhisperMessage(string message, string username, string channel)
+        {
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w" + username + " " + message + "\r\n");
+        }
+
+        public void sendChatWhisperMessage(List<string> commands, Message requestMsg)
+        {
+            string send = ":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " ";
+
+            foreach (var item in commands)
+            {
+                sendIrcMessage(send + item);
+                Thread.Sleep(300);
+            }
+        }
 
         public void pingResponse()
         {
@@ -240,6 +262,7 @@ namespace DudelkaBot.ircClient
 
         public string readMessage()
         {
+            //Console.WriteLine(inputStreamWhisper.ReadLine());
             return inputStream.ReadLine();
         }
     }

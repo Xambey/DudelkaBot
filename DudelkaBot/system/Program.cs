@@ -17,8 +17,9 @@ namespace DudelkaBot.system
         #region Variables
         static string userName = "DudelkaBot";
         static string password = "oauth:x2ha2yusryy5dir8xlhkg90rqfpkld";
-        static string host = "irc.chat.twitch.tv";
+        static string host = "irc.chat.twitch.tv";//"199.9.253.119";//
         static int port = 6667;
+
 
         static List<string> channels_names = new List<string>()
         {
@@ -42,7 +43,7 @@ namespace DudelkaBot.system
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.Unicode;
-
+            Console.InputEncoding = Encoding.Unicode;
 
             foreach (var item in channels_names)
             {
@@ -54,10 +55,19 @@ namespace DudelkaBot.system
             while (true)
             {
                 string cmd = Console.ReadLine();
-                if (!Channel.ircClient.tcpClient.Connected)
-                    Channel.ircClient.tcpClient.ConnectAsync(host, int.Parse(password)).Wait();
+                Channel.ircClient.isConnect();
+
                 switch (cmd)
                 {
+                    case "!stop":
+                        Channel.channels.First().Value.stopShow();
+                        break;
+                    case "!start":
+                        Channel.channels.First().Value.stopShow();
+                        break;
+                    case "!reconnect":
+                        Channel.reconnect();
+                        break;
                     case "!Dariya":
                         Channel.channels["dariya_willis"].startShow();
                         break;
@@ -66,6 +76,14 @@ namespace DudelkaBot.system
                         break;
                     case "!update":
                         Channel.ircClient.updateMembers();
+                        break;
+                    case "!send":
+                        string mes = Console.ReadLine();
+                        string o = Console.ReadLine();
+                        if (string.IsNullOrEmpty(o) && Channel.viewChannel != null)
+                            o = Channel.viewChannel.Name;
+                        if(Channel.channels.Any(a => a.Key == o))
+                            Channel.ircClient.sendChatBroadcastMessage(mes, o);
                         break;
                     case "!errors":
                         Console.ForegroundColor = ConsoleColor.Red;
