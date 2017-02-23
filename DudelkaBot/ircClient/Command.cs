@@ -19,7 +19,9 @@ namespace DudelkaBot.ircClient
         advert,
         death,
         music,
-        vkid
+        vkid,
+        quote,
+        qupdate
     };
 
 }

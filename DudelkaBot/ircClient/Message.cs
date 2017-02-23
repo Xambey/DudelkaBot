@@ -9,6 +9,7 @@ namespace DudelkaBot.ircClient
     public class Message
     {
         private static string patternPVMSG = @":(?<username>\w+)!\w+@\w+.tmi.twitch.tv (?<type>\w+) #(?<channel>\w+) :(?<msg>.*)";
+        private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
         private static string patternPARTorJOIN = @":(?<username>\w+)!.+ (?<type>\w+) #(?<channel>\w+)";
         private static string typePattern = @" (?<type>[A-Z]+) #";
         private static string commandPattern = @"#(?<channel>\w+) :!(?<command>\w+)$";
@@ -21,8 +22,9 @@ namespace DudelkaBot.ircClient
         private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
         private static string deathPattern = @"!death (?<command>v|[+-]|\d+)$";
         private static string vkidPattern = @"!vkid (?<id>\w+)$";
-
-        private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
+        private static string quotePattern = @"!quote (?<op>[+-]) (?<some>.+)";
+        private static string quoteShowPattern = @"!quote (?<number>\d+)$";
+        private static string quoteUpdatePattern = @"!qupdate (?<number>\d+) (?<quote>.+)";
 
         private static Regex typeReg = new Regex(typePattern);
         private static Regex joinOrpartReg = new Regex(patternPARTorJOIN);
@@ -38,6 +40,9 @@ namespace DudelkaBot.ircClient
         private static Regex advertReg = new Regex(advertPattern);
         private static Regex deathReg = new Regex(deathPattern);
         private static Regex vkidReg = new Regex(vkidPattern);
+        private static Regex quoteReg = new Regex(quotePattern);
+        private static Regex quoteShowReg = new Regex(quoteShowPattern);
+        private static Regex quoteUpdateReg = new Regex(quoteUpdatePattern);
 
         public string Data { get; private set; }
         public string UserName { get; private set; }
@@ -61,7 +66,9 @@ namespace DudelkaBot.ircClient
         public string Advert { get; private set; }
         public string DeathCommand { get; private set; }
         public string vkid;
-
+        public int quoteNumber = 0;
+        public string Quote { get; set; }
+        public string quoteOperation; 
 
         public Message(string data)
         {
@@ -216,7 +223,7 @@ namespace DudelkaBot.ircClient
                             if (!Enum.TryParse(math.Groups["command"].Value, out command))
                                 command = Command.unknown;
 
-                        if (Msg.Contains("!vote"))
+                        if (Msg.StartsWith("!vote"))
                         {
                             math = voteReg.Match(Msg);
                             if (math.Success)
@@ -245,7 +252,7 @@ namespace DudelkaBot.ircClient
                                 Success = false;
 
                         }
-                        else if (Msg.Contains("!death"))
+                        else if (Msg.StartsWith("!death"))
                         {
                             math = deathReg.Match(Msg);
                             if (math.Success)
@@ -256,7 +263,44 @@ namespace DudelkaBot.ircClient
                             else
                                 Success = false;
                         }
-                        else if (Msg.Contains("!advert"))
+                        else if (Msg.StartsWith("!quote"))
+                        {
+                            if (command == Command.quote)
+                                break;
+                            math = quoteShowReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                quoteNumber = int.Parse(math.Groups["number"].Value);
+                                command = Command.quote;
+                            }
+                            else
+                            {
+                                math = quoteReg.Match(Msg);
+                                if (math.Success)
+                                {
+                                    quoteOperation = math.Groups["op"].Value;
+                                    Quote = math.Groups["some"].Value;
+                                    command = Command.quote;
+                                }
+                                else
+                                {
+                                    Success = false;
+                                }
+                            }
+                        }
+                        else if(Msg.StartsWith("!qupdate"))
+                        {
+                            math = quoteUpdateReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                quoteNumber = int.Parse(math.Groups["number"].Value);
+                                Quote = math.Groups["quote"].Value;
+                                command = Command.qupdate;
+                            }
+                            else
+                                Success = false;
+                        }
+                        else if (Msg.StartsWith("!advert"))
                         {
                             math = advertReg.Match(Msg);
                             if (math.Success)
@@ -269,7 +313,7 @@ namespace DudelkaBot.ircClient
                             else
                                 Success = false;
                         }
-                        else if (Msg.Contains("!vkid"))
+                        else if (Msg.StartsWith("!vkid"))
                         {
                             math = vkidReg.Match(Msg);
                             if (math.Success)

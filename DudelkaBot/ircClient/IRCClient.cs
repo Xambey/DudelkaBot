@@ -251,7 +251,7 @@ namespace DudelkaBot.ircClient
             foreach (var item in commands)
             {
                 sendIrcMessage(send + item);
-                Thread.Sleep(300);
+                Thread.Sleep(500);
             }
         }
 
