@@ -12,7 +12,7 @@ using DudelkaBot.dataBase.model;
 using DudelkaBot.vk;
 using DudelkaBot.ircClient;
 using DudelkaBot.resources;
-
+using System.Data.SqlClient;
 
 namespace DudelkaBot.system
 {
@@ -26,8 +26,9 @@ namespace DudelkaBot.system
             "!advert [время в мин] [кол-во повторов] [объявление] - объявление",
             "!death [+|-|v|value] - счетчик смертей + - добавить/убавить, v - показать, value - установить значение",
             "!vkid id[номер страницы в вк] ИЛИ !vkid [сокращение страницы в вк] - установка странницы в вк стриммера, необходимо для работы !music",
-            "!quote [+|-] [цитата|номер] - добавить/удалить цитату",
             "!qupdate [номер цитаты] [цитата] - принудительная вставка/редактирование цитаты",
+            "ДЛЯ МОДЕРАТОРОВ И САБОВ от 6 МЕСЯЦЕВ ПОДПИСКИ.",
+            "!quote [+|-] [цитата|номер] - добавить/удалить цитату",
             "@DudelkaBot, /color [Цвет, по стандарту] - установить цвет бота",
             "ДЛЯ ВСЕХ: ",
             "!sexylevel - ваш уровень сексуальности на канале",
@@ -64,16 +65,26 @@ namespace DudelkaBot.system
         public static List<Message> errorListMessages = new List<Message>();
         public static Channel viewChannel;
 
-        private static Timer MembersTimer = new Timer(updateMembers, null, 7 * 60000, 7 * 60000);//time in 10 min
         private static string answerpattern= @"@DudelkaBot, (?<text>.+)";
         private static string subpattern = @".+subscriber\/(?<sub>\d+).+";
+        private static string idpattern = @".+user-id=(?<id>\d+);.+";
 
+        private static Timer connectTimer = new Timer(checkConnect, null, 10 * 60000, 10 * 60000);
         private static Regex answerReg = new Regex(answerpattern);
         private static Regex subReg = new Regex(subpattern);
+        private static Regex idReg = new Regex(idpattern);
+        private static HttpsClient req = new HttpsClient("145466944", "k1vf6fr82i4inavo2odnhuaq8d8rz2", "https://im.twitch.tv/v1/messages?on_site=");
+
+        private static void checkConnect(object obj)
+        {
+            ircClient.isConnect();
+        }
 
         public bool idConnect()
-        {
-            return ircClient.isConnect();
+        { 
+            if(ircClient != null)
+                return ircClient.isConnect();
+            return false;
         }
 
         public Channel(string channelName, string iphost, int port, string userName, string password)
@@ -81,27 +92,60 @@ namespace DudelkaBot.system
             Name = channelName;
             if (!channels.ContainsKey(Name))
                 channels.Add(channelName, this);
-
             this.iphost = iphost;
             this.port = port;
             this.password = password;
             this.userName = userName;
             using (var db = new ChatContext())
             {
-                if (!db.Channels.Any(a => a.Channel_name == channelName))
+                var chan = db.Channels.SingleOrDefault(a => a.Channel_name == channelName);
+                if (chan == null)
                 {
-                    var channel = new Channels(channelName);
-                    db.Channels.Add(channel);
-                    id = db.Channels.Single(a => a.Channel_name == channelName).Channel_id;
+                    chan = new Channels(channelName);
+                    db.Channels.Add(chan);
+                    db.SaveChangesAsync().Wait();
+                    id = chan.Channel_id;
                 }
                 else
                 {
-                    id = db.Channels.Single(a => a.Channel_name == channelName).Channel_id;
+                    id = chan.Channel_id;
                 }
-                db.SaveChanges();
+                db.SaveChangesAsync().Wait();
+
+                //findDublicateUsers(db);
             }
             StreamTimer = new Timer(streamStateUpdate, null, 10* 60000, 10 * 60000);
             QuoteTimer = new Timer(showQuote, null, 20 * 60000, 20 * 60000);
+
+        }
+
+
+        private static void findDublicateUsers(ChatContext db)
+        {
+            Dictionary<string, int> map = new Dictionary<string, int>();
+            foreach (var item in db.Users)
+            {
+                if (!map.ContainsKey(item.Username))
+                {
+                    map.Add(item.Username, 1);
+                }
+                else
+                    map[item.Username]++;
+            }
+
+            foreach (var item in map)
+            {
+                if (item.Value > 1)
+                {
+                    Console.Write(item.Key.ToString() + " - " + item.Value.ToString() + " - ");
+                    foreach (var g in db.Users)
+                    {
+                        if (g.Username == item.Key)
+                            Console.Write(" " + g.Id.ToString());
+                    }
+                    Console.WriteLine();
+                }
+            }
         }
 
         private void showQuote(object obj)
@@ -119,10 +163,9 @@ namespace DudelkaBot.system
                     while(c == lastqouteindex)
                         c = rand.Next(1, or.Count); ;
                     lastqouteindex = c;
-
                     var quot = or.SingleOrDefault(a => a.Number == lastqouteindex);
                     if (quot != null)
-                        ircClient.sendChatBroadcastMessage(string.Format("Великая цитата Kappa №{0} : '{1}'", lastqouteindex, quot.Quote), Name);
+                        ircClient.sendChatBroadcastMessage(string.Format("/me Великая цитата Kappa №{0} : '{1}'", lastqouteindex, quot.Quote), Name);
                 }
             }
             countMessageQuote = 0;
@@ -130,22 +173,20 @@ namespace DudelkaBot.system
 
         public static void reconnect()
         {
-            foreach (var item in channels)
+            if (ircClient != null)
             {
-                ircClient.leaveRoom(item.Key);
+                foreach (var item in channels)
+                {
+                    ircClient.leaveRoom(item.Key);
+                }
+
+                ircClient.reconnect(Process);
+
+                foreach (var item in channels)
+                {
+                    ircClient.joinRoom(item.Key);
+                }
             }
-
-            ircClient.reconnect(Process);
-
-            foreach (var item in channels)
-            {
-                ircClient.joinRoom(item.Key);
-            }
-        }
-
-        private static void updateMembers(object obj)
-        {
-            ircClient.updateMembers();
         }
 
         private void streamStateUpdate(object obj)
@@ -198,6 +239,7 @@ namespace DudelkaBot.system
                 ircClient.startProcess(Process);
             }
             ircClient.joinRoom(Name);
+
         }
 
         private int sexyLevel(string username)
@@ -205,8 +247,15 @@ namespace DudelkaBot.system
             int level = 0;
             using(var db = new ChatContext())
             {
-                var ID = db.Users.Single(a => a.Username == username).Id;
-                var user = db.ChannelsUsers.Single(a => a.User_id == ID && a.Channel_id == id);
+                var us = db.Users.SingleOrDefault(a => a.Username == username);
+                if (us == null)
+                    return 0;
+
+                var ID = us.Id;
+
+                var user = db.ChannelsUsers.SingleOrDefault(a => a.User_id == ID && a.Channel_id == id);
+                if (user == null)
+                    return 0;
 
                 if (user.CountSubscriptions >= 12)
                     level += 100;
@@ -247,44 +296,48 @@ namespace DudelkaBot.system
 
         private static void switchMessage(string data)
         {
-            Message currentMessage = new Message(data);
+            try
+            {
+                Message currentMessage = new Message(data);
 
-            if(currentMessage.Channel == viewChannel.Name || currentMessage.Channel == null) { 
-                if(currentMessage.Msg == null)
+                if(viewChannel != null && currentMessage.Channel == viewChannel.Name && currentMessage.Msg != null)
+                    Console.WriteLine(currentMessage.UserName + ": " + currentMessage.Msg);
+
+                if (!currentMessage.Success)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine(data);
                     Console.ResetColor();
+                    lock (errorListMessages)
+                    {
+                        if (errorListMessages.Count > 50)
+                            errorListMessages.Clear();
+                        errorListMessages.Add(currentMessage);
+                    }
+                    return;
+                }
+                else if (currentMessage.UserName == "moobot" || currentMessage.UserName == "nightbot")
+                    return;
+
+                if (currentMessage.Channel != null)
+                {
+                    if (channels.ContainsKey(currentMessage.Channel))
+                        channels[currentMessage.Channel].handler(currentMessage);
                 }
                 else
-                    Console.WriteLine(currentMessage.UserName + ": " + currentMessage.Msg);
-            }
-
-            if (!currentMessage.Success)
-            {
-                lock (errorListMessages)
                 {
-                    if (errorListMessages.Count > 50)
-                        errorListMessages.Clear();
-                    errorListMessages.Add(currentMessage);
+                    channels.First().Value?.handler(currentMessage);
                 }
+            }
+            catch(Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Source + " " + ex.Message + " " + ex.Data);
+                Console.ResetColor();
                 return;
             }
-            else if (currentMessage.UserName == "moobot" || currentMessage.UserName == "nightbot")
-                return;
-
-            if (currentMessage.Channel != null)
-            {
-                if(channels.ContainsKey(currentMessage.Channel))
-                    channels[currentMessage.Channel].handler(currentMessage);
-            }
-            else
-            {
-                channels.First().Value?.handler(currentMessage);
-            }
-
         }
-        
+
         private bool isUserVote(Message msg)
         {
             lock (voteResult)
@@ -309,156 +362,115 @@ namespace DudelkaBot.system
                     switch (msg.Type)
                     {
                         case TypeMessage.JOIN:
-                            if (!db.Users.Any(a => a.Username == msg.UserName))
+                            var user = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+                            if (user != null)
                             {
-                                Users user = new Users(msg.UserName);
-                                db.Users.Add(user);
-                                db.SaveChangesAsync().Wait();
-                                if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
-                                {
-                                    var chus = new ChannelsUsers(user.Id, id) { Active = true };
-                                    db.ChannelsUsers.Add(chus);
-                                }
+                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == user.Id);
+
+                                if (chus != null)
+                                    chus.Active = true;
                                 else
-                                    db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = true;
-                                db.SaveChangesAsync().Wait();
+                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
                             }
                             else
                             {
-                                var Id = db.Users.Single(b => b.Username == msg.UserName).Id;
-                                if (!db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
-                                {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = true });
-                                }
-                                else
-                                {
-                                    db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id).Active = true;
-                                }
-
+                                user = new Users(msg.UserName);
+                                db.Users.Add(user);
                                 db.SaveChangesAsync().Wait();
+
+                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == user.Id);
+
+                                if (chus != null)
+                                    chus.Active = true;
+                                else
+                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
                             }
+                            db.SaveChangesAsync().Wait();
                             break;
                         case TypeMessage.PART:
-                            if (db.Users.Any(a => a.Username == msg.UserName))
+                            var userPart = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+                            if (userPart != null)
                             {
-                                var Id = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                if (db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
-                                {
-                                    db.ChannelsUsers.Single(a => a.User_id == Id & a.Channel_id == id).Active = false;
-                                }
+                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPart.Id);
+
+                                if (chus != null)
+                                    chus.Active = false;
                                 else
-                                {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = false });
-                                }
-                                db.SaveChangesAsync().Wait();
+                                    db.ChannelsUsers.Add(new ChannelsUsers(userPart.Id, id) { Active = false });
                             }
                             else
                             {
-                                Users user = new Users(msg.UserName);
-                                db.Users.Add(user);
+                                userPart = new Users(msg.UserName);
+                                db.Users.Add(userPart);
                                 db.SaveChangesAsync().Wait();
-                                if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
-                                {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = false });
-                                }
+
+                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPart.Id);
+
+                                if (chus != null)
+                                    chus.Active = false;
                                 else
-                                    db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = false;
-                                db.SaveChangesAsync().Wait();
+                                    db.ChannelsUsers.Add(new ChannelsUsers(userPart.Id, id) { Active = false });
                             }
+                            db.SaveChangesAsync().Wait();
                             break;
                         case TypeMessage.MODE:
-                            if (!db.Users.Any(a => a.Username == msg.UserName))
-                            {
-                                var user = new Users(msg.UserName);
-                                db.Users.Add(user);
-                                db.SaveChangesAsync().Wait();
-                                if (db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
-                                {
-                                    var chus = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
+                            var userMode = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
 
-                                    if (msg.Sign == "+")
-                                    {
-                                        chus.Moderator = true;
-                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
-                                    }
-                                    else if (msg.Sign == "-")
-                                        chus.Moderator = false;
-                                }
+                            if (userMode != null)
+                            {
+                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userMode.Id);
+
+                                if (chus != null)
+                                    chus.Moderator = msg.Sign == "+" ? true : false;
                                 else
-                                {
-                                    var chus = new ChannelsUsers(user.Id, id);
-                                    if (msg.Sign == "+")
-                                    {
-                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
-                                        chus.Moderator = true;
-                                    }
-                                    else if (msg.Sign == "-")
-                                        chus.Moderator = false;
-                                    db.ChannelsUsers.Add(chus);
-                                }
-                                db.SaveChangesAsync().Wait();
+                                    chus = new ChannelsUsers(userMode.Id, id) { Moderator = msg.Sign == "+" ? true : false };
                             }
                             else
                             {
-                                var Id = db.Users.Single(a => a.Username == msg.UserName).Id;
-
-                                if (db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
-                                {
-                                    var chus = db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id);
-
-                                    if (msg.Sign == "+")
-                                    {
-                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
-                                        chus.Moderator = true;
-                                    }
-                                    else if (msg.Sign == "-")
-                                        chus.Moderator = false;
-                                    db.SaveChangesAsync().Wait();
-                                }
-                                else
-                                {
-                                    var chus = new ChannelsUsers(Id, id);
-                                    if (msg.Sign == "+")
-                                    {
-                                        //ircClient.sendChatBroadcastMessage("/me В чат вошел модератор " + msg.UserName + " .Добро пожаловать домой! ;)", msg);
-                                        chus.Moderator = true;
-                                    }
-                                    else if (msg.Sign == "-")
-                                        chus.Moderator = false;
-                                    db.ChannelsUsers.Add(chus);
-                                }
+                                userMode = new Users(msg.UserName);
+                                db.Users.Add(userMode);
                                 db.SaveChangesAsync().Wait();
+
+                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userMode.Id);
+
+                                if (chus != null)
+                                    chus.Moderator = msg.Sign == "+" ? true : false;
+                                else
+                                    chus = new ChannelsUsers(userMode.Id, id) { Moderator = msg.Sign == "+" ? true : false };
                             }
+
+                            db.SaveChangesAsync().Wait();
                             break;
                         case TypeMessage.NAMES:
                             foreach (var item in msg.NamesUsers)
                             {
-                                if (!db.Users.Any(a => a.Username == item))
-                                {
-                                    var user = new Users(item);
-                                    db.Users.Add(user);
-                                    db.SaveChangesAsync().Wait();
+                                var userNames = db.Users.FirstOrDefault(a => a.Username == item);
 
-                                    if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
-                                    {
-                                        db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
-                                    }
+                                if (userNames != null)
+                                {
+                                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userNames.Id);
+
+                                    if (chus != null)
+                                        chus.Active = true;
                                     else
-                                        db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id).Active = true;
-                                    db.SaveChangesAsync().Wait();
+                                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, id) { Active = true });
                                 }
                                 else
                                 {
-                                    var Id = db.Users.Single(a => a.Username == item).Id;
-
-                                    if (!db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
-                                    {
-                                        db.ChannelsUsers.Add(new ChannelsUsers(Id, id) { Active = true });
-                                    }
-                                    else
-                                        db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id).Active = true;
+                                    userNames = new Users(item);
+                                    db.Users.Add(userNames);
                                     db.SaveChangesAsync().Wait();
+
+                                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userNames.Id);
+
+                                    if (chus != null)
+                                        chus.Active = true;
+                                    else
+                                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, id) { Active = true });
                                 }
+                                db.SaveChangesAsync().Wait();
                             }
                             break;
                         case TypeMessage.NOTICE:
@@ -474,138 +486,149 @@ namespace DudelkaBot.system
                         case TypeMessage.ROOMSTATE:
                             break;
                         case TypeMessage.USERNOTICE:
-                            if (!db.Users.Any(a => a.Username == msg.SubscriberName))
-                            {
-                                var user = new Users(msg.SubscriberName);
-                                db.Users.Add(user);
-                                db.SaveChangesAsync().Wait();
+                            var userNotice = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
 
-                                if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
+                            if (userNotice != null)
+                            {
+                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
+
+                                if (chus != null)
                                 {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id, msg.Subscription) { Active = true });
+                                    chus.Active = true;
+                                    if (msg.Subscription > chus.CountSubscriptions)
+                                        chus.CountSubscriptions = msg.Subscription;
                                 }
                                 else
                                 {
-                                    var t = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
-                                    t.Active = true;
-                                    if(msg.Subscription > t.CountSubscriptions)
-                                        t.CountSubscriptions = msg.Subscription;
+                                    chus = new ChannelsUsers(userNotice.Id, id, msg.Subscription) { Active = true };
+                                    if (msg.Subscription > chus.CountSubscriptions)
+                                        chus.CountSubscriptions = msg.Subscription;
+                                    db.ChannelsUsers.Add(chus);
                                 }
-                                db.SaveChangesAsync().Wait();
                             }
                             else
                             {
-                                int Id;
-                                Id = db.Users.Single(a => a.Username == msg.SubscriberName).Id;
+                                userNotice = new Users(msg.SubscriberName);
+                                db.Users.Add(userNotice);
+                                db.SaveChangesAsync().Wait();
 
-                                if (!db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id))
+                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
+
+                                if (chus != null)
                                 {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(Id, id, msg.Subscription) { Active = true });
+                                    chus.Active = true;
+                                    if (msg.Subscription > chus.CountSubscriptions)
+                                        chus.CountSubscriptions = msg.Subscription;
                                 }
                                 else
                                 {
-                                    var t = db.ChannelsUsers.Single(a => a.User_id == Id && a.Channel_id == id);
-                                    t.Active = true;
-                                    if (msg.Subscription > t.CountSubscriptions)
-                                        t.CountSubscriptions = msg.Subscription;
+                                    chus = new ChannelsUsers(userNotice.Id, id, msg.Subscription) { Active = true };
+                                    if (msg.Subscription > chus.CountSubscriptions)
+                                        chus.CountSubscriptions = msg.Subscription;
+                                    db.ChannelsUsers.Add(chus);
                                 }
-                                db.SaveChangesAsync().Wait();
                             }
-                            var k = db.Users.Single(a => a.Username == msg.SubscriberName).Id;
-                            var j = db.ChannelsUsers.Single(a => a.Channel_id == id && a.User_id == k);
+                            db.SaveChangesAsync().Wait();
 
-
-                            lock (ircClient)
-                                ircClient.sendChatMessage("Спасибо за переподписку!!! Добро пожаловать в кровать " + j.CountSubscriptions.ToString() + " - месячников KappaPride", msg.SubscriberName, msg);
+                            var j = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
+                            if (j != null)
+                                ircClient.sendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
                             break;
                         case TypeMessage.Tags:
                             break;
                         case TypeMessage.PRIVMSG:
                             countMessageForTenMin++;
                             countMessageQuote++;
-                            if (!db.Users.Any(a => a.Username == msg.UserName))
+                            var userPRIVMSG = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+                            if (userPRIVMSG != null)
                             {
-                                Users user = new Users(msg.UserName);
-                                db.Users.Add(user);
-                                db.SaveChangesAsync().Wait();
-
-                                var ID = user.Id;
-
-                                if (!db.ChannelsUsers.Any(a => a.User_id == ID && a.Channel_id == id))
-                                {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(ID, id) { Active = true, CountMessage = 1 });
-                                }
+                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPRIVMSG.Id);
+                                if (chus != null)
+                                    chus.Active = true;
                                 else
                                 {
-                                    var chus = db.ChannelsUsers.Single(a => a.User_id == ID && a.Channel_id == id);
-                                    chus.Active = true;
-                                    chus.CountMessage += 1;
+                                    chus = new ChannelsUsers(userPRIVMSG.Id, id) { Active = true, CountMessage = 0 };
+                                    db.ChannelsUsers.Add(chus);
                                 }
-                                db.SaveChangesAsync().Wait();
+                                chus.CountMessage++;
                             }
                             else
                             {
-                                Users user;
-                                user = db.Users.Single(a => a.Username == msg.UserName);
-                                if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
-                                {
-                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true, CountMessage = 1 });
-                                }
+                                userPRIVMSG = new Users(msg.UserName);
+                                db.Users.Add(userPRIVMSG);
+                                db.SaveChangesAsync().Wait();
+
+                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPRIVMSG.Id);
+                                if (chus != null)
+                                    chus.Active = true;
                                 else
                                 {
-                                    var chus = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
-                                    chus.Active = true;
-                                    chus.CountMessage += 1;
+                                    chus = new ChannelsUsers(userPRIVMSG.Id, id) { Active = true, CountMessage = 0 };
+                                    db.ChannelsUsers.Add(chus);
                                 }
-                                db.SaveChangesAsync().Wait();
+                                chus.CountMessage++;
                             }
+                            db.SaveChangesAsync().Wait();
 
                             if (msg.UserName == "twitchnotify")
                             {
-                                if (!db.Users.Any(a => a.Username == msg.SubscriberName))
-                                {
-                                    Users user = new Users(msg.SubscriberName);
-                                    db.Users.Add(user);
-                                    db.SaveChangesAsync().Wait();
+                                var userNotify = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
 
-                                    var ID = user.Id;
-                                    if (!db.ChannelsUsers.Any(a => a.User_id == ID && a.Channel_id == id))
+                                if (userNotify != null)
+                                {
+                                    var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotify.Id);
+
+                                    if (chus != null)
                                     {
-                                        db.ChannelsUsers.Add(new ChannelsUsers(ID, id) { Active = true, CountSubscriptions = msg.Subscription });
+                                        chus.Active = true;
+                                        if (msg.Subscription > chus.CountSubscriptions)
+                                            chus.CountSubscriptions = msg.Subscription;
                                     }
                                     else
                                     {
-                                        var chus = db.ChannelsUsers.Single(a => a.User_id == ID && a.Channel_id == id);
-                                        chus.Active = true;
-                                        chus.CountSubscriptions = msg.Subscription;
+                                        chus = new ChannelsUsers(userNotify.Id, id, msg.Subscription) { Active = true };
+                                        if (msg.Subscription > chus.CountSubscriptions)
+                                            chus.CountSubscriptions = msg.Subscription;
+                                        db.ChannelsUsers.Add(chus);
                                     }
-                                    db.SaveChangesAsync().Wait();
                                 }
                                 else
                                 {
-                                    var user = db.Users.Single(a => a.Username == msg.SubscriberName);
-                                    if (!db.ChannelsUsers.Any(a => a.User_id == user.Id && a.Channel_id == id))
+                                    userNotify = new Users(msg.SubscriberName);
+                                    db.Users.Add(userNotify);
+                                    db.SaveChangesAsync().Wait();
+
+                                    var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotify.Id);
+
+                                    if (chus != null)
                                     {
-                                        db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true, CountMessage = msg.Subscription });
+                                        chus.Active = true;
+                                        if (msg.Subscription > chus.CountSubscriptions)
+                                            chus.CountSubscriptions = msg.Subscription;
+                                        else
+                                            chus.CountSubscriptions++;
                                     }
                                     else
                                     {
-                                        var chus = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
-
-                                        chus.Active = true;
-                                        chus.CountSubscriptions = msg.Subscription;
+                                        chus = new ChannelsUsers(userNotify.Id, id, msg.Subscription) { Active = true };
+                                        if (msg.Subscription > chus.CountSubscriptions)
+                                            chus.CountSubscriptions = msg.Subscription;
+                                        else
+                                            chus.CountSubscriptions++;
+                                        db.ChannelsUsers.Add(chus);
                                     }
-                                    db.SaveChangesAsync().Wait();
                                 }
+                                db.SaveChangesAsync().Wait();
                                 lock (ircClient)
-                                    ircClient.sendChatMessage("Спасибо за подписку! Добро пожаловать в кровать " + msg.Subscription.ToString() + " месячников KappaPride", msg.SubscriberName, msg);
+                                    ircClient.sendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa", msg.Subscription), msg.SubscriberName, msg);
                                 break;
                             }
                             else if (VoteActive)
                             {
                                 lock (voteResult)
                                 {
-                                    if ((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && isUserVote(msg) == false)
+                                    if ((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && !isUserVote(msg))
                                     {
                                         if (msg.Msg.All(char.IsDigit))
                                         {
@@ -622,14 +645,18 @@ namespace DudelkaBot.system
                                 var math = Regex.Match(msg.Msg, @"\/color (?<color>\w+)$");
                                 if (math.Success)
                                 {
-                                    var u = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                    if(db.ChannelsUsers.Single(a => a.Channel_id == id && a.User_id == u).Moderator || msg.UserName == "dudelka_krasnaya")
+                                    var u = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (u == null)
+                                        break;
+                                    var g = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == u.Id);
+                                    if (g == null)
+                                        break;
+                                    if (g.Moderator || msg.UserName == "dudelka_krasnaya")
                                         ircClient.sendChatBroadcastMessage("/color " + math.Groups["color"].Value, msg);
                                     break;
                                 }
                                 else
                                 {
-
                                     math = answerReg.Match(msg.Msg);
                                     if (math.Success)
                                     {
@@ -642,10 +669,17 @@ namespace DudelkaBot.system
                             switch (msg.command)
                             {
                                 case Command.vote:
-                                    var ID = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                    if ((db.ChannelsUsers.Any(a => a.User_id == ID && a.Channel_id == id && a.Moderator) || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && msg.VoteActive && !VoteActive)
+                                    var userVote = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (userVote == null)
+                                        break;
+                                    var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userVote.Id);
+
+                                    if (chus == null)
+                                        break;
+
+                                    if ((chus.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && msg.VoteActive && !VoteActive)
                                     {
-                                        VoteTimer = new Timer(stopVote, null, msg.Time * 60000, msg.Time * 60000);
+                                        VoteTimer = new Timer(stopVote, msg, msg.Time * 60000, msg.Time * 60000);
                                         lock (voteResult)
                                         {
                                             for (int i = 0; i < msg.variants.Count; i++)
@@ -661,30 +695,44 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.advert:
-                                    var Id = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                    if ((db.ChannelsUsers.Any(a => a.User_id == Id && a.Channel_id == id && a.Moderator) || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name))
+                                    var userAdvert = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (userAdvert == null)
+                                        break;
+                                    var chu = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userAdvert.Id);
+                                    if (chu == null)
+                                        break;
+                                    if ((chu.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name))
                                     {
                                         Advert advert = new Advert(msg.AdvertTime, msg.AdvertCount, msg.Advert, Name);
                                         ircClient.sendChatMessage("Объявление '" + msg.Advert + "' активировано", msg);
                                     }
-                                        break;
+                                    break;
                                 case Command.citytime:
                                     ircClient.sendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).TimeOfDay.ToString().Remove(8), msg);
                                     break;
                                 case Command.help:
-                                    ircClient.sendChatWhisperMessage(commands, msg);
+                                    var u = idReg.Match(msg.Data);
+                                    if (u.Success)
+                                    {
+                                        SendWhisperMessage(u.Groups["id"].Value, msg.UserName, commands);
+                                        //await req.MakePostRequest("hui", 113282518, "POST");
+                                        //Console.WriteLine(s);
+                                        //ircClient.sendChatWhisperMessage(commands, ulong.Parse(u.Groups["id"].Value), msg);
+                                    }
                                     break;
                                 case Command.date:
                                     ircClient.sendChatMessage(DateTime.Now.ToString(), msg);
                                     break;
                                 case Command.mystat:
-                                    var user = db.Users.Single(a => a.Username == msg.UserName);
-                                    var chus = db.ChannelsUsers.Single(a => a.User_id == user.Id && a.Channel_id == id);
+                                    var userStat = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (userStat == null)
+                                        break;
+                                    var chusStat = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userStat.Id);
                                     var math = subReg.Match(msg.Data);
                                     if (math.Success)
-                                        chus.CountSubscriptions = int.Parse(math.Groups["sub"].Value);
+                                        chusStat.CountSubscriptions = int.Parse(math.Groups["sub"].Value) > chusStat.CountSubscriptions ? int.Parse(math.Groups["sub"].Value) : chusStat.CountSubscriptions;
                                     db.SaveChangesAsync().Wait();
-                                    ircClient.sendChatMessage("Вы написали " + chus.CountMessage.ToString() + " сообщений на канале" + (chus.CountSubscriptions > 0 ? ", также вы сексуальны уже " + chus.CountSubscriptions.ToString() + " месяца(ев) KappaPride" : ""), msg);
+                                    ircClient.sendChatMessage("Вы написали " + chusStat.CountMessage.ToString() + " сообщений на канале" + (chusStat.CountSubscriptions > 0 ? ", также вы сексуальны уже " + chusStat.CountSubscriptions.ToString() + " месяца(ев) KappaPride" : ""), msg);
                                     break;
                                 case Command.toplist:
                                     List<string> toplist;
@@ -705,33 +753,44 @@ namespace DudelkaBot.system
                                 case Command.sexylevel:
 
                                     var m = subReg.Match(msg.Data);
+                                    if (msg.Channel == "dariya_willis")
+                                        break;
                                     if (m.Success)
                                     {
-                                        var usid = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                        var chan = db.ChannelsUsers.Single(a => a.User_id == usid && a.Channel_id == id);
-
-                                        chan.CountSubscriptions = int.Parse(m.Groups["sub"].Value);
+                                        var usLevel = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                        if (usLevel == null)
+                                            break;
+                                        var chan = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == usLevel.Id);
+                                        int val = int.Parse(m.Groups["sub"].Value);
+                                        if (chan.CountSubscriptions < val)
+                                            chan.CountSubscriptions = val;
                                         db.SaveChangesAsync().Wait();
                                     }
+
                                     int level = sexyLevel(msg.UserName);
 
                                     if (msg.UserName == Name)
                                         level = 200;
-                                    ircClient.sendChatWhisperMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), msg);
+                                    m = idReg.Match(msg.Data);
+                                    if (m.Success)
+                                    {
+                                        SendWhisperMessage(m.Groups["id"].Value, msg.UserName, "Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level));
+                                        //ircClient.sendChatWhisperMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), ulong.Parse(m.Groups["id"].Value), msg);
+                                    }
 
                                     break;
                                 case Command.members:
-                                    ircClient.sendChatBroadcastMessage(string.Format("Сейчас в чате {0} сексуалов, {1} лучших модеров и не только KappaPride ", db.ChannelsUsers.Where(a => a.Active && a.Channel_id == id && !a.Moderator).Count(), db.ChannelsUsers.Where(a => a.Active && a.Channel_id == id && a.Moderator).Count()), msg);
+                                    ircClient.sendChatBroadcastMessage(string.Format("Сейчас в чате {0} человек, {1} лучших модеров и не только KappaPride ", db.ChannelsUsers.Where(a => a.Active && a.Channel_id == id && !a.Moderator).Count(), db.ChannelsUsers.Where(a => a.Active && a.Channel_id == id && a.Moderator).Count()), msg);
                                     break;
                                 case Command.unknown:
                                     lock (errorListMessages)
                                         errorListMessages.Add(msg);
                                     break;
                                 case Command.music:
-                                    var ch = db.Channels.Single(a => a.Channel_id == id);
+                                    var ch = db.Channels.FirstOrDefault(a => a.Channel_id == id);
                                     if (ch.VkId as object != null)
                                     {
-                                        if(ch.VkId == 0)
+                                        if (ch.VkId == 0)
                                         {
                                             ircClient.sendChatMessage("Не установлен Vk Id для канала, см. !help", msg);
                                             break;
@@ -744,16 +803,22 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.vkid:
+                                    var t = db.Users.FirstOrDefault(a => a.Username == msg.UserName)?.Id;
+                                    if (t == null)
+                                        break;
+                                    var mod = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == t && a.Moderator);
+                                    if (mod == null)
+                                        break;
                                     var mat = Regex.Match(msg.vkid, @"id(?<id>\d+)$");
                                     if (msg.vkid.Contains("id"))
                                     {
                                         mat = Regex.Match(msg.vkid, @"id(?<id>\d+)$");
 
-                                        if(mat.Success)
+                                        if (mat.Success)
                                         {
                                             var d = long.Parse(mat.Groups["id"].Value);
                                             if (Vkontakte.userExist(d))
-                                                db.Channels.Single(a => a.Channel_name == Name).VkId = (int)d;
+                                                db.Channels.FirstOrDefault(a => a.Channel_name == Name).VkId = (int)d;
                                             else break;
                                         }
                                     }
@@ -764,7 +829,7 @@ namespace DudelkaBot.system
                                         {
                                             long? vkid = Vkontakte.getUserId(mat.Groups["screenname"].Value);
                                             if (vkid != null)
-                                                db.Channels.Single(a => a.Channel_name == Name).VkId = (int)vkid;
+                                                db.Channels.FirstOrDefault(a => a.Channel_name == Name).VkId = (int)vkid;
                                             else
                                                 break;
                                         }
@@ -774,11 +839,15 @@ namespace DudelkaBot.system
                                     db.SaveChangesAsync().Wait();
                                     break;
                                 case Command.death:
-                                    var iduser = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                    if (db.ChannelsUsers.Any(a => a.Channel_id == id && a.User_id == iduser && a.Moderator) || msg.UserName == "dudelka_krasnaya")
+                                    var userDeath = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (userDeath == null)
+                                        break;
+                                    var chDeath = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userDeath.Id);
+                                    if (chDeath == null)
+                                        break;
+                                    if (chDeath.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name)
                                     {
-
-                                        var channel = db.Channels.Single(a => a.Channel_name == Name);
+                                        var channel = db.Channels.FirstOrDefault(a => a.Channel_name == Name);
                                         int current = channel.DeathCount;
                                         switch (msg.DeathCommand)
                                         {
@@ -790,7 +859,7 @@ namespace DudelkaBot.system
                                                     channel.DeathCount--;
                                                 break;
                                             case "v":
-                                                ircClient.sendChatBroadcastMessage("/me Умерли " + channel.DeathCount.ToString() + " раза LUL", Name);
+                                                ircClient.sendChatBroadcastMessage(string.Format("/me Умерли {0} {1} LUL", channel.DeathCount, Helper.GetDeclension(channel.DeathCount, "раз", "раза", "раз")), Name);
                                                 break;
                                             default:
                                                 int val;
@@ -801,37 +870,46 @@ namespace DudelkaBot.system
                                                 break;
                                         }
                                         if (current != channel.DeathCount)
-                                            ircClient.sendChatBroadcastMessage("/me Умерли " + channel.DeathCount.ToString() + " раза LUL", Name);
+                                            ircClient.sendChatBroadcastMessage(string.Format("/me Умерли {0} {1} FeelsBadMan", channel.DeathCount, Helper.GetDeclension(channel.DeathCount, "раз", "раза", "раз")), Name);
                                         db.SaveChangesAsync().Wait();
                                     }
                                     break;
                                 case Command.qupdate:
-                                    int x = msg.quoteNumber;
-                                    if (x <= 0)
-                                        break;
-                                    var uu = db.Quotes.Where(a => a.Channel_id == id).ToList();
+                                    var Userqupdate = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if ((Userqupdate != null && db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == Userqupdate.Id && a.Moderator) != null) || msg.UserName == "dudelka_krasnaya")
+                                    {
+                                        int x = msg.quoteNumber;
+                                        if (x <= 0)
+                                            break;
+                                        var uu = db.Quotes.Where(a => a.Channel_id == id).ToList();
 
-                                    var quo = uu.SingleOrDefault(a => a.Number == x);
-                                    if(quo != null)
-                                    {
-                                        quo.Quote = msg.Quote;
-                                        ircClient.sendChatMessage(string.Format("Цитата№{0} - отредактирована", quo.Number),msg);
-                                    }
-                                    else
-                                    {
-                                        var o = new Quotes(id, msg.Quote, DateTime.Now.Date, x);
-                                        db.Quotes.Add(o);
+                                        var quo = uu.FirstOrDefault(a => a.Number == x);
+                                        if (quo != null)
+                                        {
+                                            quo.Quote = msg.Quote;
+                                            ircClient.sendChatMessage(string.Format("Цитата№{0} - отредактирована", quo.Number), msg);
+                                        }
+                                        else
+                                        {
+                                            var o = new Quotes(id, msg.Quote, DateTime.Now.Date, x);
+                                            db.Quotes.Add(o);
+                                            db.SaveChangesAsync().Wait();
+                                            ircClient.sendChatMessage(string.Format("Цитата№{0} : {1} - добавлена", o.Number, o.Quote), msg);
+                                        }
                                         db.SaveChangesAsync().Wait();
-                                        ircClient.sendChatMessage(string.Format("Цитата№{0} : {1} - добавлена", o.Number, o.Quote), msg);
                                     }
-                                    db.SaveChangesAsync().Wait();
                                     break;
                                 case Command.quote:
+                                    ChannelsUsers chusModer = null;
                                     var cur = db.Quotes.Where(a => a.Channel_id == id).ToList();
-                                    if(msg.Msg == "!quote")
+                                    if (msg.Msg == "!quote")
                                     {
-                                        ircClient.sendChatWhisperMessage("Список цитат: ",msg);
-                                        ircClient.sendChatWhisperMessage(new List<string>(cur.Select(a => string.Format("{0}: '{1}'",a.Number, a.Quote))), msg);
+                                        var f = idReg.Match(msg.Data);
+                                        if (f.Success)
+                                        {
+                                            SendWhisperMessage(f.Groups["id"].Value, msg.UserName, new List<string>(cur.Select(a => string.Format("{0}: '{1}'", a.Number, a.Quote))));
+                                            //ircClient.sendChatWhisperMessage(new List<string>(cur.Select(a => string.Format("{0}: '{1}'", a.Number, a.Quote))), ulong.Parse(f.Groups["id"].Value), msg);
+                                        }
                                         break;
                                     }
                                     bool Moder;
@@ -839,13 +917,28 @@ namespace DudelkaBot.system
                                         Moder = true;
                                     else
                                     {
-                                        var UsId = db.Users.Single(a => a.Username == msg.UserName).Id;
-                                        Moder = db.ChannelsUsers.Single(a => a.User_id == UsId && a.Channel_id == id).Moderator;
+                                        var userModer = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                        if (userModer == null)
+                                            break;
+                                        chusModer = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userModer.Id);
+                                        if (chusModer == null)
+                                            break;
+                                        Moder = chusModer.Moderator;
+                                        var l = subReg.Match(msg.Data);
+                                        if (l.Success)
+                                        {
+                                            int b = int.Parse(l.Groups["sub"].Value);
+                                            if (b > chusModer.CountSubscriptions)
+                                                chusModer.CountSubscriptions = b;
+                                            db.SaveChangesAsync().Wait();
+                                        }
+                                        if (chusModer.CountSubscriptions >= 6)
+                                            Moder = true;
                                     }
                                     switch (msg.quoteOperation)
                                     {
                                         case "+":
-                                            if(Moder && !cur.Any(a => a.Quote == msg.Quote))
+                                            if (Moder && !cur.Any(a => a.Quote == msg.Quote))
                                             {
                                                 var nu = cur.Count() + 1;
                                                 var e = new Quotes(id, msg.Quote, DateTime.Now, nu);
@@ -853,24 +946,24 @@ namespace DudelkaBot.system
                                                 db.SaveChangesAsync().Wait();
                                                 ircClient.sendChatBroadcastMessage(string.Format("Цитата №{0} : {1} - добавлена", nu, msg.Quote), msg);
                                             }
-                                            
+
                                             break;
                                         case "-":
                                             int y = int.Parse(msg.Quote);
-                                            var t = cur.SingleOrDefault(a => a.Number == y);
+                                            var o = cur.FirstOrDefault(a => a.Number == y);
 
-                                            if (Moder && t != null)
+                                            if (Moder && o != null)
                                             {
-                                                ircClient.sendChatBroadcastMessage(string.Format("Цитата №{0} : {1} - удалена", y, t.Quote), msg);
-                                                db.Quotes.Remove(t);
+                                                ircClient.sendChatBroadcastMessage(string.Format("Цитата №{0} : {1} - удалена", y, o.Quote), msg);
+                                                db.Quotes.Remove(o);
                                                 db.SaveChangesAsync().Wait();
                                             }
                                             break;
                                         default:
-                                            if (Moder)
+                                            if (Moder || chusModer.CountSubscriptions > 6)
                                             {
                                                 int q = msg.quoteNumber;
-                                                var r = cur.SingleOrDefault(a => a.Number == q);
+                                                var r = cur.FirstOrDefault(a => a.Number == q);
                                                 if (r != null)
                                                     ircClient.sendChatMessage(string.Format("Цитата №{0} от {1:dd/MM/yyyy} : {2}", q, r.Date, r.Quote), msg);
                                             }
@@ -896,20 +989,11 @@ namespace DudelkaBot.system
                     }
                 }
             }
-            catch (AggregateException ex)
+            catch (SqlException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ResetColor();
-                handler(msg);
-                return;
-            }
-            catch (InvalidOperationException ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.Source + " " + ex.Message + " " + ex.Data);
-                Console.ResetColor();
-                handler(msg);
                 return;
             }
             catch (DbUpdateException ex)
@@ -920,6 +1004,58 @@ namespace DudelkaBot.system
                 handler(msg);
                 return;
             }
+            catch (AggregateException ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Source + " " + ex.Message + " " + ex.Data);
+                Console.ResetColor();
+                return;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Source + " " + ex.Message + " " + ex.Data);
+                Console.ResetColor();
+                handler(msg);
+                return;
+            }
+        }
+
+        private static void SendWhisperMessage(string touser_id, string username, List<string> message)
+        {
+            if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
+                return;
+            if (message.Count <= 0)
+                return;
+            int i = 1;
+            string buff = "";
+            foreach (var item in message)
+            {
+                buff += item + "; ";
+                if (i % 3 == 0)
+                {
+                    req.SendPost(touser_id, buff);
+                    buff = "";
+                    Thread.Sleep(700);
+                }
+                i++;
+            }
+            if (!string.IsNullOrEmpty(buff))
+                req.SendPost(touser_id, buff);
+            var ig = new Users(username);
+            IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.blockWhisperCancel, ig, 60000, 60000));
+        }
+
+        private static void SendWhisperMessage(string touser_id, string username, string message)
+        {
+            if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
+                return;
+            if (!string.IsNullOrEmpty(message))
+                req.SendPost(touser_id, message);
+            else
+                return;
+            var ig = new Users(username);
+            IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.blockWhisperCancel, ig, 60000, 60000));
         }
 
         private void stopVote(object s)
@@ -929,7 +1065,7 @@ namespace DudelkaBot.system
                 VoteActive = false;
                 StringBuilder builder = new StringBuilder(voteResult.Count);
 
-                builder.Append("/me Голосование окончено! Результаты: ");
+                builder.Append($"/me Голосование по теме ' {(s as Message).Theme} ' окончено! Результаты: ");
                 string win = voteResult.First().Key;
                 int max = voteResult.First().Value.Count;
                 foreach (var item in voteResult)
@@ -961,6 +1097,7 @@ namespace DudelkaBot.system
                         string s = ircClient.readMessage();
                         if (s != null)
                             Task.Run(() => switchMessage(s));
+                        Thread.Sleep(10);
                     }
                 }
                 catch (Exception ex)

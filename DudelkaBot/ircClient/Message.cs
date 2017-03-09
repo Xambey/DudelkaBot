@@ -92,6 +92,21 @@ namespace DudelkaBot.ircClient
                         math = namesReg.Match(data);
                         if (math.Success)
                         {
+                            string buf = "";
+                            List<string> list = new List<string>();
+                            foreach (var item in math.Groups["users"].Value)
+                            {
+                                if (item == ' ')
+                                {
+                                    list.Add(buf);
+                                    buf = "";
+                                }
+                                else
+                                    buf += item;
+                            }
+                            list.Add(buf);
+                            Channel = math.Groups["channel"].Value;
+                            NamesUsers = list;
                             Type = TypeMessage.NAMES;
                             Success = true;
                         }

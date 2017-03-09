@@ -15,8 +15,8 @@ namespace DudelkaBot.system
     public class Program
     {
         #region Variables
-        static string userName = "DudelkaBot";
-        static string password = "oauth:x2ha2yusryy5dir8xlhkg90rqfpkld";
+        static string userName = /*"DudeJIkaBot";*/"DudelkaBot";
+        static string password = /*"oauth:gqqqwtjj03paeehisajfojfpvapk33";*/"oauth:k1vf6fr82i4inavo2odnhuaq8d8rz2";
         static string host = "irc.chat.twitch.tv";//"199.9.253.119";//
         static int port = 6667;
 
@@ -24,6 +24,8 @@ namespace DudelkaBot.system
         static List<string> channels_names = new List<string>()
         {
             "dudelka_krasnaya",
+            "blackufa_twitch",
+            "dariya_willis",
             //"c9sneaky",
             //"nl_kripp",
             //"fairlight_excalibur",
@@ -32,8 +34,7 @@ namespace DudelkaBot.system
             //"imaqtpie",
             //"lck1",
             //"silvername",
-            "blackufa_twitch",
-            "dariya_willis"
+            //"lenagol0vach"
         };
 
         #endregion
@@ -54,8 +55,8 @@ namespace DudelkaBot.system
 
             while (true)
             {
-                string cmd = Console.ReadLine();
                 Channel.ircClient.isConnect();
+                string cmd = Console.ReadLine();
 
                 switch (cmd)
                 {
@@ -73,9 +74,6 @@ namespace DudelkaBot.system
                         break;
                     case "!Black":
                         Channel.channels["blackufa_twitch"].startShow();
-                        break;
-                    case "!update":
-                        Channel.ircClient.updateMembers();
                         break;
                     case "!send":
                         string mes = Console.ReadLine();
@@ -111,9 +109,9 @@ namespace DudelkaBot.system
                         break;
                     case "!add":
                         string chname = Console.ReadLine();
-                        if (!Channel.channels.Any(a => a.Key == chname))
-                        {
-                            var chan = new Channel(chname, host, port, userName, password);
+                        var chan = Channel.channels.SingleOrDefault(a => a.Key == chname).Value;
+                        if (chan == null) {
+                            chan = new Channel(chname, host, port, userName, password);
                             chan.Join();
                             chan.startShow();
                         }

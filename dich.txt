@@ -1,0 +1,24 @@
+Hi, sorry for my English. I've a problem with my ChatBot, for some reason it cannot send the message in a whisper for most users.(except my primary account and an account of my friend, that the bot sends a whisper, WHY?). My bot is connected to irc.chat.twitch.tv port 6667. Everything works except the whisper:(. 
+
+:tmi.twitch.tv 004 dudelkabot :-
+:tmi.twitch.tv 002 dudelkabot :Your host is tmi.twitch.tv
+:tmi.twitch.tv 003 dudelkabot :This server is rather new
+:tmi.twitch.tv 375 dudelkabot :-
+:tmi.twitch.tv 001 dudelkabot :Welcome, GLHF!
+:tmi.twitch.tv 376 dudelkabot :>
+:tmi.twitch.tv 372 dudelkabot :You are in a maze of twisty passages, all alike.
+:tmi.twitch.tv CAP * ACK :twitch.tv/membership
+:tmi.twitch.tv CAP * ACK :twitch.tv/commands
+:tmi.twitch.tv CAP * ACK :twitch.tv/tags
+
+I want to ask you to check the whisper of my bot on the server group. I think the problem is on the server side(
+bot name: DudelkaBot
+primary account name Dudelka_Krasnaya
+friend account name: craynet2
+
+AND
+my global ip: 194.135.232.150 , may be my ip is banned? (Russian Federation)
+
+P.S  I was trying to connect with another account, the same result. 
+P.S.S Earlier the whisper was not working
+P.S.S.S Also, if possible, the bot can add to the whitelist? It will write a lot of posts in a whisper (long list of commands and responses)

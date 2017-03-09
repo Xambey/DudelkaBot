@@ -1,10 +1,13 @@
 {
   "buildOptions": {
-    "emitEntryPoint": true
+    "emitEntryPoint": true,
+    "optimize": true
   },
   "dependencies": {
     "AngleSharp": "0.9.9",
     "HtmlAgilityPack.NetCore": "1.5.0.1",
+    "Microsoft.AspNetCore": "1.1.0",
+    "Microsoft.AspNetCore.Hosting": "1.0.0",
     "Microsoft.EntityFrameworkCore.Design": {
       "type": "build",
       "version": "1.0.0-preview2-final"
@@ -17,8 +20,9 @@
       "version": "1.0.1"
     },
     "Newtonsoft.Json": "9.0.1",
-    "VkNet": "1.26.0"
-  },
+    "system.net.http.winhttphandler": "4.0.0-beta-23123",
+    "system.net.websockets.client": "4.0.0-beta-23123",
+    "VkNet": "1.26.0" },
 
   "frameworks": {
     "netcoreapp1.0": {

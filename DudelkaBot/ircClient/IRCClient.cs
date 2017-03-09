@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using DudelkaBot.dataBase.model;
 
 namespace DudelkaBot.ircClient
 {
@@ -22,6 +23,8 @@ namespace DudelkaBot.ircClient
         private const int messageLimit = 10;
         private Task process;
         private CancellationTokenSource token;
+
+        public static Dictionary<Users,Timer> WhisperBlock = new Dictionary<Users, Timer>();
 
         public void reconnect(Action func)
         {
@@ -91,6 +94,7 @@ namespace DudelkaBot.ircClient
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("Подключение не удалось \n" + ex.Message);
                         Console.ResetColor();
+                        Thread.Sleep(10000);
                     }
                 }
                 return true;
@@ -126,41 +130,11 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine("PASS " + password);
                 outputStream.WriteLine("NICK " + userName);
-                outputStream.WriteLine("USER " + userName);
                 outputStream.WriteLine("CAP REQ :twitch.tv/membership");
                 outputStream.WriteLine("CAP REQ :twitch.tv/commands");
                 outputStream.WriteLine("CAP REQ :twitch.tv/tags");
+                //outputStream.WriteLine("");
                 outputStream.Flush();
-            }
-        }
-
-        public void updateMembers()
-        {
-            try
-            {
-                lock (tcpClient)
-                {
-                    while (!tcpClient.Connected)
-                    {
-                        try
-                        {
-                            tcpClient.ConnectAsync(ipHost, port).Wait();
-                        }
-                        finally
-                        {
-                            var color = Console.ForegroundColor;
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("Подключение не удалось");
-                        }
-                    }
-                    outputStream.WriteLine("CAP REQ :twitch.tv/membership");
-                    outputStream.Flush();
-                }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return;
             }
         }
 
@@ -186,7 +160,22 @@ namespace DudelkaBot.ircClient
 
         private void sendIrcMessage(string message)
         { 
-            if (messageCount++ < messageLimit && isConnect())
+
+            if (isConnect() && messageCount++ < messageLimit)
+            {
+                outputStream.WriteLine(message);
+                outputStream.Flush();
+                Timer timer = new Timer(timerTick, null, 0, 30000);
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(message);
+                Console.ResetColor();
+            }
+        }
+
+        private void sendIrcMessage(string message, bool undetected)
+        {
+            if (isConnect())
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
@@ -234,36 +223,58 @@ namespace DudelkaBot.ircClient
 
         //whispers
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public void sendChatWhisperMessage(string message, Message requestMsg)
+        public void sendChatWhisperMessage(string message, ulong id_user, Message requestMsg)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message + "\r\n");
+            if (WhisperBlock.Any(a => a.Key.Username == requestMsg.UserName))
+                return;
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message);
         }
 
-        public void sendChatWhisperMessage(string message, string username, string channel)
+        public void sendChatWhisperMessage(string message, string username, ulong id_user, string channel)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w" + username + " " + message + "\r\n");
+            if (WhisperBlock.Any(a => a.Key.Username == username))
+                return;
+            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + username + " " + message);
         }
 
-        public void sendChatWhisperMessage(List<string> commands, Message requestMsg)
+        public void sendChatWhisperMessage(List<string> commands, ulong id_user, Message requestMsg)
         {
-            string send = ":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " ";
-
+            if (WhisperBlock.Any(a => a.Key.Username == requestMsg.UserName))
+                return;
+            int i = 1;
+            string send = /* "@badges=;color=;display-name=DudelkaBot;emotes=;mod=0;room-id=;subscriber=0;turbo=0;user-id=145466944;user-type=" + */":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " ";
+            string buf = send;
             foreach (var item in commands)
             {
-                sendIrcMessage(send + item);
-                Thread.Sleep(500);
+                buf += item + "; ";
+                if (i % 3 == 0)
+                {
+                    sendIrcMessage(buf, true);
+                    buf = send;
+                    Thread.Sleep(500);
+                }
+                i++;
             }
+            if(buf != send)
+                sendIrcMessage(buf, true);
+            var user = new Users(requestMsg.UserName);
+            WhisperBlock.Add(user, new Timer(blockWhisperCancel,user, 60000, 60000));
         }
 
         public void pingResponse()
         {
-            sendIrcMessage("PONG twi.twitch.tv\r\n");
+            sendIrcMessage("PONG twi.twitch.tv");
         }
 
         public string readMessage()
         {
-            //Console.WriteLine(inputStreamWhisper.ReadLine());
             return inputStream.ReadLine();
+        }
+
+        public static void blockWhisperCancel(object obj)
+        {
+            WhisperBlock[obj as Users].Dispose();
+            WhisperBlock.Remove(obj as Users);
         }
     }
 }
