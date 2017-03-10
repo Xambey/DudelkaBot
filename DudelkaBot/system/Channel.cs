@@ -119,7 +119,6 @@ namespace DudelkaBot.system
 
         }
 
-
         private static void findDublicateUsers(ChatContext db)
         {
             Dictionary<string, int> map = new Dictionary<string, int>();
@@ -229,7 +228,6 @@ namespace DudelkaBot.system
         {
             viewChannel = null;
         }
-
 
         public void Join()
         {
@@ -362,116 +360,16 @@ namespace DudelkaBot.system
                     switch (msg.Type)
                     {
                         case TypeMessage.JOIN:
-                            var user = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
-
-                            if (user != null)
-                            {
-                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == user.Id);
-
-                                if (chus != null)
-                                    chus.Active = true;
-                                else
-                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
-                            }
-                            else
-                            {
-                                user = new Users(msg.UserName);
-                                db.Users.Add(user);
-                                db.SaveChangesAsync().Wait();
-
-                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == user.Id);
-
-                                if (chus != null)
-                                    chus.Active = true;
-                                else
-                                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
-                            }
-                            db.SaveChangesAsync().Wait();
+                            JoinMessage(msg, db);
                             break;
                         case TypeMessage.PART:
-                            var userPart = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
-
-                            if (userPart != null)
-                            {
-                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPart.Id);
-
-                                if (chus != null)
-                                    chus.Active = false;
-                                else
-                                    db.ChannelsUsers.Add(new ChannelsUsers(userPart.Id, id) { Active = false });
-                            }
-                            else
-                            {
-                                userPart = new Users(msg.UserName);
-                                db.Users.Add(userPart);
-                                db.SaveChangesAsync().Wait();
-
-                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPart.Id);
-
-                                if (chus != null)
-                                    chus.Active = false;
-                                else
-                                    db.ChannelsUsers.Add(new ChannelsUsers(userPart.Id, id) { Active = false });
-                            }
-                            db.SaveChangesAsync().Wait();
+                            PartMessage(msg, db);
                             break;
                         case TypeMessage.MODE:
-                            var userMode = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
-
-                            if (userMode != null)
-                            {
-                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userMode.Id);
-
-                                if (chus != null)
-                                    chus.Moderator = msg.Sign == "+" ? true : false;
-                                else
-                                    chus = new ChannelsUsers(userMode.Id, id) { Moderator = msg.Sign == "+" ? true : false };
-                            }
-                            else
-                            {
-                                userMode = new Users(msg.UserName);
-                                db.Users.Add(userMode);
-                                db.SaveChangesAsync().Wait();
-
-                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userMode.Id);
-
-                                if (chus != null)
-                                    chus.Moderator = msg.Sign == "+" ? true : false;
-                                else
-                                    chus = new ChannelsUsers(userMode.Id, id) { Moderator = msg.Sign == "+" ? true : false };
-                            }
-
-                            db.SaveChangesAsync().Wait();
+                            ModeMessage(msg, db);
                             break;
                         case TypeMessage.NAMES:
-                            foreach (var item in msg.NamesUsers)
-                            {
-                                var userNames = db.Users.FirstOrDefault(a => a.Username == item);
-
-                                if (userNames != null)
-                                {
-                                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userNames.Id);
-
-                                    if (chus != null)
-                                        chus.Active = true;
-                                    else
-                                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, id) { Active = true });
-                                }
-                                else
-                                {
-                                    userNames = new Users(item);
-                                    db.Users.Add(userNames);
-                                    db.SaveChangesAsync().Wait();
-
-                                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userNames.Id);
-
-                                    if (chus != null)
-                                        chus.Active = true;
-                                    else
-                                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, id) { Active = true });
-                                }
-                                db.SaveChangesAsync().Wait();
-                            }
+                            NamesMessage(msg, db);
                             break;
                         case TypeMessage.NOTICE:
                             break;
@@ -486,158 +384,22 @@ namespace DudelkaBot.system
                         case TypeMessage.ROOMSTATE:
                             break;
                         case TypeMessage.USERNOTICE:
-                            var userNotice = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
-
-                            if (userNotice != null)
-                            {
-                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
-
-                                if (chus != null)
-                                {
-                                    chus.Active = true;
-                                    if (msg.Subscription > chus.CountSubscriptions)
-                                        chus.CountSubscriptions = msg.Subscription;
-                                }
-                                else
-                                {
-                                    chus = new ChannelsUsers(userNotice.Id, id, msg.Subscription) { Active = true };
-                                    if (msg.Subscription > chus.CountSubscriptions)
-                                        chus.CountSubscriptions = msg.Subscription;
-                                    db.ChannelsUsers.Add(chus);
-                                }
-                            }
-                            else
-                            {
-                                userNotice = new Users(msg.SubscriberName);
-                                db.Users.Add(userNotice);
-                                db.SaveChangesAsync().Wait();
-
-                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
-
-                                if (chus != null)
-                                {
-                                    chus.Active = true;
-                                    if (msg.Subscription > chus.CountSubscriptions)
-                                        chus.CountSubscriptions = msg.Subscription;
-                                }
-                                else
-                                {
-                                    chus = new ChannelsUsers(userNotice.Id, id, msg.Subscription) { Active = true };
-                                    if (msg.Subscription > chus.CountSubscriptions)
-                                        chus.CountSubscriptions = msg.Subscription;
-                                    db.ChannelsUsers.Add(chus);
-                                }
-                            }
-                            db.SaveChangesAsync().Wait();
-
-                            var j = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
-                            if (j != null)
-                                ircClient.sendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
+                            UsernoticeMessage(msg, db);
                             break;
                         case TypeMessage.Tags:
                             break;
                         case TypeMessage.PRIVMSG:
-                            countMessageForTenMin++;
-                            countMessageQuote++;
-                            var userPRIVMSG = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
-
-                            if (userPRIVMSG != null)
-                            {
-                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPRIVMSG.Id);
-                                if (chus != null)
-                                    chus.Active = true;
-                                else
-                                {
-                                    chus = new ChannelsUsers(userPRIVMSG.Id, id) { Active = true, CountMessage = 0 };
-                                    db.ChannelsUsers.Add(chus);
-                                }
-                                chus.CountMessage++;
-                            }
-                            else
-                            {
-                                userPRIVMSG = new Users(msg.UserName);
-                                db.Users.Add(userPRIVMSG);
-                                db.SaveChangesAsync().Wait();
-
-                                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPRIVMSG.Id);
-                                if (chus != null)
-                                    chus.Active = true;
-                                else
-                                {
-                                    chus = new ChannelsUsers(userPRIVMSG.Id, id) { Active = true, CountMessage = 0 };
-                                    db.ChannelsUsers.Add(chus);
-                                }
-                                chus.CountMessage++;
-                            }
-                            db.SaveChangesAsync().Wait();
+                            NewMethod(msg, db);
 
                             if (msg.UserName == "twitchnotify")
                             {
-                                var userNotify = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
-
-                                if (userNotify != null)
-                                {
-                                    var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotify.Id);
-
-                                    if (chus != null)
-                                    {
-                                        chus.Active = true;
-                                        if (msg.Subscription > chus.CountSubscriptions)
-                                            chus.CountSubscriptions = msg.Subscription;
-                                    }
-                                    else
-                                    {
-                                        chus = new ChannelsUsers(userNotify.Id, id, msg.Subscription) { Active = true };
-                                        if (msg.Subscription > chus.CountSubscriptions)
-                                            chus.CountSubscriptions = msg.Subscription;
-                                        db.ChannelsUsers.Add(chus);
-                                    }
-                                }
-                                else
-                                {
-                                    userNotify = new Users(msg.SubscriberName);
-                                    db.Users.Add(userNotify);
-                                    db.SaveChangesAsync().Wait();
-
-                                    var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotify.Id);
-
-                                    if (chus != null)
-                                    {
-                                        chus.Active = true;
-                                        if (msg.Subscription > chus.CountSubscriptions)
-                                            chus.CountSubscriptions = msg.Subscription;
-                                        else
-                                            chus.CountSubscriptions++;
-                                    }
-                                    else
-                                    {
-                                        chus = new ChannelsUsers(userNotify.Id, id, msg.Subscription) { Active = true };
-                                        if (msg.Subscription > chus.CountSubscriptions)
-                                            chus.CountSubscriptions = msg.Subscription;
-                                        else
-                                            chus.CountSubscriptions++;
-                                        db.ChannelsUsers.Add(chus);
-                                    }
-                                }
-                                db.SaveChangesAsync().Wait();
-                                lock (ircClient)
-                                    ircClient.sendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa", msg.Subscription), msg.SubscriberName, msg);
+                                SubscribeMessage(msg, db);
+                                ircClient.sendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa", msg.Subscription), msg.SubscriberName, msg);
                                 break;
                             }
                             else if (VoteActive)
                             {
-                                lock (voteResult)
-                                {
-                                    if ((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && !isUserVote(msg))
-                                    {
-                                        if (msg.Msg.All(char.IsDigit))
-                                        {
-                                            voteResult[voteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
-                                        }
-                                        else
-                                            voteResult[msg.Msg].Add(new User(msg.UserName));
-                                    }
-                                }
+                                VoteHandlerMessage(msg);
                                 break;
                             }
                             else
@@ -838,7 +600,7 @@ namespace DudelkaBot.system
                                     }
                                     db.SaveChangesAsync().Wait();
                                     break;
-                                case Command.death:
+                                case Command.deathbattle:
                                     var userDeath = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
                                     if (userDeath == null)
                                         break;
@@ -1021,6 +783,281 @@ namespace DudelkaBot.system
             }
         }
 
+        private void VoteHandlerMessage(Message msg)
+        {
+            lock (voteResult)
+            {
+                if ((voteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= voteResult.Count ? true : false)) && !isUserVote(msg))
+                {
+                    if (msg.Msg.All(char.IsDigit))
+                    {
+                        voteResult[voteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
+                    }
+                    else
+                        voteResult[msg.Msg].Add(new User(msg.UserName));
+                }
+            }
+        }
+
+        private void SubscribeMessage(Message msg, ChatContext db)
+        {
+            var userNotify = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
+
+            if (userNotify != null)
+            {
+                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotify.Id);
+
+                if (chus != null)
+                {
+                    chus.Active = true;
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                }
+                else
+                {
+                    chus = new ChannelsUsers(userNotify.Id, id, msg.Subscription) { Active = true };
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                    db.ChannelsUsers.Add(chus);
+                }
+            }
+            else
+            {
+                userNotify = new Users(msg.SubscriberName);
+                db.Users.Add(userNotify);
+                db.SaveChangesAsync().Wait();
+
+                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotify.Id);
+
+                if (chus != null)
+                {
+                    chus.Active = true;
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                    else
+                        chus.CountSubscriptions++;
+                }
+                else
+                {
+                    chus = new ChannelsUsers(userNotify.Id, id, msg.Subscription) { Active = true };
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                    else
+                        chus.CountSubscriptions++;
+                    db.ChannelsUsers.Add(chus);
+                }
+            }
+            db.SaveChangesAsync().Wait();
+        }
+
+        private void NewMethod(Message msg, ChatContext db)
+        {
+            countMessageForTenMin++;
+            countMessageQuote++;
+            var userPRIVMSG = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+            if (userPRIVMSG != null)
+            {
+                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPRIVMSG.Id);
+                if (chus != null)
+                    chus.Active = true;
+                else
+                {
+                    chus = new ChannelsUsers(userPRIVMSG.Id, id) { Active = true, CountMessage = 0 };
+                    db.ChannelsUsers.Add(chus);
+                }
+                chus.CountMessage++;
+            }
+            else
+            {
+                userPRIVMSG = new Users(msg.UserName);
+                db.Users.Add(userPRIVMSG);
+                db.SaveChangesAsync().Wait();
+
+                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPRIVMSG.Id);
+                if (chus != null)
+                    chus.Active = true;
+                else
+                {
+                    chus = new ChannelsUsers(userPRIVMSG.Id, id) { Active = true, CountMessage = 0 };
+                    db.ChannelsUsers.Add(chus);
+                }
+                chus.CountMessage++;
+            }
+            db.SaveChangesAsync().Wait();
+        }
+
+        private void UsernoticeMessage(Message msg, ChatContext db)
+        {
+            var userNotice = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
+
+            if (userNotice != null)
+            {
+                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
+
+                if (chus != null)
+                {
+                    chus.Active = true;
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                }
+                else
+                {
+                    chus = new ChannelsUsers(userNotice.Id, id, msg.Subscription) { Active = true };
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                    db.ChannelsUsers.Add(chus);
+                }
+            }
+            else
+            {
+                userNotice = new Users(msg.SubscriberName);
+                db.Users.Add(userNotice);
+                db.SaveChangesAsync().Wait();
+
+                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
+
+                if (chus != null)
+                {
+                    chus.Active = true;
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                }
+                else
+                {
+                    chus = new ChannelsUsers(userNotice.Id, id, msg.Subscription) { Active = true };
+                    if (msg.Subscription > chus.CountSubscriptions)
+                        chus.CountSubscriptions = msg.Subscription;
+                    db.ChannelsUsers.Add(chus);
+                }
+            }
+            db.SaveChangesAsync().Wait();
+
+            var j = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userNotice.Id);
+            if (j != null)
+                ircClient.sendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
+        }
+
+        private void NamesMessage(Message msg, ChatContext db)
+        {
+            foreach (var item in msg.NamesUsers)
+            {
+                var userNames = db.Users.FirstOrDefault(a => a.Username == item);
+
+                if (userNames != null)
+                {
+                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userNames.Id);
+
+                    if (chus != null)
+                        chus.Active = true;
+                    else
+                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, id) { Active = true });
+                }
+                else
+                {
+                    userNames = new Users(item);
+                    db.Users.Add(userNames);
+                    db.SaveChangesAsync().Wait();
+
+                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userNames.Id);
+
+                    if (chus != null)
+                        chus.Active = true;
+                    else
+                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, id) { Active = true });
+                }
+                db.SaveChangesAsync().Wait();
+            }
+        }
+
+        private void ModeMessage(Message msg, ChatContext db)
+        {
+            var userMode = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+            if (userMode != null)
+            {
+                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userMode.Id);
+
+                if (chus != null)
+                    chus.Moderator = msg.Sign == "+" ? true : false;
+                else
+                    chus = new ChannelsUsers(userMode.Id, id) { Moderator = msg.Sign == "+" ? true : false };
+            }
+            else
+            {
+                userMode = new Users(msg.UserName);
+                db.Users.Add(userMode);
+                db.SaveChangesAsync().Wait();
+
+                var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == userMode.Id);
+
+                if (chus != null)
+                    chus.Moderator = msg.Sign == "+" ? true : false;
+                else
+                    chus = new ChannelsUsers(userMode.Id, id) { Moderator = msg.Sign == "+" ? true : false };
+            }
+
+            db.SaveChangesAsync().Wait();
+        }
+
+        private void JoinMessage(Message msg, ChatContext db)
+        {
+            var user = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+            if (user != null)
+            {
+                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == user.Id);
+
+                if (chus != null)
+                    chus.Active = true;
+                else
+                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
+            }
+            else
+            {
+                user = new Users(msg.UserName);
+                db.Users.Add(user);
+                db.SaveChangesAsync().Wait();
+
+                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == user.Id);
+
+                if (chus != null)
+                    chus.Active = true;
+                else
+                    db.ChannelsUsers.Add(new ChannelsUsers(user.Id, id) { Active = true });
+            }
+            db.SaveChangesAsync().Wait();
+        }
+
+        private void PartMessage(Message msg, ChatContext db)
+        {
+            var userPart = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+
+            if (userPart != null)
+            {
+                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPart.Id);
+
+                if (chus != null)
+                    chus.Active = false;
+                else
+                    db.ChannelsUsers.Add(new ChannelsUsers(userPart.Id, id) { Active = false });
+            }
+            else
+            {
+                userPart = new Users(msg.UserName);
+                db.Users.Add(userPart);
+                db.SaveChangesAsync().Wait();
+
+                var chus = db.ChannelsUsers.Where(p => p.Channel_id == id).FirstOrDefault(p => p.User_id == userPart.Id);
+
+                if (chus != null)
+                    chus.Active = false;
+                else
+                    db.ChannelsUsers.Add(new ChannelsUsers(userPart.Id, id) { Active = false });
+            }
+            db.SaveChangesAsync().Wait();
+        }
+
         private static void SendWhisperMessage(string touser_id, string username, List<string> message)
         {
             if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
@@ -1035,13 +1072,23 @@ namespace DudelkaBot.system
                 if (i % 3 == 0)
                 {
                     req.SendPost(touser_id, buff);
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("send "+ username + ": ");
+                    Console.WriteLine(buff);
+                    Console.ResetColor();
                     buff = "";
                     Thread.Sleep(700);
                 }
                 i++;
             }
             if (!string.IsNullOrEmpty(buff))
+            {
                 req.SendPost(touser_id, buff);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("send " + username + ": ");
+                Console.WriteLine(buff);
+                Console.ResetColor();
+            }
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.blockWhisperCancel, ig, 60000, 60000));
         }
@@ -1054,6 +1101,10 @@ namespace DudelkaBot.system
                 req.SendPost(touser_id, message);
             else
                 return;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("send " + username + ": ");
+            Console.WriteLine(message);
+            Console.ResetColor();
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.blockWhisperCancel, ig, 60000, 60000));
         }

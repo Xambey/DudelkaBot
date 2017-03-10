@@ -21,6 +21,7 @@ namespace DudelkaBot.ircClient
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
         private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
         private static string deathPattern = @"!death (?<command>v|[+-]|\d+)$";
+        private static string deathBattlePattern = @"!deathbattle (?<command>v|[+-]|\d+)$";
         private static string vkidPattern = @"!vkid (?<id>\w+)$";
         private static string quotePattern = @"!quote (?<op>[+-]) (?<some>.+)";
         private static string quoteShowPattern = @"!quote (?<number>\d+)$";
@@ -39,6 +40,7 @@ namespace DudelkaBot.ircClient
         private static Regex voteReg = new Regex(votePattern);
         private static Regex advertReg = new Regex(advertPattern);
         private static Regex deathReg = new Regex(deathPattern);
+        private static Regex deathBattleReg = new Regex(deathBattlePattern);
         private static Regex vkidReg = new Regex(vkidPattern);
         private static Regex quoteReg = new Regex(quotePattern);
         private static Regex quoteShowReg = new Regex(quoteShowPattern);
@@ -267,13 +269,24 @@ namespace DudelkaBot.ircClient
                                 Success = false;
 
                         }
+                        else if(Msg.StartsWith("!deathbattle"))
+                        {
+                            math = deathBattleReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                DeathCommand = math.Groups["command"].Value;
+                                command = Command.deathbattle;
+                            }
+                            else
+                                Success = false;
+                        }
                         else if (Msg.StartsWith("!death"))
                         {
                             math = deathReg.Match(Msg);
                             if (math.Success)
                             {
                                 DeathCommand = math.Groups["command"].Value;
-                                command = Command.death;
+                                command = Command.deathbattle;
                             }
                             else
                                 Success = false;
