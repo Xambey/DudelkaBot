@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <AssemblyName>DudelkaBot</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>DudelkaBot</PackageId>
+    <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.9.9" />
+    <PackageReference Include="HtmlAgilityPack.NetCore" Version="1.5.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="1.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.0.3">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="1.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.Design" Version="1.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="1.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="system.net.http.winhttphandler" Version="4.0.0-beta-23123" />
+    <PackageReference Include="System.Net.WebSockets.Client" Version="4.0.0" />
+    <PackageReference Include="VkNet" Version="1.26.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

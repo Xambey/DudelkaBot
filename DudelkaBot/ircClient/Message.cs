@@ -286,7 +286,7 @@ namespace DudelkaBot.ircClient
                             if (math.Success)
                             {
                                 DeathCommand = math.Groups["command"].Value;
-                                command = Command.deathbattle;
+                                command = Command.death;
                             }
                             else
                                 Success = false;

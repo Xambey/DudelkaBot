@@ -17,6 +17,7 @@ namespace DudelkaBot.ircClient
         date,
         citytime,
         advert,
+        death,
         deathbattle,
         music,
         vkid,

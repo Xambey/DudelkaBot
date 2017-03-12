@@ -19,13 +19,13 @@ namespace DudelkaBot.system
         static string password = /*"oauth:gqqqwtjj03paeehisajfojfpvapk33";*/"oauth:k1vf6fr82i4inavo2odnhuaq8d8rz2";
         static string host = "irc.chat.twitch.tv";//"199.9.253.119";//
         static int port = 6667;
-
+        #endregion`
 
         static List<string> channels_names = new List<string>()
         {
             "dudelka_krasnaya",
             "blackufa_twitch",
-            "dariya_willis",
+            "dariya_willis"
             //"c9sneaky",
             //"nl_kripp",
             //"fairlight_excalibur",
@@ -36,8 +36,6 @@ namespace DudelkaBot.system
             //"silvername",
             //"lenagol0vach"
         };
-
-        #endregion
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
 
