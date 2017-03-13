@@ -26,9 +26,9 @@ namespace DudelkaBot.ircClient
 
         public static Dictionary<Users,Timer> WhisperBlock = new Dictionary<Users, Timer>();
 
-        public void reconnect(Action func)
+        public void Reconnect(Action func)
         {
-            stopProcess();
+            StopProcess();
             inputStream.Dispose();
             outputStream.Dispose();
             tcpClient.Dispose();
@@ -39,19 +39,19 @@ namespace DudelkaBot.ircClient
                 inputStream = new StreamReader(tcpClient.GetStream());
                 outputStream = new StreamWriter(tcpClient.GetStream());
 
-                signIn();
+                SignIn();
             }
-            startProcess(func);
+            StartProcess(func);
         }
 
-        public void startProcess(Action func)
+        public void StartProcess(Action func)
         {
             token = new CancellationTokenSource();
             process = new Task(func, token.Token);
             process.Start();
         }
 
-        public void stopProcess()
+        public void StopProcess()
         {
             if (process != null && !process.IsCompleted)
             {
@@ -59,7 +59,7 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        private void timerTick(object state)
+        private void TimerTick(object state)
         {
 
             messageCount = 0;
@@ -105,7 +105,7 @@ namespace DudelkaBot.ircClient
 
         public IrcClient(string ipHost, int port, string userName, string password)
         {
-            Timer timer = new Timer(timerTick, null, 0, 30000);
+            Timer timer = new Timer(TimerTick, null, 0, 30000);
             this.ipHost = ipHost;
             this.port = port;
             this.userName = userName;
@@ -120,11 +120,11 @@ namespace DudelkaBot.ircClient
                 inputStream = new StreamReader(tcpClient.GetStream());
                 outputStream = new StreamWriter(tcpClient.GetStream());
 
-                signIn();
+                SignIn();
             }
         }
 
-        public void signIn()
+        public void SignIn()
         {
             if (isConnect())
             {
@@ -138,7 +138,7 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        public void joinRoom(string channel)
+        public void JoinRoom(string channel)
         {
             if (isConnect())
             {
@@ -148,8 +148,7 @@ namespace DudelkaBot.ircClient
             }
         }
 
-
-        public void leaveRoom(string channel)
+        public void LeaveRoom(string channel)
         {
             if(isConnect())
             {
@@ -158,14 +157,14 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        private void sendIrcMessage(string message)
+        private void SendIrcMessage(string message)
         { 
 
             if (isConnect() && messageCount++ < messageLimit)
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
-                Timer timer = new Timer(timerTick, null, 0, 30000);
+                Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(message);
@@ -173,13 +172,13 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        private void sendIrcMessage(string message, bool undetected)
+        private void SendIrcMessage(string message, bool undetected)
         {
             if (isConnect())
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
-                Timer timer = new Timer(timerTick, null, 0, 30000);
+                Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(message);
@@ -187,27 +186,27 @@ namespace DudelkaBot.ircClient
             }
         }
 
-        public void sendChatMessage(string message, Message requestMsg) 
+        public void SendChatMessage(string message, Message requestMsg) 
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message + "\r\n");
         }
 
-        public void sendChatMessage(string message, string getter, Message requestMsg)
+        public void SendChatMessage(string message, string getter, Message requestMsg)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message + "\r\n");
         }
 
-        public void sendChatBroadcastMessage(string message, Message requestMsg)
+        public void SendChatBroadcastMessage(string message, Message requestMsg)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message + "\r\n");
         }
 
-        public void sendChatBroadcastMessage(string message, string channel)
+        public void SendChatBroadcastMessage(string message, string channel)
         {
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
         }
 
-        public void sendChatBroadcastChatMessage(List<string> commands, Message requestMsg)
+        public void SendChatBroadcastChatMessage(List<string> commands, Message requestMsg)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -218,26 +217,26 @@ namespace DudelkaBot.ircClient
                 builder.Append(item + " ");
             }
 
-            sendIrcMessage(builder.ToString());
+            SendIrcMessage(builder.ToString());
         }
 
         //whispers
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public void sendChatWhisperMessage(string message, ulong id_user, Message requestMsg)
+        public void SendChatWhisperMessage(string message, ulong id_user, Message requestMsg)
         {
             if (WhisperBlock.Any(a => a.Key.Username == requestMsg.UserName))
                 return;
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message);
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + requestMsg.UserName + " " + message);
         }
 
-        public void sendChatWhisperMessage(string message, string username, ulong id_user, string channel)
+        public void SendChatWhisperMessage(string message, string username, ulong id_user, string channel)
         {
             if (WhisperBlock.Any(a => a.Key.Username == username))
                 return;
-            sendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + username + " " + message);
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #jtv" + " :/w " + username + " " + message);
         }
 
-        public void sendChatWhisperMessage(List<string> commands, ulong id_user, Message requestMsg)
+        public void SendChatWhisperMessage(List<string> commands, ulong id_user, Message requestMsg)
         {
             if (WhisperBlock.Any(a => a.Key.Username == requestMsg.UserName))
                 return;
@@ -249,29 +248,29 @@ namespace DudelkaBot.ircClient
                 buf += item + "; ";
                 if (i % 3 == 0)
                 {
-                    sendIrcMessage(buf, true);
+                    SendIrcMessage(buf, true);
                     buf = send;
                     Thread.Sleep(500);
                 }
                 i++;
             }
             if(buf != send)
-                sendIrcMessage(buf, true);
+                SendIrcMessage(buf, true);
             var user = new Users(requestMsg.UserName);
-            WhisperBlock.Add(user, new Timer(blockWhisperCancel,user, 60000, 60000));
+            WhisperBlock.Add(user, new Timer(BlockWhisperCancel,user, 60000, 60000));
         }
 
-        public void pingResponse()
+        public void PingResponse()
         {
-            sendIrcMessage("PONG twi.twitch.tv");
+            SendIrcMessage("PONG twi.twitch.tv");
         }
 
-        public string readMessage()
+        public string ReadMessage()
         {
             return inputStream.ReadLine();
         }
 
-        public static void blockWhisperCancel(object obj)
+        public static void BlockWhisperCancel(object obj)
         {
             WhisperBlock[obj as Users].Dispose();
             WhisperBlock.Remove(obj as Users);

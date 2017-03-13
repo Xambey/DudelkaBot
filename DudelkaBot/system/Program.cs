@@ -49,7 +49,7 @@ namespace DudelkaBot.system
                 Channel channel = new Channel(item, host, port, userName, password);
                 channel.Join();
             }
-            Channel.channels.First().Value.startShow();
+            Channel.channels.First().Value.StartShow();
 
             while (true)
             {
@@ -59,19 +59,19 @@ namespace DudelkaBot.system
                 switch (cmd)
                 {
                     case "!stop":
-                        Channel.channels.First().Value.stopShow();
+                        Channel.channels.First().Value.StopShow();
                         break;
                     case "!start":
-                        Channel.channels.First().Value.stopShow();
+                        Channel.channels.First().Value.StopShow();
                         break;
                     case "!reconnect":
-                        Channel.reconnect();
+                        Channel.Reconnect();
                         break;
                     case "!Dariya":
-                        Channel.channels["dariya_willis"].startShow();
+                        Channel.channels["dariya_willis"].StartShow();
                         break;
                     case "!Black":
-                        Channel.channels["blackufa_twitch"].startShow();
+                        Channel.channels["blackufa_twitch"].StartShow();
                         break;
                     case "!send":
                         string mes = Console.ReadLine();
@@ -79,7 +79,7 @@ namespace DudelkaBot.system
                         if (string.IsNullOrEmpty(o) && Channel.viewChannel != null)
                             o = Channel.viewChannel.Name;
                         if(Channel.channels.Any(a => a.Key == o))
-                            Channel.ircClient.sendChatBroadcastMessage(mes, o);
+                            Channel.ircClient.SendChatBroadcastMessage(mes, o);
                         break;
                     case "!errors":
                         Console.ForegroundColor = ConsoleColor.Red;
@@ -111,7 +111,7 @@ namespace DudelkaBot.system
                         if (chan == null) {
                             chan = new Channel(chname, host, port, userName, password);
                             chan.Join();
-                            chan.startShow();
+                            chan.StartShow();
                         }
                         break;
                     case "!remove":
@@ -130,7 +130,7 @@ namespace DudelkaBot.system
                                 var channel = math.Groups["channel"].Value;
                                 if (Channel.channels.Any(p => p.Key == channel))
                                 {
-                                    Channel.channels[channel].startShow();
+                                    Channel.channels[channel].StartShow();
                                 }
                             }
                         }
