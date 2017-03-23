@@ -23,9 +23,11 @@ namespace DudelkaBot.ircClient
         private static string deathPattern = @"!death (?<command>v|[+-]|\d+)$";
         private static string deathBattlePattern = @"!deathbattle (?<command>v|[+-]|\d+)$";
         private static string vkidPattern = @"!vkid (?<id>\w+)$";
-        private static string quotePattern = @"!quote (?<op>[+-]) (?<some>.+)";
+        private static string quotePattern = @"!quote\s+(?<op>[+-])\s+(?<some>.+)";
+        private static string quoteDatePapptern = @"!quote\s+(?<op>[+-])\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<some>.+)";
         private static string quoteShowPattern = @"!quote (?<number>\d+)$";
         private static string quoteUpdatePattern = @"!qupdate (?<number>\d+) (?<quote>.+)";
+        private static string quoteUpdateWithDate = @"!qupdate\s+(?<number>\d+)\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<quote>.+)";
 
         private static Regex typeReg = new Regex(typePattern);
         private static Regex joinOrpartReg = new Regex(patternPARTorJOIN);
@@ -43,8 +45,10 @@ namespace DudelkaBot.ircClient
         private static Regex deathBattleReg = new Regex(deathBattlePattern);
         private static Regex vkidReg = new Regex(vkidPattern);
         private static Regex quoteReg = new Regex(quotePattern);
+        private static Regex quoteDateReg = new Regex(quoteDatePapptern);
         private static Regex quoteShowReg = new Regex(quoteShowPattern);
         private static Regex quoteUpdateReg = new Regex(quoteUpdatePattern);
+        private static Regex quoteUpdateWithDateReg = new Regex(quoteUpdateWithDate);
 
         public string Data { get; private set; }
         public string UserName { get; private set; }
@@ -70,7 +74,8 @@ namespace DudelkaBot.ircClient
         public string vkid;
         public int quoteNumber = 0;
         public string Quote { get; set; }
-        public string quoteOperation; 
+        public string quoteOperation;
+        public DateTime Date;
 
         public Message(string data)
         {
@@ -303,30 +308,54 @@ namespace DudelkaBot.ircClient
                             }
                             else
                             {
-                                math = quoteReg.Match(Msg);
+                                math = quoteDateReg.Match(Msg);
                                 if (math.Success)
                                 {
                                     quoteOperation = math.Groups["op"].Value;
                                     Quote = math.Groups["some"].Value;
+                                    var s = math.Groups["date"].Value.Split('.');
+                                    Date = new DateTime(int.Parse(s[2]), int.Parse(s[1]), int.Parse(s[0]));
                                     command = Command.quote;
-                                }
+                                }                                  
                                 else
                                 {
-                                    Success = false;
+                                    math = quoteReg.Match(Msg);
+                                    if (math.Success)
+                                    {
+                                        quoteOperation = math.Groups["op"].Value;
+                                        Quote = math.Groups["some"].Value;
+                                        Date = DateTime.Now;
+                                        command = Command.quote;
+                                    }
+                                    else
+                                        Success = false;
                                 }
                             }
                         }
                         else if(Msg.StartsWith("!qupdate"))
                         {
-                            math = quoteUpdateReg.Match(Msg);
+                            math = quoteUpdateWithDateReg.Match(Msg);
                             if (math.Success)
                             {
                                 quoteNumber = int.Parse(math.Groups["number"].Value);
                                 Quote = math.Groups["quote"].Value;
+                                var s = math.Groups["date"].Value.Split('.');
+                                Date = new DateTime(int.Parse(s[2]), int.Parse(s[1]), int.Parse(s[0]));
                                 command = Command.qupdate;
                             }
                             else
-                                Success = false;
+                            {
+                                math = quoteUpdateReg.Match(Msg);
+                                if (math.Success)
+                                {
+                                    quoteNumber = int.Parse(math.Groups["number"].Value);
+                                    Quote = math.Groups["quote"].Value;
+                                    command = Command.qupdate;
+                                }
+                                else
+                                    Success = false;
+                            }
+                            
                         }
                         else if (Msg.StartsWith("!advert"))
                         {
