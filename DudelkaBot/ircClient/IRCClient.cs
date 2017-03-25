@@ -7,24 +7,42 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using DudelkaBot.dataBase.model;
+using DudelkaBot.system;
 
 namespace DudelkaBot.ircClient
 {
     public class IrcClient
     {
+        #region Fields
         private TcpClient tcpClient;
         private StreamWriter outputStream;
         private StreamReader inputStream;
-        private int port;
         private string ipHost, userName, password;
         private Queue<string> queueMessages = new Queue<string>();
-
+        private int port;
         private int messageCount;
-        private const int messageLimit = 10;
+        private readonly int messageLimit = 10;
         private Task process;
         private CancellationTokenSource token;
 
-        public static Dictionary<Users,Timer> WhisperBlock = new Dictionary<Users, Timer>();
+        private static Dictionary<Users, Timer> whisperBlock = new Dictionary<Users, Timer>();
+        #endregion
+
+        #region Properties
+        public TcpClient TcpClient { get => tcpClient; protected set => tcpClient = value; }
+        public StreamWriter OutputStream { get => outputStream; protected set => outputStream = value; }
+        public StreamReader InputStream { get => inputStream; protected set => inputStream = value; }
+        public string IpHost { get => ipHost; protected set => ipHost = value; }
+        public string UserName { get => userName; protected set => userName = value; }
+        public string Password { get => password; protected set => password = value; }
+        public Queue<string> QueueMessages { get => queueMessages; protected set => queueMessages = value; }
+        public int Port { get => port; protected set => port = value; }
+        public int MessageCount { get => messageCount; protected set => messageCount = value; }
+        public int MessageLimit => messageLimit;
+        public Task Process { get => process; protected set => process = value; }
+        public CancellationTokenSource Token { get => token; protected set => token = value; }
+        public static Dictionary<Users, Timer> WhisperBlock { get => whisperBlock; protected set => whisperBlock = value; } 
+        #endregion
 
         public void Reconnect(Action func)
         {
@@ -36,6 +54,7 @@ namespace DudelkaBot.ircClient
             
             if (isConnect())
             {
+                inputStream.DiscardBufferedData();
                 inputStream = new StreamReader(tcpClient.GetStream());
                 outputStream = new StreamWriter(tcpClient.GetStream());
 
@@ -44,11 +63,24 @@ namespace DudelkaBot.ircClient
             StartProcess(func);
         }
 
+        public void ShowMessage(string message)
+        {
+            Console.Write(message);
+            Logger.Write(message);
+        }
+
+        public void ShowLineMessage(string message)
+        {
+            Console.WriteLine(message);
+            Logger.Write(message);
+        }
+
         public void StartProcess(Action func)
         {
             token = new CancellationTokenSource();
             process = new Task(func, token.Token);
             process.Start();
+            ShowLineMessage("Запущен обработчик сообщений...");
         }
 
         public void StopProcess()
@@ -56,6 +88,7 @@ namespace DudelkaBot.ircClient
             if (process != null && !process.IsCompleted)
             {
                 token.Cancel();
+                ShowLineMessage("Обработчик сообщений остановлен...");
             }
         }
 
@@ -86,9 +119,30 @@ namespace DudelkaBot.ircClient
                 {
                     try
                     {
-                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                        tcpClient.Client.ConnectAsync(ipHost, port).Wait();
+                        ShowLineMessage($"Соединение с сервером установлено...");
                     }
                     catch(Exception ex)
+                    {
+                        var color = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        ShowLineMessage("Подключение не удалось \n" + ex.Message);
+                        Console.ResetColor();
+                        Thread.Sleep(10000);
+                    }
+                }
+            }
+            else
+            {
+                tcpClient = new TcpClient();
+                while (!tcpClient.Connected)
+                {
+                    try
+                    {
+                        tcpClient.ConnectAsync(ipHost, port);
+                        Console.WriteLine($"Соединение с сервером установлено...");
+                    }
+                    catch (Exception ex)
                     {
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
@@ -97,21 +151,18 @@ namespace DudelkaBot.ircClient
                         Thread.Sleep(10000);
                     }
                 }
-                return true;
             }
-            else
-                return false;
+            
+            return true; 
         }
 
         public IrcClient(string ipHost, int port, string userName, string password)
         {
-            Timer timer = new Timer(TimerTick, null, 0, 30000);
             this.ipHost = ipHost;
             this.port = port;
             this.userName = userName;
             this.password = password;
-
-            Console.OutputEncoding = Encoding.Unicode;
+            Timer timer = new Timer(TimerTick, null, 30000, 30000);
 
             tcpClient = new TcpClient();
 
@@ -119,7 +170,6 @@ namespace DudelkaBot.ircClient
             {
                 inputStream = new StreamReader(tcpClient.GetStream());
                 outputStream = new StreamWriter(tcpClient.GetStream());
-
                 SignIn();
             }
         }
@@ -135,6 +185,7 @@ namespace DudelkaBot.ircClient
                 outputStream.WriteLine("CAP REQ :twitch.tv/tags");
                 //outputStream.WriteLine("");
                 outputStream.Flush();
+                ShowLineMessage("Инициализация аккаунта...");
             }
         }
 
@@ -150,7 +201,7 @@ namespace DudelkaBot.ircClient
 
         public void LeaveRoom(string channel)
         {
-            if(isConnect())
+            if (isConnect())
             {
                 outputStream.WriteLine("PART #" + channel);
                 outputStream.Flush();
@@ -167,7 +218,7 @@ namespace DudelkaBot.ircClient
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(message);
+                ShowLineMessage(message);
                 Console.ResetColor();
             }
         }
@@ -181,7 +232,7 @@ namespace DudelkaBot.ircClient
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(message);
+                ShowLineMessage(message);
                 Console.ResetColor();
             }
         }
@@ -219,7 +270,7 @@ namespace DudelkaBot.ircClient
 
             SendIrcMessage(builder.ToString());
         }
-
+        
         //whispers
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public void SendChatWhisperMessage(string message, ulong id_user, Message requestMsg)
@@ -267,7 +318,7 @@ namespace DudelkaBot.ircClient
 
         public string ReadMessage()
         {
-            return inputStream.ReadLine();
+            return inputStream?.ReadLine();
         }
 
         public static void BlockWhisperCancel(object obj)

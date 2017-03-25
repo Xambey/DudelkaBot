@@ -29,7 +29,7 @@ namespace DudelkaBot.system
         {
             if (--count >= 0)
             {
-                Channel.ircClient.SendChatBroadcastMessage("/me " + advert, channel);
+                Channel.IrcClient.SendChatBroadcastMessage("/me " + advert, channel);
             }
             else
                 Adverts.Remove(this);

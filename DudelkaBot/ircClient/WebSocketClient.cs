@@ -87,7 +87,6 @@ namespace DudelkaBot.ircClient
                 {
                     count = messageBuffer.Length - offset;
                 }
-                var a = new ArraySegment<byte>();
                 Client.SendAsync(new ArraySegment<byte>(messageBuffer, offset, count), WebSocketMessageType.Text, lastMessage, _cancellationToken).Wait();
             }
         }

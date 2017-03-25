@@ -47,45 +47,45 @@ namespace DudelkaBot.system
             foreach (var item in channels_names)
             {
                 Channel channel = new Channel(item, host, port, userName, password);
-                channel.Join();
+                channel.JoinRoom();
             }
-            Channel.channels.First().Value.StartShow();
+            Channel.Channels.First().Value.StartShow();
 
             while (true)
             {
-                Channel.ircClient.isConnect();
+                Channel.IrcClient.isConnect();
                 string cmd = Console.ReadLine();
 
                 switch (cmd)
                 {
                     case "!stop":
-                        Channel.channels.First().Value.StopShow();
+                        Channel.Channels.First().Value.StopShow();
                         break;
                     case "!start":
-                        Channel.channels.First().Value.StopShow();
+                        Channel.Channels.First().Value.StopShow();
                         break;
                     case "!reconnect":
                         Channel.Reconnect();
                         break;
                     case "!Dariya":
-                        Channel.channels["dariya_willis"].StartShow();
+                        Channel.Channels["dariya_willis"].StartShow();
                         break;
                     case "!Black":
-                        Channel.channels["blackufa_twitch"].StartShow();
+                        Channel.Channels["blackufa_twitch"].StartShow();
                         break;
                     case "!send":
                         string mes = Console.ReadLine();
                         string o = Console.ReadLine();
-                        if (string.IsNullOrEmpty(o) && Channel.viewChannel != null)
-                            o = Channel.viewChannel.Name;
-                        if(Channel.channels.Any(a => a.Key == o))
-                            Channel.ircClient.SendChatBroadcastMessage(mes, o);
+                        if (string.IsNullOrEmpty(o) && Channel.ViewChannel != null)
+                            o = Channel.ViewChannel.Name;
+                        if(Channel.Channels.Any(a => a.Key == o))
+                            Channel.IrcClient.SendChatBroadcastMessage(mes, o);
                         break;
                     case "!errors":
                         Console.ForegroundColor = ConsoleColor.Red;
-                        lock (Channel.errorListMessages)
+                        lock (Channel.ErrorListMessages)
                         {
-                            var ch = Channel.errorListMessages;
+                            var ch = Channel.ErrorListMessages;
                             var l = ch.Count;
                             for (int i = 0; i < l; i++)
                             { 
@@ -98,7 +98,7 @@ namespace DudelkaBot.system
                     case "!list":
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("List channels:");
-                        foreach (var item in Channel.channels)
+                        foreach (var item in Channel.Channels)
                         {
                             Console.WriteLine(item.Key + " " + item.Value.Status.ToString());
                         }
@@ -107,18 +107,18 @@ namespace DudelkaBot.system
                         break;
                     case "!add":
                         string chname = Console.ReadLine();
-                        var chan = Channel.channels.SingleOrDefault(a => a.Key == chname).Value;
+                        var chan = Channel.Channels.SingleOrDefault(a => a.Key == chname).Value;
                         if (chan == null) {
                             chan = new Channel(chname, host, port, userName, password);
-                            chan.Join();
+                            chan.JoinRoom();
                             chan.StartShow();
                         }
                         break;
                     case "!remove":
                         string name = Console.ReadLine();
-                        if (Channel.channels.Any(a => a.Key == name))
+                        if (Channel.Channels.Any(a => a.Key == name))
                         {
-                            Channel.channels.Remove(name);
+                            Channel.Channels.Remove(name);
                         }
                         break;
                     default:
@@ -128,9 +128,9 @@ namespace DudelkaBot.system
                             if (math.Groups["channel"].Success)
                             {
                                 var channel = math.Groups["channel"].Value;
-                                if (Channel.channels.Any(p => p.Key == channel))
+                                if (Channel.Channels.Any(p => p.Key == channel))
                                 {
-                                    Channel.channels[channel].StartShow();
+                                    Channel.Channels[channel].StartShow();
                                 }
                             }
                         }

@@ -16,7 +16,8 @@
       }
     },
     "DudelkaBot": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "applicationUrl": "https://msdn.microsoft.com/en-us/library/wx0123s5.aspx"
     }
   }
 }
