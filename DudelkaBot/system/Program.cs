@@ -44,9 +44,15 @@ namespace DudelkaBot.system
             Console.OutputEncoding = Encoding.Unicode;
             Console.InputEncoding = Encoding.Unicode;
 
+            //!!!!!!!!!! 
+            Channel.Port = port;
+            Channel.Password = password;
+            Channel.Iphost = host;
+            Channel.UserName = userName;
+
             foreach (var item in channels_names)
             {
-                Channel channel = new Channel(item, host, port, userName, password);
+                Channel channel = new Channel(item);
                 channel.JoinRoom();
             }
             Channel.Channels.First().Value.StartShow();
@@ -109,7 +115,7 @@ namespace DudelkaBot.system
                         string chname = Console.ReadLine();
                         var chan = Channel.Channels.SingleOrDefault(a => a.Key == chname).Value;
                         if (chan == null) {
-                            chan = new Channel(chname, host, port, userName, password);
+                            chan = new Channel(chname);
                             chan.JoinRoom();
                             chan.StartShow();
                         }

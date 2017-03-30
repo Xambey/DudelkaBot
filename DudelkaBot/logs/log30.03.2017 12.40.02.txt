@@ -1,0 +1,55 @@
+30.03.2017 12:40:02: Соединение с сервером установлено...
+30.03.2017 12:40:02: Инициализация аккаунта...
+30.03.2017 12:40:02: Запущен обработчик сообщений...
+30.03.2017 12:40:02: Выполнен вход в комнату: dudelka_krasnaya ...
+30.03.2017 12:40:02: Выполнен вход в комнату: blackufa_twitch ...
+30.03.2017 12:40:02: Выполнен вход в комнату: dariya_willis ...
+30.03.2017 12:40:02: Выполнен вход в комнату: c9sneaky ...
+30.03.2017 12:40:02: Выполнен вход в комнату: nl_kripp ...
+30.03.2017 12:40:02: Выполнен вход в комнату: fairlight_excalibur ...
+30.03.2017 12:40:02: Выполнен вход в комнату: lirik ...
+30.03.2017 12:40:02: Выполнен вход в комнату: domingo ...
+30.03.2017 12:40:02: Выполнен вход в комнату: imaqtpie ...
+30.03.2017 12:40:02: Выполнен вход в комнату: lck1 ...
+30.03.2017 12:40:02: Выполнен вход в комнату: silvername ...
+30.03.2017 12:40:02: Выполнен вход в комнату: lenagol0vach ...
+30.03.2017 12:40:02: Включено отображение чата dudelka_krasnaya ...
+30.03.2017 12:40:02: :tmi.twitch.tv 004 dudelkabot :-
+30.03.2017 12:40:02: :tmi.twitch.tv 003 dudelkabot :This server is rather new
+30.03.2017 12:40:02: :tmi.twitch.tv 002 dudelkabot :Your host is tmi.twitch.tv
+30.03.2017 12:40:02: :tmi.twitch.tv 001 dudelkabot :Welcome, GLHF!
+30.03.2017 12:40:02: :tmi.twitch.tv 372 dudelkabot :You are in a maze of twisty passages, all alike.
+30.03.2017 12:40:02: :tmi.twitch.tv 375 dudelkabot :-
+30.03.2017 12:40:02: :tmi.twitch.tv 376 dudelkabot :>
+30.03.2017 12:40:02: :tmi.twitch.tv CAP * ACK :twitch.tv/membership
+30.03.2017 12:40:02: :tmi.twitch.tv CAP * ACK :twitch.tv/commands
+30.03.2017 12:40:02: :tmi.twitch.tv CAP * ACK :twitch.tv/tags
+30.03.2017 12:40:03: :dudelkabot.tmi.twitch.tv 366 dudelkabot #dudelka_krasnaya :End of /NAMES list
+30.03.2017 12:40:03: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #dudelka_krasnaya
+30.03.2017 12:40:03: @broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #dudelka_krasnaya
+30.03.2017 12:40:03: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #blackufa_twitch
+30.03.2017 12:40:03: @broadcaster-lang=ru;emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #blackufa_twitch
+30.03.2017 12:40:03: :dudelkabot.tmi.twitch.tv 366 dudelkabot #blackufa_twitch :End of /NAMES list
+30.03.2017 12:40:03: :dudelkabot.tmi.twitch.tv 366 dudelkabot #dariya_willis :End of /NAMES list
+30.03.2017 12:40:03: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #dariya_willis
+30.03.2017 12:40:03: @broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #dariya_willis
+30.03.2017 12:40:03: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #c9sneaky
+30.03.2017 12:40:03: @broadcaster-lang=;emote-only=0;followers-only=10;r9k=0;slow=5;subs-only=0 :tmi.twitch.tv ROOMSTATE #c9sneaky
+30.03.2017 12:40:03: :dudelkabot.tmi.twitch.tv 366 dudelkabot #c9sneaky :End of /NAMES list
+30.03.2017 12:40:04: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #nl_kripp
+30.03.2017 12:40:04: @broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #nl_kripp
+30.03.2017 12:40:04: :dudelkabot.tmi.twitch.tv 366 dudelkabot #nl_kripp :End of /NAMES list
+30.03.2017 12:40:04: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #fairlight_excalibur
+30.03.2017 12:40:04: @broadcaster-lang=;emote-only=0;followers-only=2;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #fairlight_excalibur
+30.03.2017 12:40:04: :dudelkabot.tmi.twitch.tv 366 dudelkabot #fairlight_excalibur :End of /NAMES list
+30.03.2017 12:40:04: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #lirik
+30.03.2017 12:40:04: @broadcaster-lang=;emote-only=0;followers-only=10;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #lirik
+30.03.2017 12:40:12: :dudelkabot.tmi.twitch.tv 366 dudelkabot #lirik :End of /NAMES list
+30.03.2017 12:40:12: :dudelkabot.tmi.twitch.tv 366 dudelkabot #domingo :End of /NAMES list
+30.03.2017 12:40:12: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #domingo
+30.03.2017 12:40:12: @broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #domingo
+30.03.2017 12:40:12: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #imaqtpie
+30.03.2017 12:40:12: @broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;slow=10;subs-only=0 :tmi.twitch.tv ROOMSTATE #imaqtpie
+30.03.2017 12:40:17: :dudelkabot.tmi.twitch.tv 366 dudelkabot #imaqtpie :End of /NAMES list
+30.03.2017 12:40:17: @badges=;color=#9ACD32;display-name=DudelkaBot;emote-sets=0;mod=0;subscriber=0;user-type= :tmi.twitch.tv USERSTATE #lck1
+30.03.2017 12:40:17: @broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;slow=10;subs-only=0 :tmi.twitch.tv ROOMSTATE #lck1

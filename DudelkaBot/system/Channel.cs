@@ -53,7 +53,11 @@ namespace DudelkaBot.system
         #region Timers
         private Timer VoteTimer;
         private Timer StreamTimer;
-        private Timer QuoteTimer; 
+        private Timer QuoteTimer;
+        static private int StreamStateUpdateTime = 5;
+        static private int QuoteShowTime = 15;
+        static private readonly int CountLimitMessagesForUpdateStreamState = 15;
+        static private readonly int countLimitMessagesForShowQuote = 40;
         #endregion
 
         #region Patterns
@@ -71,15 +75,16 @@ namespace DudelkaBot.system
         #endregion
 
         #region Fields
+        public int countMessageForUpdateStreamState = 0;
+        public int countMessageQuote = 0;
+
         private string name;
-        private int countMessageForTenMin = 0;
-        private int countMessageQuote = 0;
         private int lastqouteindex = 0;
         private int deathBattleCount = 0;
-        private string iphost;
-        private string userName;
-        private string password;
-        private int port;
+        private static string iphost;
+        private static string userName;
+        private static string password;
+        private static int port;
         private int id;
 
         private static IrcClient ircClient;
@@ -109,39 +114,22 @@ namespace DudelkaBot.system
         public static List<string> Commands { get => commands; protected set => commands = value; }
         public Dictionary<string, List<User>> VoteResult { get => voteResult; protected set => voteResult = value; }
         public bool VoteActive { get => voteActive; protected set => voteActive = value; }
-        public int CountMessageForTenMin { get => countMessageForTenMin; protected set => countMessageForTenMin = value; }
-        public int CountMessageQuote { get => countMessageQuote; protected set => countMessageQuote = value; }
         public int Lastqouteindex { get => lastqouteindex; protected set => lastqouteindex = value; }
         public int DeathBattleCount { get => deathBattleCount; protected set => deathBattleCount = value; }
-        public int Port { get => port; protected set => port = value; }
-        public int Id { get => id; protected set => id = value; }
-        public string Iphost { get => iphost; protected set => iphost = value; }
-        public string UserName { get => userName; protected set => userName = value; }
-        public string Password { get => password; protected set => password = value; }
+        public static int Port { get => port; set => port = value; }
+        public int Id { get => id; set => id = value; }
+        public static string Iphost { get => iphost; set => iphost = value; }
+        public static string UserName { get => userName; set => userName = value; }
+        public static string Password { get => password; set => password = value; }
         public string Name { get => name; protected set => name = value; }
         #endregion
 
-        public static void ShowLineMessage(string message)
-        {
-            Console.WriteLine(message);
-            Logger.Write(message);
-        }
-
-        public static void ShowMessage(string message)
-        {
-            Console.Write(message);
-            Logger.Write(message);
-        }
-
-        public Channel(string channelName, string iphost, int port, string userName, string password)
+        public Channel(string channelName)
         { 
             Name = channelName;
+            Status = Status.Offline;
             if (!Channels.ContainsKey(Name))
                 Channels.Add(channelName, this);
-            this.Iphost = iphost;
-            this.Port = port;
-            this.Password = password;
-            this.UserName = userName;
 
             if (Commands == null)
             {
@@ -165,8 +153,9 @@ namespace DudelkaBot.system
 
                 //findDublicateUsers(db);
             }
-            StreamTimer = new Timer(StreamStateUpdate, null, 10* 60000, 10 * 60000);
-            QuoteTimer = new Timer(ShowQuote, null, 20 * 60000, 20 * 60000);
+            Logger.UpdateChannelPaths(Name);
+            StreamTimer = new Timer(StreamStateUpdate, null, StreamStateUpdateTime * 60000, StreamStateUpdateTime * 60000);
+            QuoteTimer = new Timer(ShowQuote, null, QuoteShowTime * 60000, QuoteShowTime * 60000);
         }
 
         private static void CheckConnect(object obj)
@@ -191,11 +180,11 @@ namespace DudelkaBot.system
             {
                 if (item.Value > 1)
                 {
-                    ShowLineMessage(item.Key.ToString() + " - " + item.Value.ToString() + " - ");
+                    Logger.ShowLineCommonMessage(item.Key.ToString() + " - " + item.Value.ToString() + " - ");
                     foreach (var g in db.Users)
                     {
                         if (g.Username == item.Key)
-                            ShowMessage(" " + g.Id.ToString());
+                            Logger.ShowCommonMessage(" " + g.Id.ToString());
                     }
                 }
             }
@@ -203,13 +192,13 @@ namespace DudelkaBot.system
 
         private void ShowQuote(object obj)
         {
-            if(CountMessageQuote > 40)
+            if(countMessageQuote > countLimitMessagesForShowQuote)
             {
                 using (var db = new ChatContext()) {
                     var or = db.Quotes.Where(a => a.Channel_id == Id).ToList();
                     if (or.Count <= 0)
                     {
-                        CountMessageQuote = 0;
+                        countMessageQuote = 0;
                         return;
                     }
                     int c = Rand.Next(1, or.Count);
@@ -221,7 +210,7 @@ namespace DudelkaBot.system
                         IrcClient.SendChatBroadcastMessage(string.Format("/me Великая случайная цитата Kappa - {0}, {1:yyyy} #{2} : '{3}'", Name, quot.Date, Lastqouteindex, quot.Quote), Name);
                 }
             }
-            CountMessageQuote = 0;
+            countMessageQuote = 0;
         }
 
         public static void Reconnect()
@@ -233,14 +222,26 @@ namespace DudelkaBot.system
                     IrcClient.LeaveRoom(item.Key);
                 }
 
+                Logger.StopWrite();
                 IrcClient.Reconnect(Process);
+                Logger.StartWrite();
 
                 foreach (var item in Channels)
                 {
                     IrcClient.JoinRoom(item.Key);
                 }
-                ShowLineMessage("Соединение разорвано...");
-                ShowLineMessage("Соединение установлено...");
+                Logger.ShowLineCommonMessage("Соединение разорвано...");
+                Logger.ShowLineCommonMessage("Соединение установлено...");
+            }
+            else
+            {
+                ircClient = new IrcClient(Iphost, Port, UserName, Password);
+                foreach (var item in Channels)
+                {
+                    IrcClient.JoinRoom(item.Key);
+                }
+                Logger.ShowLineCommonMessage("Соединение разорвано...");
+                Logger.ShowLineCommonMessage("Соединение установлено...");
             }
         }
 
@@ -249,7 +250,7 @@ namespace DudelkaBot.system
             try
             {
                 var oldstatus = Status;
-                if (CountMessageForTenMin == 0)
+                if (countMessageForUpdateStreamState == 0)
                 {
                     Status = Status.Offline;
                     using (var db = new ChatContext())
@@ -261,19 +262,23 @@ namespace DudelkaBot.system
                         db.SaveChangesAsync().Wait();
                     }
                 }
-                else
+                else if(countMessageForUpdateStreamState > CountLimitMessagesForUpdateStreamState)
                 {
                     Status = Status.Online;
-                    CountMessageForTenMin = 0;
+                    countMessageForUpdateStreamState = 0;
                 }
 
-                if(oldstatus != Status)
-                    ircClient.SendChatBroadcastMessage($"Канал {Name} сменил статус на {Status.ToString()}", Name);
+                if (oldstatus != Status)
+                {
+                    if(Status == Status.Offline)
+                        Logger.UpdateChannelPaths(Name);
+                    Logger.ShowLineCommonMessage($"Чат канала {Name} сменил статус на {Status.ToString()}");
+                }
             }
             catch (System.InvalidOperationException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineMessage(ex.Source + ex.Data + ex.Message);
+                Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
                 Console.ResetColor();
                 return;
             }
@@ -282,13 +287,13 @@ namespace DudelkaBot.system
         public void StartShow()
         {
             ViewChannel = this;
-            ShowLineMessage($"Включено отображение чата {Name} ...");
+            Logger.ShowLineCommonMessage($"Включено отображение чата {Name} ...");
         }
 
         public void StopShow()
         {
             ViewChannel = null;
-            ShowLineMessage($"Отображение чата отключено...");
+            Logger.ShowLineCommonMessage($"Отображение чата отключено...");
         }
 
         public void JoinRoom()
@@ -299,7 +304,7 @@ namespace DudelkaBot.system
                 IrcClient.StartProcess(Process);
             }
             IrcClient.JoinRoom(Name);
-            ShowLineMessage($"Выполнен вход в комнату: {Name} ...");
+            Logger.ShowLineCommonMessage($"Выполнен вход в комнату: {Name} ...");
         }
 
         public void LeaveRoom()
@@ -310,7 +315,7 @@ namespace DudelkaBot.system
                 IrcClient.StartProcess(Process);
             }
             IrcClient.LeaveRoom(Name);
-            ShowLineMessage($"Выполнен выход из комнаты: {Name} ...");
+            Logger.ShowLineCommonMessage($"Выполнен выход из комнаты: {Name} ...");
         }
 
         private int GetSexyLevel(string username)
@@ -372,12 +377,11 @@ namespace DudelkaBot.system
                 Message currentMessage = new Message(data);
 
                 if(ViewChannel != null && currentMessage.Channel == ViewChannel.Name && currentMessage.Msg != null)
-                    ShowLineMessage(currentMessage.UserName + ": " + currentMessage.Msg);
-
-                if (!currentMessage.Success)
+                    Logger.ShowLineChannelMessage(currentMessage.UserName,currentMessage.Msg, currentMessage.Channel);
+                else if(!currentMessage.Success)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    ShowLineMessage(data);
+                    Logger.ShowLineCommonMessage(data);
                     Console.ResetColor();
                     lock (ErrorListMessages)
                     {
@@ -389,10 +393,11 @@ namespace DudelkaBot.system
                 }
                 else if (currentMessage.UserName == "moobot" || currentMessage.UserName == "nightbot")
                     return;
+                else if (ViewChannel != null && currentMessage.Channel != ViewChannel.Name && currentMessage.Msg != null)
+                    Logger.WriteLineMessage(currentMessage.UserName,currentMessage.Msg, currentMessage.Channel);
 
-                if (currentMessage.Channel != null)
+                if (currentMessage.Channel != null && Channels.ContainsKey(currentMessage.Channel))
                 {
-                    if (Channels.ContainsKey(currentMessage.Channel))
                         Channels[currentMessage.Channel].Handler(currentMessage);
                 }
                 else
@@ -403,7 +408,7 @@ namespace DudelkaBot.system
             catch(Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                Logger.ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ResetColor();
                 return;
             }
@@ -870,7 +875,7 @@ namespace DudelkaBot.system
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineMessage(ex.Source + " " + ex.Message + " " + ex.Data + " " + ex.StackTrace);
+                Logger.ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data + " " + ex.StackTrace);
                 Console.ResetColor();
                 return;
             }
@@ -895,13 +900,13 @@ namespace DudelkaBot.system
         private void SubscribeMessage(Message msg, ChatContext db)
         {
             var userNotify = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
-            int ?chussub = 0;
+            int chussub = 0;
             if (userNotify != null)
             {
                 var chus = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userNotify.Id);
                 if (chus != null)
                 {
-                    chussub = chus?.CountSubscriptions;
+                    chussub = chus.CountSubscriptions;
                     chus.Active = true;
                     if (msg.Subscription > chus.CountSubscriptions)
                         chus.CountSubscriptions = msg.Subscription;
@@ -924,7 +929,7 @@ namespace DudelkaBot.system
                 var chus = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userNotify.Id);
                 if (chus != null)
                 {
-                    chussub = chus?.CountSubscriptions;
+                    chussub = chus.CountSubscriptions;
                     chus.Active = true;
                     if (msg.Subscription > chus.CountSubscriptions)
                         chus.CountSubscriptions = msg.Subscription;
@@ -939,7 +944,7 @@ namespace DudelkaBot.system
                 
             }
             db.SaveChangesAsync().Wait();
-            IrcClient.SendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa {2}", chussub > msg.Subscription ? chussub : msg.Subscription, chussub > msg.Subscription ? "Псс. Я тебя помню, меня не обманешь Kappa , добро пожаловать снова! ":""), msg.SubscriberName, msg);
+            IrcClient.SendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa {1}", chussub > msg.Subscription ? chussub : msg.Subscription, chussub > msg.Subscription ? "Псс. Я тебя помню, меня не обманешь Kappa , добро пожаловать снова! ":""), msg.SubscriberName, msg);
         }
 
         private void UsernoticeMessage(Message msg, ChatContext db)
@@ -995,8 +1000,8 @@ namespace DudelkaBot.system
 
         private void HandlerCountMessages(Message msg, ChatContext db)
         {
-            CountMessageForTenMin++;
-            CountMessageQuote++;
+            Interlocked.Increment(ref countMessageForUpdateStreamState);
+            Interlocked.Increment(ref countMessageQuote);
             var userPRIVMSG = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
 
             if (userPRIVMSG != null)
@@ -1032,33 +1037,36 @@ namespace DudelkaBot.system
 
         private void HandlerNamesMessage(Message msg, ChatContext db)
         {
-            foreach (var item in msg.NamesUsers)
+            lock (db)
             {
-                var userNames = db.Users.FirstOrDefault(a => a.Username == item);
-
-                if (userNames != null)
+                foreach (var item in msg.NamesUsers)
                 {
-                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == Id).FirstOrDefault(p => p.User_id == userNames.Id);
+                    var userNames = db.Users.FirstOrDefault(a => a.Username == item);
 
-                    if (chus != null)
-                        chus.Active = true;
+                    if (userNames != null)
+                    {
+                        var chus = db.ChannelsUsers.Where(p => p.Channel_id == Id).FirstOrDefault(p => p.User_id == userNames.Id);
+
+                        if (chus != null)
+                            chus.Active = true;
+                        else
+                            db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, Id) { Active = true });
+                    }
                     else
-                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, Id) { Active = true });
-                }
-                else
-                {
-                    userNames = new Users(item);
-                    db.Users.Add(userNames);
+                    {
+                        userNames = new Users(item);
+                        db.Users.Add(userNames);
+                        db.SaveChangesAsync().Wait();
+
+                        var chus = db.ChannelsUsers.Where(p => p.Channel_id == Id).FirstOrDefault(p => p.User_id == userNames.Id);
+
+                        if (chus != null)
+                            chus.Active = true;
+                        else
+                            db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, Id) { Active = true });
+                    }
                     db.SaveChangesAsync().Wait();
-
-                    var chus = db.ChannelsUsers.Where(p => p.Channel_id == Id).FirstOrDefault(p => p.User_id == userNames.Id);
-
-                    if (chus != null)
-                        chus.Active = true;
-                    else
-                        db.ChannelsUsers.Add(new ChannelsUsers(userNames.Id, Id) { Active = true });
                 }
-                db.SaveChangesAsync().Wait();
             }
         }
 
@@ -1164,8 +1172,8 @@ namespace DudelkaBot.system
                 else {
                     Req.SendPost(touser_id, buff);
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    ShowMessage("send "+ username + ": ");
-                    ShowLineMessage(buff);
+                    Logger.ShowCommonMessage("send "+ username + ": ");
+                    Logger.ShowLineCommonMessage(buff);
                     Console.ResetColor();
                     buff = item + "; ";
                     Thread.Sleep(700);
@@ -1175,8 +1183,8 @@ namespace DudelkaBot.system
             {
                 Req.SendPost(touser_id, buff);
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                ShowMessage("send " + username + ": ");
-                ShowLineMessage(buff);
+                Logger.ShowCommonMessage("send " + username + ": ");
+                Logger.ShowLineCommonMessage(buff);
                 Console.ResetColor();
             }
             var ig = new Users(username);
@@ -1192,8 +1200,8 @@ namespace DudelkaBot.system
             else
                 return;
             Console.ForegroundColor = ConsoleColor.Yellow;
-            ShowMessage("send " + username + ": ");
-            ShowLineMessage(message);
+            Logger.ShowCommonMessage("send " + username + ": ");
+            Logger.ShowLineCommonMessage(message);
             Console.ResetColor();
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
@@ -1229,25 +1237,23 @@ namespace DudelkaBot.system
 
         private static void Process()
         {
-            string s = "";
             while (true)
             {
                 try
                 {
-                    if (IrcClient.isConnect())
-                    {
-                        s = ircClient.ReadMessage();
-                        if (s != null)
-                            Task.Run(() => SwitchMessage(s));
-                        Thread.Sleep(10);
-                    }
+                    if (ircClient == null)
+                        continue;
+                    string s = ircClient.ReadMessage();
+                    if (s != null)
+                        Task.Run(() => SwitchMessage(s));
+                    
+                    Thread.Sleep(10);
                 }
                 catch (Exception ex)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    ShowLineMessage(ex.Message);
+                    Logger.ShowLineCommonMessage(ex.Data + " " + ex.Message + " " + ex.StackTrace);
                     Console.ResetColor();
-                    return;
                 }
             }
         }

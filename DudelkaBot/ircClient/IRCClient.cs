@@ -50,6 +50,7 @@ namespace DudelkaBot.ircClient
             inputStream.Dispose();
             outputStream.Dispose();
             tcpClient.Dispose();
+            Logger.StopWrite();
             tcpClient = new TcpClient();
             
             if (isConnect())
@@ -63,24 +64,12 @@ namespace DudelkaBot.ircClient
             StartProcess(func);
         }
 
-        public void ShowMessage(string message)
-        {
-            Console.Write(message);
-            Logger.Write(message);
-        }
-
-        public void ShowLineMessage(string message)
-        {
-            Console.WriteLine(message);
-            Logger.Write(message);
-        }
-
         public void StartProcess(Action func)
         {
             token = new CancellationTokenSource();
             process = new Task(func, token.Token);
             process.Start();
-            ShowLineMessage("Запущен обработчик сообщений...");
+            Logger.ShowLineCommonMessage("Запущен обработчик сообщений...");
         }
 
         public void StopProcess()
@@ -88,7 +77,7 @@ namespace DudelkaBot.ircClient
             if (process != null && !process.IsCompleted)
             {
                 token.Cancel();
-                ShowLineMessage("Обработчик сообщений остановлен...");
+                Logger.ShowLineCommonMessage("Обработчик сообщений остановлен...");
             }
         }
 
@@ -120,13 +109,13 @@ namespace DudelkaBot.ircClient
                     try
                     {
                         tcpClient.Client.ConnectAsync(ipHost, port).Wait();
-                        ShowLineMessage($"Соединение с сервером установлено...");
+                        Logger.ShowLineCommonMessage($"Соединение с сервером установлено...");
                     }
                     catch(Exception ex)
                     {
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        ShowLineMessage("Подключение не удалось \n" + ex.Message);
+                        Logger.ShowLineCommonMessage("Подключение не удалось \n" + ex.Message);
                         Console.ResetColor();
                         Thread.Sleep(10000);
                     }
@@ -185,7 +174,7 @@ namespace DudelkaBot.ircClient
                 outputStream.WriteLine("CAP REQ :twitch.tv/tags");
                 //outputStream.WriteLine("");
                 outputStream.Flush();
-                ShowLineMessage("Инициализация аккаунта...");
+                Logger.ShowLineCommonMessage("Инициализация аккаунта...");
             }
         }
 
@@ -218,7 +207,7 @@ namespace DudelkaBot.ircClient
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                ShowLineMessage(message);
+                Logger.ShowLineCommonMessage(message);
                 Console.ResetColor();
             }
         }
@@ -232,29 +221,29 @@ namespace DudelkaBot.ircClient
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                ShowLineMessage(message);
+                Logger.ShowLineCommonMessage(message);
                 Console.ResetColor();
             }
         }
 
         public void SendChatMessage(string message, Message requestMsg) 
         {
-            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + requestMsg.UserName + " " + message);
         }
 
         public void SendChatMessage(string message, string getter, Message requestMsg)
         {
-            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :@" + getter + " " + message);
         }
 
         public void SendChatBroadcastMessage(string message, Message requestMsg)
         {
-            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + requestMsg.Channel + " :" + message);
         }
 
         public void SendChatBroadcastMessage(string message, string channel)
         {
-            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + channel + " :" + message + "\r\n");
+            SendIrcMessage(":" + userName + "!" + userName + "@" + userName + ".twi.twitch.tv PRIVMSG #" + channel + " :" + message);
         }
 
         public void SendChatBroadcastChatMessage(List<string> commands, Message requestMsg)
@@ -318,7 +307,7 @@ namespace DudelkaBot.ircClient
 
         public string ReadMessage()
         {
-            return inputStream?.ReadLine();
+            return inputStream.ReadLine();
         }
 
         public static void BlockWhisperCancel(object obj)

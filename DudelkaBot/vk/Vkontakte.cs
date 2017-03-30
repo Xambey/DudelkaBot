@@ -12,18 +12,14 @@ namespace DudelkaBot.vk
     public static class Vkontakte
     {
         #region AuntData
-        //static ulong AppId = 5882984;
-        //static string email = "89036257463";
-        //static string pass = "Passw0rd";
-        //static Settings scope = Settings.All;
-        //static string OAuth = "137999";
+        static string OAuth = "b56600be2aef7fab0cbe547f98b46a424f2d00bb1e04bbad2a87a313c6af3527cda9a85fe9b1944bdb9c6";
         #endregion
         private static VkApi vk = new VkApi();
         private static void Authorize()
         {
             while (!vk.IsAuthorized)
             {
-                vk.Authorize("b56600be2aef7fab0cbe547f98b46a424f2d00bb1e04bbad2a87a313c6af3527cda9a85fe9b1944bdb9c6");
+                vk.Authorize(OAuth);
             }
         }
 
