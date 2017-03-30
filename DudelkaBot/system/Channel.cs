@@ -97,6 +97,8 @@ namespace DudelkaBot.system
         private static List<string> commands;
         private Dictionary<string, List<User>> voteResult = new Dictionary<string, List<User>>();
         private bool voteActive = false;
+        private static CancellationToken readToken = new CancellationToken();
+
         #endregion
 
         #region Properties
@@ -223,7 +225,7 @@ namespace DudelkaBot.system
                 }
 
                 Logger.StopWrite();
-                IrcClient.Reconnect(Process);
+                IrcClient.Reconnect(ProcessAsync);
                 Logger.StartWrite();
 
                 foreach (var item in Channels)
@@ -301,7 +303,7 @@ namespace DudelkaBot.system
             if (IrcClient == null)
             {
                 IrcClient = new IrcClient(Iphost, Port, UserName, Password);
-                IrcClient.StartProcess(Process);
+                IrcClient.StartProcess(ProcessAsync);
             }
             IrcClient.JoinRoom(Name);
             Logger.ShowLineCommonMessage($"Выполнен вход в комнату: {Name} ...");
@@ -312,7 +314,7 @@ namespace DudelkaBot.system
             if (IrcClient == null)
             {
                 IrcClient = new IrcClient(Iphost, Port, UserName, Password);
-                IrcClient.StartProcess(Process);
+                IrcClient.StartProcess(ProcessAsync);
             }
             IrcClient.LeaveRoom(Name);
             Logger.ShowLineCommonMessage($"Выполнен выход из комнаты: {Name} ...");
@@ -1235,7 +1237,7 @@ namespace DudelkaBot.system
             }
         }
 
-        private static void Process()
+        private static void ProcessAsync()
         {
             while (true)
             {
@@ -1243,10 +1245,10 @@ namespace DudelkaBot.system
                 {
                     if (ircClient == null)
                         continue;
-                    string s = ircClient.ReadMessage();
+                    string s = Task.Factory.StartNew<string>(() => ircClient.ReadMessage(),CancellationToken);
                     if (s != null)
                         Task.Run(() => SwitchMessage(s));
-                    
+
                     Thread.Sleep(10);
                 }
                 catch (Exception ex)

@@ -64,7 +64,7 @@ namespace DudelkaBot.ircClient
             StartProcess(func);
         }
 
-        public void StartProcess(Action func)
+        public void StartProcess(Action<Task> func)
         {
             token = new CancellationTokenSource();
             process = new Task(func, token.Token);
