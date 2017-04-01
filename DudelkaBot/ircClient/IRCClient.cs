@@ -199,15 +199,18 @@ namespace DudelkaBot.ircClient
 
         private void SendIrcMessage(string message)
         { 
-            if (isConnect() && messageCount++ < messageLimit && !message.StartsWith("PONG"))
+            if (isConnect() && messageCount++ < messageLimit)
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Logger.ShowLineCommonMessage(message);
-                Console.ResetColor();
+                if (!message.StartsWith("PONG"))
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Logger.ShowLineCommonMessage(message);
+                    Console.ResetColor();
+                }
             }
         }
 

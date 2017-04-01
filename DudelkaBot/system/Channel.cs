@@ -54,9 +54,9 @@ namespace DudelkaBot.system
         private Timer VoteTimer;
         private Timer StreamTimer;
         private Timer QuoteTimer;
-        static private int StreamStateUpdateTime = 5;
+        static private int StreamStateUpdateTime = 3;
         static private int QuoteShowTime = 15;
-        static private readonly int CountLimitMessagesForUpdateStreamState = 15;
+        static private readonly int CountLimitMessagesForUpdateStreamState = 10;
         static private readonly int countLimitMessagesForShowQuote = 40;
         #endregion
 
@@ -272,12 +272,13 @@ namespace DudelkaBot.system
                     Logger.ShowLineCommonMessage($"Чат канала {Name} сменил статус на {Status.ToString()}");
                 }
             }
-            catch (System.InvalidOperationException ex)
+            catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
+                if(ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
                 Console.ResetColor();
-                return;
             }
         }
 
@@ -555,7 +556,7 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.date:
-                                    IrcClient.SendChatMessage(DateTime.Now.ToString(), msg);
+                                    IrcClient.SendChatMessage("Время в москве: " + DateTime.Now.TimeOfDay.ToString().Remove(8), msg);
                                     break;
                                 case Command.mystat:
                                     var userStat = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -1287,7 +1288,8 @@ namespace DudelkaBot.system
                 {
                     if (ircClient == null)
                         continue;
-                    
+
+                    ircClient.isConnect();
                     string s = ircClient.ReadMessage();
                     if (!string.IsNullOrEmpty(s))
                     {
