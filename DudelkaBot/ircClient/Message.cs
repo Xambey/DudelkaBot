@@ -6,52 +6,52 @@ using System.Threading.Tasks;
 
 namespace DudelkaBot.ircClient
 {
-    public class Message
+    public class Message : IDisposable
     {
         #region Patterns
-        public static string patternPVMSG = @":(?<username>\w+)!\w+@\w+.tmi.twitch.tv (?<type>\w+) #(?<channel>\w+) :(?<msg>.*)";
-        public static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
-        public static string patternPARTorJOIN = @":(?<username>\w+)!.+ (?<type>\w+) #(?<channel>\w+)";
-        public static string typePattern = @" (?<type>[A-Z]+) #";
-        public static string commandPattern = @"#(?<channel>\w+) :!(?<command>\w+)$";
-        public static string pingPattern = @"PING\s+";
-        public static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
-        public static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
-        public static string usernoticePattern = @".+login=(?<username>\w+).+msg-param-months=(?<sub>\d+).* USERNOTICE #(?<channel>\w+)";
-        public static string subscribePattern = @"(?<username>\w+).+";
-        public static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
-        public static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
-        public static string deathPattern = @"!death (?<command>v|[+-]|\d+)$";
-        public static string deathBattlePattern = @"!deathbattle (?<command>v|[+-]|\d+)$";
-        public static string vkidPattern = @"!vkid (?<id>\w+)$";
-        public static string quotePattern = @"!quote\s+(?<op>[+-])\s+(?<some>.+)";
-        public static string quoteDatePapptern = @"!quote\s+(?<op>[+-])\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<some>.+)";
-        public static string quoteShowPattern = @"!quote (?<number>\d+)$";
-        public static string quoteUpdatePattern = @"!qupdate (?<number>\d+) (?<quote>.+)";
-        public static string quoteUpdateWithDate = @"!qupdate\s+(?<number>\d+)\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<quote>.+)"; 
+        private static string patternPVMSG = @":(?<username>\w+)!\w+@\w+.tmi.twitch.tv (?<type>\w+) #(?<channel>\w+) :(?<msg>.*)";
+        private static string patternPRIVMSGtag = @"@.* :(?<username>\w+)!.* #(?<channel>\w+) :(?<msg>.*)";
+        private static string patternPARTorJOIN = @":(?<username>\w+)!.+ (?<type>\w+) #(?<channel>\w+)";
+        private static string typePattern = @" (?<type>[A-Z]+) #";
+        private static string commandPattern = @"#(?<channel>\w+) :!(?<command>.+)$";
+        private static string pingPattern = @"PING\s+";
+        private static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
+        private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
+        private static string usernoticePattern = @".+login=(?<username>\w+).+msg-param-months=(?<sub>\d+).* USERNOTICE #(?<channel>\w+)";
+        private static string subscribePattern = @"(?<username>\w+).+";
+        private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
+        private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
+        private static string vkidPattern = @"!vkid (?<id>\w+)$";
+        private static string quotePattern = @"!quote\s+(?<op>[+-])\s+(?<some>.+)";
+        private static string quoteDatePapptern = @"!quote\s+(?<op>[+-])\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<some>.+)";
+        private static string quoteShowPattern = @"!quote (?<number>\d+)$";
+        private static string quoteUpdatePattern = @"!qupdate (?<number>\d+) (?<quote>.+)";
+        private static string quoteUpdateWithDate = @"!qupdate\s+(?<number>\d+)\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<quote>.+)";
+        private static string counterPattern = @"!counter\s+(?<command>[+-])\s+(?<name>\w+)$";
+        private static string existedCounterPattern = @"!(?<name>\w+)\s+(?<command>v|[+-]|\d+)$";
         #endregion
 
         #region Regexes
-        public static Regex typeReg = new Regex(typePattern);
-        public static Regex joinOrpartReg = new Regex(patternPARTorJOIN);
-        public static Regex pvmsgTagReg = new Regex(patternPRIVMSGtag);
-        public static Regex pvmsgReg = new Regex(patternPVMSG);
-        public static Regex commandReg = new Regex(commandPattern);
-        public static Regex pingReg = new Regex(pingPattern);
-        public static Regex namesReg = new Regex(namesPattern);
-        public static Regex modeReg = new Regex(modePattern);
-        public static Regex usernoticeReg = new Regex(usernoticePattern);
-        public static Regex subscribeReg = new Regex(subscribePattern);
-        public static Regex voteReg = new Regex(votePattern);
-        public static Regex advertReg = new Regex(advertPattern);
-        public static Regex deathReg = new Regex(deathPattern);
-        public static Regex deathBattleReg = new Regex(deathBattlePattern);
-        public static Regex vkidReg = new Regex(vkidPattern);
-        public static Regex quoteReg = new Regex(quotePattern);
-        public static Regex quoteDateReg = new Regex(quoteDatePapptern);
-        public static Regex quoteShowReg = new Regex(quoteShowPattern);
-        public static Regex quoteUpdateReg = new Regex(quoteUpdatePattern);
-        public static Regex quoteUpdateWithDateReg = new Regex(quoteUpdateWithDate);
+        private static Regex typeReg = new Regex(typePattern);
+        private static Regex joinOrpartReg = new Regex(patternPARTorJOIN);
+        private static Regex pvmsgTagReg = new Regex(patternPRIVMSGtag);
+        private static Regex pvmsgReg = new Regex(patternPVMSG);
+        private static Regex commandReg = new Regex(commandPattern);
+        private static Regex pingReg = new Regex(pingPattern);
+        private static Regex namesReg = new Regex(namesPattern);
+        private static Regex modeReg = new Regex(modePattern);
+        private static Regex usernoticeReg = new Regex(usernoticePattern);
+        private static Regex subscribeReg = new Regex(subscribePattern);
+        private static Regex voteReg = new Regex(votePattern);
+        private static Regex advertReg = new Regex(advertPattern);
+        private static Regex vkidReg = new Regex(vkidPattern);
+        private static Regex quoteReg = new Regex(quotePattern);
+        private static Regex quoteDateReg = new Regex(quoteDatePapptern);
+        private static Regex quoteShowReg = new Regex(quoteShowPattern);
+        private static Regex quoteUpdateReg = new Regex(quoteUpdatePattern);
+        private static Regex quoteUpdateWithDateReg = new Regex(quoteUpdateWithDate);
+        private static Regex counterReg = new Regex(counterPattern);
+        private static Regex existedCounterReg = new Regex(existedCounterPattern);
         #endregion
 
         #region Fields
@@ -76,12 +76,13 @@ namespace DudelkaBot.ircClient
         private int advertTime = 0;
         private int advertCount = 0;
         private string advert;
-        private string deathCommand;
         private string vkid;
         private int quoteNumber = 0;
         private string quote;
         private string quoteOperation;
         private DateTime date;
+        private string oldName;
+        private string newName;
 
         #endregion
 
@@ -104,12 +105,13 @@ namespace DudelkaBot.ircClient
         public int AdvertTime { get => advertTime; set => advertTime = value; }
         public int AdvertCount { get => advertCount; set => advertCount = value; }
         public string Advert { get => advert; set => advert = value; }
-        public string DeathCommand { get => deathCommand; set => deathCommand = value; }
         public string Vkid { get => vkid; set => vkid = value; }
         public int QuoteNumber { get => quoteNumber; set => quoteNumber = value; }
         public string Quote { get => quote; set => quote = value; }
         public string QuoteOperation { get => quoteOperation; set => quoteOperation = value; }
         public DateTime Date { get => date; set => date = value; }
+        public string NewName { get => newName; set => newName = value; }
+        public string OldName { get => oldName; set => oldName = value; }
 
         #endregion
 
@@ -310,27 +312,24 @@ namespace DudelkaBot.ircClient
                                 Success = false;
 
                         }
-                        else if(Msg.StartsWith("!deathbattle"))
+                        else if(Msg.StartsWith("!counter"))
                         {
-                            math = deathBattleReg.Match(Msg);
+                            math = counterReg.Match(Msg);
                             if (math.Success)
                             {
-                                DeathCommand = math.Groups["command"].Value;
-                                Command = Command.deathbattle;
+                                Sign = math.Groups["command"].Value;
+                                NewName = math.Groups["name"].Value;
+                                Command = Command.counter;
                             }
                             else
-                                Success = false;
-                        }
-                        else if (Msg.StartsWith("!death"))
-                        {
-                            math = deathReg.Match(Msg);
-                            if (math.Success)
                             {
-                                DeathCommand = math.Groups["command"].Value;
-                                Command = Command.death;
+                                if(Msg == "!counter")
+                                {
+                                    Command = Command.counter;
+                                }
+                                else
+                                    Success = false;
                             }
-                            else
-                                Success = false;
                         }
                         else if (Msg.StartsWith("!quote"))
                         {
@@ -417,7 +416,27 @@ namespace DudelkaBot.ircClient
                             else
                                 Success = false;
                         }
-
+                        else if (Msg.StartsWith("!"))
+                        {
+                            math = existedCounterReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                NewName = math.Groups["name"].Value;
+                                Sign = math.Groups["command"].Value;
+                                Command = Command.existedcounter;
+                            }
+                            else
+                            {
+                                math = commandReg.Match(data);
+                                if (math.Success)
+                                {
+                                    if (!Enum.TryParse(math.Groups["command"].Value, out Command))
+                                        Command = Command.unknown;
+                                }
+                                else
+                                    Success = false;
+                            }
+                        }
 
                         break;
                     case TypeMessage.GLOBALUSERSTATE:
@@ -429,6 +448,11 @@ namespace DudelkaBot.ircClient
                         break;
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

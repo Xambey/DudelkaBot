@@ -14,18 +14,20 @@ namespace DudelkaBot.ircClient
     public class IrcClient
     {
         #region Fields
-        private TcpClient tcpClient;
-        private StreamWriter outputStream;
-        private StreamReader inputStream;
         private string ipHost, userName, password;
-        private Queue<string> queueMessages = new Queue<string>();
         private int port;
         private int messageCount;
         private readonly int messageLimit = 10;
+        #endregion
+
+        #region References
+        private TcpClient tcpClient;
+        private StreamWriter outputStream;
+        private StreamReader inputStream;
+        private Queue<string> queueMessages = new Queue<string>();
         private Task process;
         private CancellationTokenSource token;
-
-        private static Dictionary<Users, Timer> whisperBlock = new Dictionary<Users, Timer>();
+        private static Dictionary<Users, Timer> whisperBlock = new Dictionary<Users, Timer>(); 
         #endregion
 
         #region Properties
@@ -47,21 +49,16 @@ namespace DudelkaBot.ircClient
         public void Reconnect(Action func)
         {
             StopProcess();
-            inputStream.Dispose();
-            outputStream.Dispose();
             tcpClient.Dispose();
-            Logger.StopWrite();
             tcpClient = new TcpClient();
-            
             if (isConnect())
             {
-                inputStream.DiscardBufferedData();
                 inputStream = new StreamReader(tcpClient.GetStream());
                 outputStream = new StreamWriter(tcpClient.GetStream());
-
+                Thread.Sleep(2000);
+                StartProcess(func);
                 SignIn();
             }
-            StartProcess(func);
         }
 
         public void StartProcess(Action func)
@@ -76,7 +73,9 @@ namespace DudelkaBot.ircClient
         {
             if (process != null && !process.IsCompleted)
             {
+                token.Token.WaitHandle.WaitOne(2000);
                 token.Cancel();
+                token.Dispose();
                 Logger.ShowLineCommonMessage("Обработчик сообщений остановлен...");
             }
         }
@@ -113,6 +112,8 @@ namespace DudelkaBot.ircClient
                     }
                     catch(Exception ex)
                     {
+                        if (ex.InnerException != null && ex.InnerException is SocketException)
+                            return true;
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Logger.ShowLineCommonMessage("Подключение не удалось \n" + ex.Message);
@@ -154,7 +155,6 @@ namespace DudelkaBot.ircClient
             Timer timer = new Timer(TimerTick, null, 30000, 30000);
 
             tcpClient = new TcpClient();
-
             if (isConnect())
             {
                 inputStream = new StreamReader(tcpClient.GetStream());
@@ -199,16 +199,18 @@ namespace DudelkaBot.ircClient
 
         private void SendIrcMessage(string message)
         { 
-
             if (isConnect() && messageCount++ < messageLimit)
             {
                 outputStream.WriteLine(message);
                 outputStream.Flush();
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Logger.ShowLineCommonMessage(message);
-                Console.ResetColor();
+                if (!message.StartsWith("PONG"))
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Logger.ShowLineCommonMessage(message);
+                    Console.ResetColor();
+                }
             }
         }
 
@@ -258,8 +260,7 @@ namespace DudelkaBot.ircClient
             }
 
             SendIrcMessage(builder.ToString());
-        }
-        
+        }       
         //whispers
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public void SendChatWhisperMessage(string message, ulong id_user, Message requestMsg)
@@ -307,7 +308,18 @@ namespace DudelkaBot.ircClient
 
         public string ReadMessage()
         {
-            return inputStream.ReadLine();
+            try
+            {
+                return inputStream.ReadLine();
+            }
+            catch(Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Logger.ShowLineCommonMessage(ex.Message + ex.StackTrace + ex.Data);
+                if (ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.StackTrace + ex.InnerException.Data);
+                return string.Empty;
+            }
         }
 
         public static void BlockWhisperCancel(object obj)

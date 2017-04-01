@@ -34,11 +34,18 @@ namespace DudelkaBot.system
             //"imaqtpie",
             //"lck1",
             //"silvername",
+<<<<<<< HEAD
             //"lenagol0vach"
             //"lenagol0vach",
             //"dota2ruhub",
             //"thijshs",
             //"pgl_dota",i
+=======
+            //"lenagol0vach",
+            //"dota2ruhub",
+            //"thijshs",
+            //"pgl_dota",
+>>>>>>> test
             //"kephrii"
         };
         static string pattern = @"!(?<channel>\w+)";
@@ -115,6 +122,13 @@ namespace DudelkaBot.system
                         }
                         Console.ResetColor();
                         Thread.Sleep(2000);
+                        break;
+                    case "!savelog":
+                        foreach (var item in Channel.Channels)
+                        {
+                            Logger.SaveChannelLog(item.Value.Name);
+                        }
+                        Logger.SaveCommonLog();
                         break;
                     case "!add":
                         string chname = Console.ReadLine();

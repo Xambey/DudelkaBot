@@ -13,14 +13,13 @@ namespace DudelkaBot.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
             modelBuilder
-                .HasAnnotation("ProductVersion", "1.1.0-rtm-22752")
+                .HasAnnotation("ProductVersion", "1.1.1")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("DudelkaBot.dataBase.model.Channels", b =>
                 {
                     b.Property<int>("Channel_id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("Channel_name");
 
@@ -52,11 +51,41 @@ namespace DudelkaBot.Migrations
                     b.ToTable("ChannelsUsers");
                 });
 
+            modelBuilder.Entity("DudelkaBot.dataBase.model.Counters", b =>
+                {
+                    b.Property<int>("Channel_id");
+
+                    b.Property<int>("Number")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("Count");
+
+                    b.Property<string>("Counter_name");
+
+                    b.HasKey("Channel_id", "Number");
+
+                    b.ToTable("Counters");
+                });
+
+            modelBuilder.Entity("DudelkaBot.dataBase.model.Quotes", b =>
+                {
+                    b.Property<int>("Channel_id");
+
+                    b.Property<int>("Number");
+
+                    b.Property<DateTime>("Date");
+
+                    b.Property<string>("Quote");
+
+                    b.HasKey("Channel_id", "Number");
+
+                    b.ToTable("Quotes");
+                });
+
             modelBuilder.Entity("DudelkaBot.dataBase.model.Users", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("Username");
 

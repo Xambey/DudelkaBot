@@ -10,19 +10,25 @@ namespace DudelkaBot.system
 {
     internal static class Logger
     {
-        static readonly int timeHours = 24;
-        static readonly int countElementsForWriteChannels = 100;
-        static readonly int countElementsForWriteCommon = 50;
+        #region Constants
+            static readonly int timeHours = 24;
+            static readonly int countElementsForWriteChannels = 100;
+            static readonly int countElementsForWriteCommon = 50;
+        #endregion
 
-        static string path = $"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt";
-        //writing in concole
-        static string channelPath = "./logs/channels"; //$"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt"; 
-        static FileStream stream;
-        static Timer timerLogFile = new Timer(ChangeLogFileName, null, timeHours * 60 * 60000, timeHours * 60 * 60000);
-        static bool ActiveLog = true;
+        #region Fields
+        static string commonPath = $"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt";
+        static string channelPath = "./logs/channels";
+        static string CommonPath { get => commonPath; set => commonPath = value; }
+        static bool ActiveLog = true; 
+        #endregion
+
+        #region References
+        static Timer timerLogFile = new Timer(UpdateLogFileName, null, timeHours * 60 * 60000, timeHours * 60 * 60000);
         static ConcurrentQueue<string> CommonContainer = new ConcurrentQueue<string>();
         static ConcurrentDictionary<string, ConcurrentQueue<string>> channelslog = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
-        static Dictionary<string, string> channelPaths = new Dictionary<string, string>();
+        static Dictionary<string, string> channelPaths = new Dictionary<string, string>(); 
+        #endregion
 
         public static void UpdateChannelPaths(string channelname)
         {
@@ -32,16 +38,45 @@ namespace DudelkaBot.system
                 channelPaths.Add(channelname, channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.') }.txt");
             else
                 channelPaths[channelname] = channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.') }.txt";
+            Thread.Sleep(1000);
         }
 
         public static void SaveChannelLog(string channelname)
         {
+            using (var stream = new StreamWriter(File.Open(channelPaths[channelname], FileMode.Append), Encoding.Unicode))
+            {
+                if (!channelslog.ContainsKey(channelname))
+                    return;
+                while (!channelslog[channelname].IsEmpty)
+                {
+                    string mes;
+                    if (!channelslog[channelname].TryDequeue(out mes))
+                    {
+                        throw new InvalidOperationException("Ошибка! Не удалось удалить элемент из очереди");
+                    }
+                    stream.Write(mes);
+                }
 
+                stream.Flush();
+            }
         }
 
         public static void SaveCommonLog()
         {
+            using (var stream = new StreamWriter(File.Open(CommonPath, FileMode.Append), Encoding.Unicode))
+            {
+                while (!CommonContainer.IsEmpty)
+                {
+                    string mes;
+                    if (!CommonContainer.TryDequeue(out mes))
+                    {
+                        throw new InvalidOperationException("Ошибка! Не удалось удалить элемент из очереди");
+                    }
+                    stream.Write(mes);
+                }
 
+                stream.Flush();
+            }
         }
 
         public static void ShowLineCommonMessage(string message)
@@ -58,7 +93,7 @@ namespace DudelkaBot.system
 
         public static void ShowLineChannelMessage(string username, string message, string channelname)
         {
-            Console.WriteLine(message);
+            Console.WriteLine(username + ": " + message);
             WriteLineMessage(username, message, channelname);
         }
 
@@ -86,8 +121,6 @@ namespace DudelkaBot.system
                 return false;
             }
         }
-
-
 
         public static void WriteLineMessage(string username,string message, string channelname)
         {
@@ -121,9 +154,9 @@ namespace DudelkaBot.system
                                 }
                                 stream.Write(mes);
                             }
-
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -172,7 +205,7 @@ namespace DudelkaBot.system
                     if (CommonContainer.Count >= countElementsForWriteCommon)
                     {
                         CommonContainer.Enqueue(DateTime.Now.ToString() + ": " + message + "\n");
-                        using (var stream = new StreamWriter(File.Open(path, FileMode.Append),Encoding.Unicode))
+                        using (var stream = new StreamWriter(File.Open(CommonPath, FileMode.Append),Encoding.Unicode))
                         {
                             while (!CommonContainer.IsEmpty)
                             {
@@ -186,6 +219,7 @@ namespace DudelkaBot.system
 
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -252,6 +286,7 @@ namespace DudelkaBot.system
 
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -300,7 +335,7 @@ namespace DudelkaBot.system
                     if (CommonContainer.Count >= countElementsForWriteCommon)
                     {
                         CommonContainer.Enqueue(" " + message);
-                        using (var stream = new StreamWriter(File.Open(path, FileMode.Append),Encoding.Unicode))
+                        using (var stream = new StreamWriter(File.Open(CommonPath, FileMode.Append),Encoding.Unicode))
                         {
                             while (!CommonContainer.IsEmpty)
                             {
@@ -314,6 +349,7 @@ namespace DudelkaBot.system
 
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -345,11 +381,12 @@ namespace DudelkaBot.system
             }
         }
 
-        static void ChangeLogFileName(object obj)
+        static void UpdateLogFileName(object obj)
         {
-            lock(path)
-                path = $"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt";
+            lock(CommonPath)
+                CommonPath = $"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt";
         }
+
         public static void StopWrite()
         {
             ActiveLog = false;
