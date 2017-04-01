@@ -25,16 +25,20 @@ namespace DudelkaBot.system
         {
             "dudelka_krasnaya",
             "blackufa_twitch",
-            "dariya_willis",
-            "c9sneaky",
-            "nl_kripp",
-            "fairlight_excalibur",
-            "lirik",
-            "domingo",
-            "imaqtpie",
-            "lck1",
-            "silvername",
-            "lenagol0vach"
+            "dariya_willis"
+            //"c9sneaky",
+            //"nl_kripp",
+            //"fairlight_excalibur",
+            //"lirik",
+            //"domingo",
+            //"imaqtpie",
+            //"lck1",
+            //"silvername",
+            //"lenagol0vach",
+            //"dota2ruhub",
+            //"thijshs",
+            //"pgl_dota",
+            //"kephrii"
         };
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
