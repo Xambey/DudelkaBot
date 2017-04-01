@@ -156,6 +156,7 @@ namespace DudelkaBot.system
                             }
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -218,6 +219,7 @@ namespace DudelkaBot.system
 
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -284,6 +286,7 @@ namespace DudelkaBot.system
 
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {
@@ -346,6 +349,7 @@ namespace DudelkaBot.system
 
                             stream.Flush();
                         }
+                        GC.Collect();
                     }
                     else
                     {

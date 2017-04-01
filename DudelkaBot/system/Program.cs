@@ -34,7 +34,11 @@ namespace DudelkaBot.system
             "imaqtpie",
             "lck1",
             "silvername",
-            "lenagol0vach"
+            "lenagol0vach",
+            "dota2ruhub",
+            "thijshs",
+            "pgl_dota",
+            "kephrii"
         };
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
