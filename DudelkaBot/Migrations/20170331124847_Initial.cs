@@ -15,7 +15,9 @@ namespace DudelkaBot.Migrations
                 {
                     Channel_id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Channel_name = table.Column<string>(nullable: true)
+                    Channel_name = table.Column<string>(nullable: true),
+                    DeathCount = table.Column<int>(nullable: false),
+                    VkId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -39,6 +41,35 @@ namespace DudelkaBot.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Counters",
+                columns: table => new
+                {
+                    Channel_id = table.Column<int>(nullable: false),
+                    Number = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Count = table.Column<int>(nullable: false),
+                    Counter_name = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Counters", x => new { x.Channel_id, x.Number });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Quotes",
+                columns: table => new
+                {
+                    Channel_id = table.Column<int>(nullable: false),
+                    Number = table.Column<int>(nullable: false),
+                    Date = table.Column<DateTime>(nullable: false),
+                    Quote = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Quotes", x => new { x.Channel_id, x.Number });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -59,6 +90,12 @@ namespace DudelkaBot.Migrations
 
             migrationBuilder.DropTable(
                 name: "ChannelsUsers");
+
+            migrationBuilder.DropTable(
+                name: "Counters");
+
+            migrationBuilder.DropTable(
+                name: "Quotes");
 
             migrationBuilder.DropTable(
                 name: "Users");

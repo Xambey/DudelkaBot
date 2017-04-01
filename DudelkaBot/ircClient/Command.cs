@@ -17,12 +17,12 @@ namespace DudelkaBot.ircClient
         date,
         citytime,
         advert,
-        death,
-        deathbattle,
         music,
         vkid,
         quote,
-        qupdate
+        qupdate,
+        counter,
+        existedcounter
     };
 
 }

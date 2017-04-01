@@ -25,16 +25,16 @@ namespace DudelkaBot.system
         {
             "dudelka_krasnaya",
             "blackufa_twitch",
-            "dariya_willis"
-            //"c9sneaky",
-            //"nl_kripp",
-            //"fairlight_excalibur",
-            //"lirik",
-            //"domingo",
-            //"imaqtpie",
-            //"lck1",
-            //"silvername",
-            //"lenagol0vach"
+            "dariya_willis",
+            "c9sneaky",
+            "nl_kripp",
+            "fairlight_excalibur",
+            "lirik",
+            "domingo",
+            "imaqtpie",
+            "lck1",
+            "silvername",
+            "lenagol0vach"
         };
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
@@ -110,6 +110,13 @@ namespace DudelkaBot.system
                         }
                         Console.ResetColor();
                         Thread.Sleep(2000);
+                        break;
+                    case "!savelog":
+                        foreach (var item in Channel.Channels)
+                        {
+                            Logger.SaveChannelLog(item.Value.Name);
+                        }
+                        Logger.SaveCommonLog();
                         break;
                     case "!add":
                         string chname = Console.ReadLine();
