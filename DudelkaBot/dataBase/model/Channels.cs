@@ -15,6 +15,7 @@ namespace DudelkaBot.dataBase.model
         public int Channel_id { get; set; }
         public string Channel_name { get; set; }
         public int VkId { get; set; }
+        public int DjId { get; set; }
 
         public Channels() { }
         public Channels(string channelName)

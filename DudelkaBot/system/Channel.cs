@@ -76,7 +76,7 @@ namespace DudelkaBot.system
         private static Dictionary<string, Channel> channels = new Dictionary<string, Channel>();
         private static Channel viewChannel;
         private static List<Message> errorListMessages = new List<Message>();
-        private Status status = Status.Unknown;
+        private Status status = Status.Offline;
         private static Random rand = new Random();
         private static List<string> commands;
         private Dictionary<string, List<User>> voteResult = new Dictionary<string, List<User>>();
@@ -247,7 +247,7 @@ namespace DudelkaBot.system
             try
             {
                 var oldstatus = Status;
-                if (countMessageForUpdateStreamState == 0)
+                if (countMessageForUpdateStreamState <= CountLimitMessagesForUpdateStreamState)
                 {
                     Status = Status.Offline;
                     using (var db = new ChatContext())
@@ -259,7 +259,7 @@ namespace DudelkaBot.system
                         db.SaveChanges();
                     }
                 }
-                else if(countMessageForUpdateStreamState > CountLimitMessagesForUpdateStreamState)
+                else
                 {
                     Status = Status.Online;
                     countMessageForUpdateStreamState = 0;
@@ -628,14 +628,54 @@ namespace DudelkaBot.system
                                         if (ch.VkId == 0)
                                         {
                                             IrcClient.SendChatMessage("Не установлен Vk Id для канала, см. !help", msg);
-                                            break;
                                         }
                                         string trackname = Vkontakte.getNameTrack(ch.VkId);
                                         if (string.IsNullOrEmpty(trackname))
-                                            IrcClient.SendChatMessage("В данный момент музыка не играет :(", msg);
+                                        {
+                                            if (ch.DjId as object != null)
+                                            {
+                                                if (ch.DjId == 0)
+                                                {
+                                                    IrcClient.SendChatMessage("Не установлен DjId для канала, см. !help", msg);
+                                                    break;
+                                                }
+                                                string g = req.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
+                                                if (string.IsNullOrEmpty(g))
+                                                {
+                                                    IrcClient.SendChatMessage("В данный момент музыка нигде не играет FeelsBadMan !", msg);
+                                                }
+                                                else
+                                                {
+                                                    IrcClient.SendChatMessage(g, msg);
+                                                    break;
+                                                }
+                                            }
+                                        }
                                         else
-                                            IrcClient.SendChatMessage("Сейчас играет: " + trackname + " Kreygasm", msg);
+                                        {
+                                            IrcClient.SendChatMessage("Сейчас в VK играет: " + trackname + " Kreygasm", msg);
+                                            break;
+                                        }
                                     }
+                                    
+                                    break;
+                                case Command.djid:
+                                    var pe = db.Users.FirstOrDefault(a => a.Username == msg.UserName)?.Id;
+                                    if (pe == null)
+                                        break;
+                                    var mode = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == pe && a.Moderator);
+                                    if (mode == null && msg.UserName != "dudelka_krasnaya") 
+                                        break;
+                                    var chih = db.Channels.FirstOrDefault(a => a.Channel_name == Name);
+                                    if (chih == null)
+                                        break;
+                                    int v;
+                                    int.TryParse(msg.Djid, out v);
+                                    if (v == 0)
+                                        break;
+                                    chih.DjId = v;
+                                    ircClient.SendChatMessage("DjId сохранено!", msg);
+                                    db.SaveChanges();
                                     break;
                                 case Command.vkid:
                                     var t = db.Users.FirstOrDefault(a => a.Username == msg.UserName)?.Id;
@@ -1215,7 +1255,7 @@ namespace DudelkaBot.system
                 if ((buff + item + "; ").Length < 480)
                     buff += item + "; ";
                 else {
-                    Req.SendPost(touser_id, buff);
+                    Req.SendPostWhisperMessage(touser_id, buff);
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Logger.ShowCommonMessage("send "+ username + ": ");
                     Logger.ShowLineCommonMessage(buff);
@@ -1226,7 +1266,7 @@ namespace DudelkaBot.system
             }
             if (!string.IsNullOrEmpty(buff))
             {
-                Req.SendPost(touser_id, buff);
+                Req.SendPostWhisperMessage(touser_id, buff);
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Logger.ShowCommonMessage("send " + username + ": ");
                 Logger.ShowLineCommonMessage(buff);
@@ -1241,7 +1281,7 @@ namespace DudelkaBot.system
             if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
                 return;
             if (!string.IsNullOrEmpty(message) && message.Length < 500)
-                Req.SendPost(touser_id, message);
+                Req.SendPostWhisperMessage(touser_id, message);
             else
                 return;
             Console.ForegroundColor = ConsoleColor.Yellow;

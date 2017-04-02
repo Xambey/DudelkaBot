@@ -43,10 +43,10 @@ namespace DudelkaBot.system
 
         public static void SaveChannelLog(string channelname)
         {
+            if (!channelslog.ContainsKey(channelname) || channelslog.IsEmpty)
+                return;
             using (var stream = new StreamWriter(File.Open(channelPaths[channelname], FileMode.Append), Encoding.Unicode))
             {
-                if (!channelslog.ContainsKey(channelname))
-                    return;
                 while (!channelslog[channelname].IsEmpty)
                 {
                     string mes;
@@ -63,6 +63,8 @@ namespace DudelkaBot.system
 
         public static void SaveCommonLog()
         {
+            if (CommonContainer.IsEmpty)
+                return;
             using (var stream = new StreamWriter(File.Open(CommonPath, FileMode.Append), Encoding.Unicode))
             {
                 while (!CommonContainer.IsEmpty)

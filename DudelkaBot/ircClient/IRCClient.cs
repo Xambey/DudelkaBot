@@ -310,7 +310,10 @@ namespace DudelkaBot.ircClient
         {
             try
             {
-                return inputStream.ReadLine();
+                var task = inputStream.ReadLineAsync();
+
+                task.Wait(Timeout.InfiniteTimeSpan);
+                return task.Result;
             }
             catch(Exception ex)
             {
