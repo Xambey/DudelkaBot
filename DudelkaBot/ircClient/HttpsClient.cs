@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading;
+using DudelkaBot.system;
 
 namespace DudelkaBot.ircClient
 {
@@ -24,6 +25,7 @@ namespace DudelkaBot.ircClient
         private static Random random = new Random();
         private static string patternrandom = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private static string DjURL = "https://twitch-dj.ru/includes/back.php?func=playlist&channel=channel_id&c";
+        private static string StreamUrl = "https://api.twitch.tv/kraken/streams/?channel=name&callback=twitch_info&client_id=";
         private int lengthid = 30;
 
         public HttpsClient(string userid, string token, string url)
@@ -47,6 +49,46 @@ namespace DudelkaBot.ircClient
             }
             return result;
         }
+        public Tuple<Status, int, DateTime> GetChannelInfo(string channelname, string client_id)
+        {
+            HttpResponseMessage message;
+            try
+            {
+                HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, StreamUrl.Replace("name", channelname) + client_id);
+                m.Method = new HttpMethod("GET");
+                m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+                m.Headers.CacheControl = new CacheControlHeaderValue() { NoCache = true };
+                message = client.SendAsync(m).Result;
+                string te = Encoding.UTF8.GetString(message.Content.ReadAsByteArrayAsync().Result);
+                te = te.Substring(16);
+                te = te.Remove(te.Length - 1, 1);
+
+                JObject text = JObject.Parse(te);
+                var results = text["streams"].Children().ToList();
+
+                if (results.Count == 0)
+                    return new Tuple<Status, int, DateTime>(Status.Offline, 0, default(DateTime));
+
+                var stream = results.ElementAtOrDefault(0);
+                if (stream == default(JObject))
+                    return new Tuple<Status, int, DateTime>(Status.Unknown, 0, default(DateTime));
+                var viewers = stream["viewers"].ToObject<int>();
+                var created_at = stream["created_at"].ToObject<DateTime>().ToLocalTime();
+                return new Tuple<Status, int, DateTime>(Status.Online, viewers, created_at);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                if (ex.InnerException != null)
+                {
+                    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
+                }
+                Console.ResetColor();
+                return new Tuple<Status, int, DateTime>(Status.Unknown, 0, default(DateTime));
+            }
+
+        }
 
         /// <summary>
         /// 
@@ -66,7 +108,7 @@ namespace DudelkaBot.ircClient
             catch (WebException ex)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine(ex.Message);
+                Logger.ShowLineCommonMessage(ex.Message);
                 Console.ResetColor();
                 return "Ошибка, говнокод! Обратитесь к моему хозяину!";
             }
@@ -80,7 +122,9 @@ namespace DudelkaBot.ircClient
                 return "Сейчас музыка не играет FeelsBadMan ";
             string title = results[2].ToObject<string>();
             string author = results[6].ToObject<string>();
-            if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(author))
+            DateTime startTime = results[4].ToObject<DateTime>();
+
+            if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(author) && startTime.Date == DateTime.Now.Date)
                 return $"Сейчас играет: {title} Kreygasm Заказал: {author} Kappa ";
             return string.Empty;
         }
@@ -92,7 +136,7 @@ namespace DudelkaBot.ircClient
             msg.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
             msg.Headers.Authorization = new AuthenticationHeaderValue("OAuth", token);
             string data = "{" + $"\"on_site\":\"\",\"body\":\"{message}\",\"from_id\":{id},\"to_id\":{to_id},\"nonce\":\"{UniqueMessageId()}\"" + "}";
-            
+
 
             msg.Content = new StringContent(data, Encoding.UTF8, "application/json");
             try
@@ -110,20 +154,22 @@ namespace DudelkaBot.ircClient
 
         public async void SendPostWhisperMessage(string to_id, string message)
         {
-            var msg = new HttpRequestMessage(new HttpMethod("POST"), url);
-            msg.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json")); 
-            msg.Headers.Authorization = new AuthenticationHeaderValue("OAuth", token); 
-            string data = "{" + $"\"on_site\":\"\",\"body\":\"{message}\",\"from_id\":{id},\"to_id\":{to_id},\"nonce\":\"{UniqueMessageId()}\"" + "}";
-
-            msg.Content = new StringContent(data, Encoding.UTF8, "application/json");
             try
             {
+                var msg = new HttpRequestMessage(new HttpMethod("POST"), url);
+                msg.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
+                msg.Headers.Authorization = new AuthenticationHeaderValue("OAuth", token);
+                string data = "{" + $"\"on_site\":\"\",\"body\":\"{message}\",\"from_id\":{id},\"to_id\":{to_id},\"nonce\":\"{UniqueMessageId()}\"" + "}";
+
+                msg.Content = new StringContent(data, Encoding.UTF8, "application/json");
                 await client.SendAsync(msg);
             }
-            catch (WebException ex)
+            catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine(ex.Message);
+                Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                if (ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
                 Console.ResetColor();
                 return;
             }
@@ -157,15 +203,16 @@ namespace DudelkaBot.ircClient
                     return await new StreamReader(responseStream.GetResponseStream(), Encoding.Unicode, true).ReadToEndAsync();
                 }
             }
-            catch (WebException e) {
+            catch (WebException e)
+            {
                 handleWebException(e);
                 return null;
             }
 
         }
 
-        internal async Task<string> MakePostRequest(string message ,ulong to_userid , string method, string requestData = null, byte[] data = null)
-        {                
+        internal async Task<string> MakePostRequest(string message, ulong to_userid, string method, string requestData = null, byte[] data = null)
+        {
 
             if (data == null)
                 data = new UTF8Encoding().GetBytes(requestData ?? "");
@@ -204,7 +251,8 @@ namespace DudelkaBot.ircClient
                     return await new StreamReader(responseStream.GetResponseStream(), Encoding.Unicode, true).ReadToEndAsync();
                 }
             }
-            catch (WebException e) {
+            catch (WebException e)
+            {
                 handleWebException(e);
                 return null;
             }

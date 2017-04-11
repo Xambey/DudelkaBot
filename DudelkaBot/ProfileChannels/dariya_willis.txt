@@ -1,0 +1,17 @@
+﻿!vote=1
+!advert=1
+!vkid=1
+!djid=1
+!qupdate=1
+!counter=1
+!quote=1 
+!sexylevel=0
+!date=1
+!help=1
+!members=1
+!mystat=1
+!toplist=1
+!citytime=1
+!music=1
+!viewers=1
+!uptime=1

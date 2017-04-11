@@ -23,7 +23,9 @@ namespace DudelkaBot.ircClient
         qupdate,
         counter,
         existedcounter,
-        djid
+        djid,
+        viewers,
+        uptime
     };
 
 }

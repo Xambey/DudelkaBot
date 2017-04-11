@@ -282,11 +282,6 @@ namespace DudelkaBot.ircClient
                             break;
                         }
 
-                        math = commandReg.Match(data);
-                        if (math.Success)
-                            if (!Enum.TryParse(math.Groups["command"].Value, out Command))
-                                Command = Command.unknown;
-
                         if (Msg.StartsWith("!vote"))
                         {
                             math = voteReg.Match(Msg);
@@ -337,8 +332,11 @@ namespace DudelkaBot.ircClient
                         }
                         else if (Msg.StartsWith("!quote"))
                         {
-                            if (Command == Command.quote)
+                            if(Msg == "!quote")
+                            {
+                                Command = Command.quote;
                                 break;
+                            }
                             math = quoteShowReg.Match(Msg);
                             if (math.Success)
                             {
