@@ -113,12 +113,12 @@ namespace DudelkaBot.system
                         Console.ResetColor();
 
                         break;
-                    case "!list":
+                    case "!status":
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("List channels:");
                         foreach (var item in Channel.Channels)
                         {
-                            Console.WriteLine(item.Key + " " + item.Value.Status.ToString());
+                            Console.WriteLine($"Статус {item.Value.Name} чата: - {item.Value.StatusChat} | канала: {item.Value.StatusStream}");
                         }
                         Console.ResetColor();
                         Thread.Sleep(2000);

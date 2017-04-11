@@ -29,6 +29,7 @@ namespace DudelkaBot.ircClient
         private static string quoteUpdateWithDate = @"!qupdate\s+(?<number>\d+)\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<quote>.+)";
         private static string counterPattern = @"!counter\s+(?<command>[+-])\s+(?<name>\w+)$";
         private static string existedCounterPattern = @"!(?<name>\w+)\s+(?<command>v|[+-]|\d+)$";
+        private static string djidPattern = @"!djid (?<id>\w+)$";
         #endregion
 
         #region Regexes
@@ -52,6 +53,7 @@ namespace DudelkaBot.ircClient
         private static Regex quoteUpdateWithDateReg = new Regex(quoteUpdateWithDate);
         private static Regex counterReg = new Regex(counterPattern);
         private static Regex existedCounterReg = new Regex(existedCounterPattern);
+        private static Regex djidReg = new Regex(djidPattern);
         #endregion
 
         #region Fields
@@ -59,6 +61,7 @@ namespace DudelkaBot.ircClient
         public Command Command = Command.unknown;
         public int Time = 0;
 
+        private string djid;
         private string data;
         private string userName;
         private string subscriberName;
@@ -112,6 +115,7 @@ namespace DudelkaBot.ircClient
         public DateTime Date { get => date; set => date = value; }
         public string NewName { get => newName; set => newName = value; }
         public string OldName { get => oldName; set => oldName = value; }
+        public string Djid { get => djid; set => djid = value; }
 
         #endregion
 
@@ -278,11 +282,6 @@ namespace DudelkaBot.ircClient
                             break;
                         }
 
-                        math = commandReg.Match(data);
-                        if (math.Success)
-                            if (!Enum.TryParse(math.Groups["command"].Value, out Command))
-                                Command = Command.unknown;
-
                         if (Msg.StartsWith("!vote"))
                         {
                             math = voteReg.Match(Msg);
@@ -333,8 +332,11 @@ namespace DudelkaBot.ircClient
                         }
                         else if (Msg.StartsWith("!quote"))
                         {
-                            if (Command == Command.quote)
+                            if(Msg == "!quote")
+                            {
+                                Command = Command.quote;
                                 break;
+                            }
                             math = quoteShowReg.Match(Msg);
                             if (math.Success)
                             {
@@ -401,6 +403,17 @@ namespace DudelkaBot.ircClient
                                 AdvertCount = int.Parse(math.Groups["count"].Value);
                                 Advert = math.Groups["advert"].Value;
                                 Command = Command.advert;
+                            }
+                            else
+                                Success = false;
+                        }
+                        else if (Msg.StartsWith("!djid"))
+                        {
+                            math = djidReg.Match(Msg);
+                            if (math.Success)
+                            {
+                                Command = Command.djid;
+                                Djid = math.Groups["id"].Value;
                             }
                             else
                                 Success = false;

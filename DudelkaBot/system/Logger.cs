@@ -43,26 +43,39 @@ namespace DudelkaBot.system
 
         public static void SaveChannelLog(string channelname)
         {
-            using (var stream = new StreamWriter(File.Open(channelPaths[channelname], FileMode.Append), Encoding.Unicode))
+            try
             {
-                if (!channelslog.ContainsKey(channelname))
+                if (!channelslog.ContainsKey(channelname) || channelslog[channelname].IsEmpty)
                     return;
-                while (!channelslog[channelname].IsEmpty)
+                using (var stream = new StreamWriter(File.Open(channelPaths[channelname], FileMode.Append), Encoding.Unicode))
                 {
-                    string mes;
-                    if (!channelslog[channelname].TryDequeue(out mes))
+                    while (!channelslog[channelname].IsEmpty)
                     {
-                        throw new InvalidOperationException("Ошибка! Не удалось удалить элемент из очереди");
+                        string mes;
+                        if (!channelslog[channelname].TryDequeue(out mes))
+                        {
+                            throw new InvalidOperationException("Ошибка! Не удалось удалить элемент из очереди");
+                        }
+                        stream.Write(mes);
                     }
-                    stream.Write(mes);
-                }
 
-                stream.Flush();
+                    stream.Flush();
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                if (ex.InnerException != null)
+                    ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
+                Console.ResetColor();
             }
         }
 
         public static void SaveCommonLog()
         {
+            if (CommonContainer.IsEmpty)
+                return;
             using (var stream = new StreamWriter(File.Open(CommonPath, FileMode.Append), Encoding.Unicode))
             {
                 while (!CommonContainer.IsEmpty)
