@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using DudelkaBot.dataBase;
 using System.Text;
 using System.Text.RegularExpressions;
+using DudelkaBot.Logging;
 
 namespace DudelkaBot.system
 {

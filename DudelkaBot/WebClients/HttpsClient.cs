@@ -12,8 +12,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 using DudelkaBot.system;
+using DudelkaBot.enums;
+using DudelkaBot.Logging;
 
-namespace DudelkaBot.ircClient
+namespace DudelkaBot.WebClients
 {
     public class HttpsClient
     {
@@ -49,6 +51,7 @@ namespace DudelkaBot.ircClient
             }
             return result;
         }
+
         public Tuple<Status, int, DateTime> GetChannelInfo(string channelname, string client_id)
         {
             HttpResponseMessage message;
@@ -89,7 +92,6 @@ namespace DudelkaBot.ircClient
             }
 
         }
-
         /// <summary>
         /// 
         /// </summary>
@@ -128,7 +130,6 @@ namespace DudelkaBot.ircClient
                 return $"Сейчас играет: {title} Kreygasm Заказал: {author} Kappa ";
             return string.Empty;
         }
-
 
         public async void GetChannelStatus(string to_id, string message)
         {

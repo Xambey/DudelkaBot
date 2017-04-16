@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using DudelkaBot.dataBase.model;
 using DudelkaBot.system;
+using DudelkaBot.Messages;
+using DudelkaBot.Logging;
 
 namespace DudelkaBot.ircClient
 {
