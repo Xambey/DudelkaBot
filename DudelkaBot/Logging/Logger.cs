@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace DudelkaBot.system
+namespace DudelkaBot.Logging
 {
     internal static class Logger
     {

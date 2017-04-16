@@ -13,7 +13,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Text;
 
-namespace DudelkaBot.ircClient
+namespace DudelkaBot.WebClients
 {
     public class WebSocketClient
     {

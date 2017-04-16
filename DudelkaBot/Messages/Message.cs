@@ -1,10 +1,11 @@
-﻿using System;
+﻿using DudelkaBot.enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace DudelkaBot.ircClient
+namespace DudelkaBot.Messages
 {
     public class Message : IDisposable
     {

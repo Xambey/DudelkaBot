@@ -5,8 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using DudelkaBot.Logging;
 
-namespace DudelkaBot.system
+namespace DudelkaBot.Profiller
 {
     public static class Profiller
     {

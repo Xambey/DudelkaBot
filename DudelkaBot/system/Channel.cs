@@ -12,7 +12,11 @@ using DudelkaBot.dataBase.model;
 using DudelkaBot.vk;
 using DudelkaBot.ircClient;
 using DudelkaBot.resources;
+using DudelkaBot.WebClients;
 using System.Data.SqlClient;
+using DudelkaBot.Messages;
+using DudelkaBot.enums;
+using DudelkaBot.Logging;
 
 namespace DudelkaBot.system
 {
@@ -162,8 +166,8 @@ namespace DudelkaBot.system
 
                     //findDublicateUsers(db);
                 }
-                if (Profiller.GetProfileOrDefault(Name) == null)
-                    Profiller.TryCreateProfile(Name);
+                if (Profiller.Profiller.GetProfileOrDefault(Name) == null)
+                    Profiller.Profiller.TryCreateProfile(Name);
 
                 req.GetChannelInfo(Name, client_id);
                 Logger.UpdateChannelPaths(Name);
@@ -576,9 +580,9 @@ namespace DudelkaBot.system
                             switch (msg.Command)
                             {
                                 case Command.vote:
-                                    var pr = Profiller.GetProfileOrDefault(Name);
+                                    var pr = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (pr == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (pr != null && pr.Vote == 0)
                                         break;
                                     var userVote = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -607,9 +611,9 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.advert:
-                                    var pro = Profiller.GetProfileOrDefault(Name);
+                                    var pro = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (pro == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (pro != null && pro.Advert == 0)
                                         break;
                                     var userAdvert = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -625,17 +629,17 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.citytime:
-                                    var prof = Profiller.GetProfileOrDefault(Name);
+                                    var prof = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prof == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prof != null && prof.Citytime == 0)
                                         break;
                                     IrcClient.SendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).TimeOfDay.ToString().Remove(8), msg);
                                     break;
                                 case Command.help:
-                                    var profi = Profiller.GetProfileOrDefault(Name);
+                                    var profi = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (profi == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (profi != null && profi.Help == 0)
                                         break;
                                     var u = IdReg.Match(msg.Data);
@@ -645,17 +649,17 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.date:
-                                    var profil = Profiller.GetProfileOrDefault(Name);
+                                    var profil = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (profil == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (profil != null && profil.Date == 0)
                                         break;
                                     IrcClient.SendChatMessage("Время в москве: " + DateTime.Now.TimeOfDay.ToString().Remove(8), msg);
                                     break;
                                 case Command.mystat:
-                                    var profile = Profiller.GetProfileOrDefault(Name);
+                                    var profile = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (profile == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (profile != null && profile.Mystat == 0)
                                         break;
 
@@ -670,9 +674,9 @@ namespace DudelkaBot.system
                                     IrcClient.SendChatMessage("Вы написали " + chusStat.CountMessage.ToString() + " сообщений на канале" + (chusStat.CountSubscriptions > 0 ? ", также вы сексуальны уже " + chusStat.CountSubscriptions.ToString() + " месяца(ев) KappaPride" : ""), msg);
                                     break;
                                 case Command.toplist:
-                                    var profiler = Profiller.GetProfileOrDefault(Name);
+                                    var profiler = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (profiler == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (profiler != null && profiler.Toplist == 0)
                                         break;
                                     
@@ -691,9 +695,9 @@ namespace DudelkaBot.system
 
                                     break;
                                 case Command.uptime:
-                                    var pru = Profiller.GetProfileOrDefault(Name);
+                                    var pru = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (pru == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (pru != null && pru.Uptime == 0)
                                         break;
 
@@ -706,9 +710,9 @@ namespace DudelkaBot.system
                                     IrcClient.SendChatMessage($"Чатику хорошо уже {time.Hours} {Helper.GetDeclension(time.Hours,"час","часа","часов")}, {time.Minutes} {Helper.GetDeclension(time.Hours, "минута", "минуты", "минуты")}, {time.Seconds} {Helper.GetDeclension(time.Hours, "секунды", "секунд", "секунды")} Kreygasm " , msg);
                                     break;
                                 case Command.sexylevel:
-                                    var prus = Profiller.GetProfileOrDefault(Name);
+                                    var prus = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prus == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prus != null && prus.Sexylevel == 0)
                                         break;
                                     var m = SubReg.Match(msg.Data);
@@ -739,9 +743,9 @@ namespace DudelkaBot.system
 
                                     break;
                                 case Command.members:
-                                    var prum = Profiller.GetProfileOrDefault(Name);
+                                    var prum = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prum == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prum != null && prum.Members == 0)
                                         break;
                                     IrcClient.SendChatBroadcastMessage(string.Format("Сейчас в чате {0} активных человек, {1} лучших модеров и не только Kappa ", db.ChannelsUsers.Where(a => a.Active && a.Channel_id == Id && !a.Moderator).Count(), db.ChannelsUsers.Where(a => a.Active && a.Channel_id == Id && a.Moderator).Count()), msg);
@@ -751,9 +755,9 @@ namespace DudelkaBot.system
                                         ErrorListMessages.Add(msg);
                                     break;
                                 case Command.viewers:
-                                    var prumt = Profiller.GetProfileOrDefault(Name);
+                                    var prumt = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prumt == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prumt != null && prumt.Viewers == 0)
                                         break;
                                     var la = req.GetChannelInfo(Name, client_id);
@@ -762,9 +766,9 @@ namespace DudelkaBot.system
                                     IrcClient.SendChatMessage($"Сейчас стрим смотрит {la.Item2} человек gachiGASM nymnCorn ", msg);
                                     break;
                                 case Command.music:
-                                    var prumi = Profiller.GetProfileOrDefault(Name);
+                                    var prumi = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prumi == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prumi != null && prumi.Music == 0)
                                         break;
                                     if (StatusStream != Status.Online)
@@ -809,9 +813,9 @@ namespace DudelkaBot.system
                                     
                                     break;
                                 case Command.djid:
-                                    var prom = Profiller.GetProfileOrDefault(Name);
+                                    var prom = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prom == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prom != null && prom.Djid == 0)
                                         break;
 
@@ -833,9 +837,9 @@ namespace DudelkaBot.system
                                     db.SaveChanges();
                                     break;
                                 case Command.vkid:
-                                    var promi = Profiller.GetProfileOrDefault(Name);
+                                    var promi = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (promi == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (promi != null && promi.Vkid == 0)
                                         break;
 
@@ -875,9 +879,9 @@ namespace DudelkaBot.system
                                     db.SaveChanges();
                                     break;
                                 case Command.counter:
-                                    var promic = Profiller.GetProfileOrDefault(Name);
+                                    var promic = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (promic == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (promic != null && promic.Counter == 0)
                                         break;
                                     var userCounter = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -941,9 +945,9 @@ namespace DudelkaBot.system
                                     }                              
                                     break;
                                 case Command.existedcounter:
-                                    var promict = Profiller.GetProfileOrDefault(Name);
+                                    var promict = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (promict == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (promict != null && promict.Counter == 0)
                                         break;
                                     var exCounter = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -992,9 +996,9 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.qupdate:
-                                    var promis = Profiller.GetProfileOrDefault(Name);
+                                    var promis = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (promis == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (promis != null && promis.Qupdate == 0)
                                         break;
 
@@ -1026,9 +1030,9 @@ namespace DudelkaBot.system
                                     }
                                     break;
                                 case Command.quote:
-                                    var prome = Profiller.GetProfileOrDefault(Name);
+                                    var prome = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prome == null)
-                                        Profiller.TryCreateProfile(Name);
+                                        Profiller.Profiller.TryCreateProfile(Name);
                                     if (prome != null && prome.Quote == 0)
                                         break;
 
