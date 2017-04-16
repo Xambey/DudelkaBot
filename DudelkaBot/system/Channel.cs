@@ -100,6 +100,7 @@ namespace DudelkaBot.system
         private int id;   
         private bool voteActive = false;
         private bool namesHandlerActive = false;
+        private static bool activeLog = false;
 
         #endregion
 
@@ -128,6 +129,7 @@ namespace DudelkaBot.system
         public string Name { get => name; protected set => name = value; }
         public Status StatusStream { get => statusStream; set => statusStream = value; }
         public bool NamesHandlerActive { get => namesHandlerActive; set => namesHandlerActive = value; }
+        public static bool ActiveLog { get => activeLog; set => activeLog = value; }
         #endregion
 
         public Channel(string channelName)
@@ -445,14 +447,16 @@ namespace DudelkaBot.system
                 else if(!currentMessage.Success)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Logger.ShowLineCommonMessage(data);
+
+                    if(ActiveLog)
+                        Logger.ShowLineCommonMessage(data);
                     Console.ResetColor();
-                    lock (ErrorListMessages)
-                    {
-                        if (ErrorListMessages.Count > 50)
-                            ErrorListMessages.Clear();
-                        ErrorListMessages.Add(currentMessage);
-                    }
+                    //lock (ErrorListMessages)
+                    //{
+                    //    if (ErrorListMessages.Count > 50)
+                    //        ErrorListMessages.Clear();
+                    //    ErrorListMessages.Add(currentMessage);
+                    //}
                     return;
                 }
                 else if (currentMessage.UserName == "moobot" || currentMessage.UserName == "nightbot")
@@ -563,7 +567,7 @@ namespace DudelkaBot.system
                                     math = AnswerReg.Match(msg.Msg);
                                     if (math.Success)
                                     {
-                                        IrcClient.SendChatMessage(math.Groups["text"].Value, msg);
+                                        IrcClient.SendChatBroadcastMessage(math.Groups["text"].Value, msg);
                                         break;
                                     }
                                 }
@@ -1242,8 +1246,8 @@ namespace DudelkaBot.system
             db.SaveChanges();
 
             var j = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userNotice.Id);
-            //if (j != null)
-            //    ircClient.SendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
+            if (j != null)
+                ircClient.SendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
         }
 
         private void HandlerCountMessages(Message msg, ChatContext db)
@@ -1437,8 +1441,11 @@ namespace DudelkaBot.system
                 else {
                     Req.SendPostWhisperMessage(touser_id, buff);
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Logger.ShowCommonMessage("send "+ username + ": ");
-                    Logger.ShowLineCommonMessage(buff);
+                    if (ActiveLog)
+                    {
+                        Logger.ShowCommonMessage("send " + username + ": ");
+                        Logger.ShowLineCommonMessage(buff);
+                    }
                     Console.ResetColor();
                     buff = item + "; ";
                     Thread.Sleep(700);
@@ -1448,8 +1455,11 @@ namespace DudelkaBot.system
             {
                 Req.SendPostWhisperMessage(touser_id, buff);
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Logger.ShowCommonMessage("send " + username + ": ");
-                Logger.ShowLineCommonMessage(buff);
+                if (ActiveLog)
+                {
+                    Logger.ShowCommonMessage("send " + username + ": ");
+                    Logger.ShowLineCommonMessage(buff);
+                }
                 Console.ResetColor();
             }
             var ig = new Users(username);
@@ -1465,8 +1475,11 @@ namespace DudelkaBot.system
             else
                 return;
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Logger.ShowCommonMessage("send " + username + ": ");
-            Logger.ShowLineCommonMessage(message);
+            if (ActiveLog)
+            {
+                Logger.ShowCommonMessage("send " + username + ": ");
+                Logger.ShowLineCommonMessage(message);
+            }
             Console.ResetColor();
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
