@@ -208,7 +208,8 @@ namespace DudelkaBot.ircClient
                 if (!message.StartsWith("PONG"))
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Logger.ShowLineCommonMessage(message);
+                    if (Channel.ActiveLog)
+                        Logger.ShowLineCommonMessage(message);
                     Console.ResetColor();
                 }
             }
@@ -223,7 +224,8 @@ namespace DudelkaBot.ircClient
                 Timer timer = new Timer(TimerTick, null, 0, 30000);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Logger.ShowLineCommonMessage(message);
+                if(Channel.ActiveLog)
+                    Logger.ShowLineCommonMessage(message);
                 Console.ResetColor();
             }
         }

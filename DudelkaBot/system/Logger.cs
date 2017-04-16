@@ -94,7 +94,7 @@ namespace DudelkaBot.system
 
         public static void ShowLineCommonMessage(string message)
         {
-            Console.WriteLine(message);
+            Console.WriteLine($"{DateTime.Now}: {message}");
             WriteLineMessage(message);
         }
 
@@ -106,7 +106,7 @@ namespace DudelkaBot.system
 
         public static void ShowLineChannelMessage(string username, string message, string channelname)
         {
-            Console.WriteLine(username + ": " + message);
+            Console.WriteLine($"{DateTime.Now} {username}: {message}");
             WriteLineMessage(username, message, channelname);
         }
 

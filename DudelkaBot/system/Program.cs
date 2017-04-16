@@ -99,6 +99,19 @@ namespace DudelkaBot.system
                         if(Channel.Channels.Any(a => a.Key == o))
                             Channel.IrcClient.SendChatBroadcastMessage(mes, o);
                         break;
+                    case "!broadcast":
+                        string m = Console.ReadLine();
+                        if (Channel.ViewChannel == null)
+                            break;
+                        if (Channel.Channels.Any(a => a.Key == Channel.ViewChannel.Name))
+                            Channel.IrcClient.SendChatBroadcastMessage(m,Channel.ViewChannel.Name);
+                        break;
+                    case "!start common log":
+                        Channel.ActiveLog = true;
+                        break;
+                    case "!stop common log":
+                        Channel.ActiveLog = false;
+                        break;
                     case "!errors":
                         Console.ForegroundColor = ConsoleColor.Red;
                         lock (Channel.ErrorListMessages)
