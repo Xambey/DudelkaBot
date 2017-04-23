@@ -18,7 +18,7 @@ namespace DudelkaBot.Messages
         private static string pingPattern = @"PING\s+";
         private static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
-        private static string usernoticePattern = @".+login=(?<username>\w+).+msg-param-months=(?<sub>\d+).* USERNOTICE #(?<channel>\w+)";
+        private static string usernoticePattern = @".*login=(?<username>\w+).+msg-param-months=(?<sub>\d+).+system-msg=(?<message>[^;]+);.* USERNOTICE #(?<channel>\w+)";
         private static string subscribePattern = @"(?<username>\w+).+";
         private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
         private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
@@ -248,6 +248,8 @@ namespace DudelkaBot.Messages
                             SubscriberName = math.Groups["username"].Value;
                             Subscription = int.Parse(math.Groups["sub"].Value);
                             Channel = math.Groups["channel"].Value;
+                            if (math.Groups["message"].Value.Contains("while\\syou\\swere\\saway"))
+                                Success = false;
                         }
                         else
                             Success = false;
@@ -280,6 +282,8 @@ namespace DudelkaBot.Messages
                                 SubscriberName = math.Groups["username"].Value;
                                 Subscription = 1;
                             }
+                            if (Data.Contains("while\\syou\\swere\\saway!"))
+                                Success = false;
                             break;
                         }
 
@@ -389,6 +393,7 @@ namespace DudelkaBot.Messages
                                     QuoteNumber = int.Parse(math.Groups["number"].Value);
                                     Quote = math.Groups["quote"].Value;
                                     Command = Command.qupdate;
+                                    Date = default(DateTime);
                                 }
                                 else
                                     Success = false;
@@ -466,7 +471,6 @@ namespace DudelkaBot.Messages
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
     }
 }

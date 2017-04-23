@@ -52,11 +52,11 @@ namespace DudelkaBot.ircClient
         {
             StopProcess();
             tcpClient.Dispose();
-            tcpClient = new TcpClient();
+
             if (isConnect())
             {
-                inputStream = new StreamReader(tcpClient.GetStream());
-                outputStream = new StreamWriter(tcpClient.GetStream());
+                //inputStream = new StreamReader(tcpClient.GetStream());
+                //outputStream = new StreamWriter(tcpClient.GetStream());
                 Thread.Sleep(2000);
                 StartProcess(func);
                 SignIn();
@@ -65,6 +65,8 @@ namespace DudelkaBot.ircClient
 
         public void StartProcess(Action func)
         {
+            if (token != null)
+                token.Dispose();
             token = new CancellationTokenSource();
             process = new Task(func, token.Token);
             process.Start();
@@ -109,17 +111,23 @@ namespace DudelkaBot.ircClient
                 {
                     try
                     {
-                        tcpClient.Client.ConnectAsync(ipHost, port).Wait();
+                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                        if (inputStream != null)
+                            inputStream.Dispose();
+                        if (outputStream != null)
+                            outputStream.Dispose();
+                        inputStream = new StreamReader(tcpClient.GetStream());
+                        outputStream = new StreamWriter(tcpClient.GetStream());
                         Logger.ShowLineCommonMessage($"Соединение с сервером установлено...");
                     }
                     catch(Exception ex)
                     {
-                        if (ex.InnerException != null && ex.InnerException is SocketException)
-                            return true;
+                        //if (ex.InnerException != null && ex.InnerException is SocketException)
+                        //    return true;
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Logger.ShowLineCommonMessage("Подключение не удалось \n" + ex.Message);
-                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Gray;
                         Thread.Sleep(10000);
                     }
                 }
@@ -127,11 +135,18 @@ namespace DudelkaBot.ircClient
             else
             {
                 tcpClient = new TcpClient();
+
                 while (!tcpClient.Connected)
                 {
                     try
                     {
-                        tcpClient.ConnectAsync(ipHost, port);
+                        tcpClient.ConnectAsync(ipHost, port).Wait();
+                        if (inputStream != null)
+                            inputStream.Dispose();
+                        if (outputStream != null)
+                            outputStream.Dispose();
+                        inputStream = new StreamReader(tcpClient.GetStream());
+                        outputStream = new StreamWriter(tcpClient.GetStream());
                         Console.WriteLine($"Соединение с сервером установлено...");
                     }
                     catch (Exception ex)
@@ -139,7 +154,7 @@ namespace DudelkaBot.ircClient
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("Подключение не удалось \n" + ex.Message);
-                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Gray;
                         Thread.Sleep(10000);
                     }
                 }
@@ -156,13 +171,7 @@ namespace DudelkaBot.ircClient
             this.password = password;
             Timer timer = new Timer(TimerTick, null, 30000, 30000);
 
-            tcpClient = new TcpClient();
-            if (isConnect())
-            {
-                inputStream = new StreamReader(tcpClient.GetStream());
-                outputStream = new StreamWriter(tcpClient.GetStream());
-                SignIn();
-            }
+            SignIn();
         }
 
         public void SignIn()
@@ -212,7 +221,7 @@ namespace DudelkaBot.ircClient
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     if (Channel.ActiveLog)
                         Logger.ShowLineCommonMessage(message);
-                    Console.ResetColor();
+                    Console.ForegroundColor = ConsoleColor.Gray;
                 }
             }
         }
@@ -228,7 +237,7 @@ namespace DudelkaBot.ircClient
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 if(Channel.ActiveLog)
                     Logger.ShowLineCommonMessage(message);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
 
@@ -325,6 +334,7 @@ namespace DudelkaBot.ircClient
                 Logger.ShowLineCommonMessage(ex.Message + ex.StackTrace + ex.Data);
                 if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.StackTrace + ex.InnerException.Data);
+                isConnect();
                 return string.Empty;
             }
         }
