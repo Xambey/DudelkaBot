@@ -39,7 +39,9 @@ namespace DudelkaBot.system
             //"dota2ruhub",
             //"thijshs",
             //"pgl_dota",
-            //"kephrii"
+            //"kephrii",
+            //"voyboy",
+            //"lpl1"
         };
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
@@ -48,7 +50,6 @@ namespace DudelkaBot.system
         {
             Console.OutputEncoding = Encoding.Unicode;
             Console.InputEncoding = Encoding.Unicode;
-
             //!!!!!!!!!! 
             Channel.Port = port;
             Channel.Password = password;
@@ -61,7 +62,6 @@ namespace DudelkaBot.system
                 channel.JoinRoom();
             }
             Channel.Channels.First().Value.StartShow();
-
             while (true)
             {
                 Channel.IrcClient.isConnect();
@@ -69,13 +69,16 @@ namespace DudelkaBot.system
 
                 switch (cmd)
                 {
-                    case "!stop":
+                    case "!stop show channel log":
+                        Logger.ShowLineCommonMessage("Остановка отображения лога канала");
                         Channel.Channels.First().Value.StopShow();
                         break;
-                    case "!start":
+                    case "!start show channel log":
+                        Logger.ShowLineCommonMessage("Запуск отображения лога канала");
                         Channel.Channels.First().Value.StopShow();
                         break;
                     case "!reconnect":
+                        Logger.ShowLineCommonMessage("Запуск переподключения к серверу...");
                         Channel.Reconnect();
                         break;
                     case "!Dariya":
@@ -99,10 +102,12 @@ namespace DudelkaBot.system
                         if (Channel.Channels.Any(a => a.Key == Channel.ViewChannel.Name))
                             Channel.IrcClient.SendChatBroadcastMessage(m,Channel.ViewChannel.Name);
                         break;
-                    case "!start common log":
+                    case "!start show common log":
+                        Logger.ShowLineCommonMessage("Запуск отображения общего лога");
                         Channel.ActiveLog = true;
                         break;
-                    case "!stop common log":
+                    case "!stop show common log":
+                        Logger.ShowLineCommonMessage("Остановка отображения общего лога");
                         Channel.ActiveLog = false;
                         break;
                     case "!errors":
@@ -116,7 +121,7 @@ namespace DudelkaBot.system
                                 Console.WriteLine(ch[i].Data);
                             }
                         }
-                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Gray;
 
                         break;
                     case "!status":
@@ -126,15 +131,24 @@ namespace DudelkaBot.system
                         {
                             Console.WriteLine($"Статус {item.Value.Name} чата: - {item.Value.StatusChat} | канала: {item.Value.StatusStream}");
                         }
-                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Gray;
                         Thread.Sleep(2000);
                         break;
-                    case "!savelog":
+                    case "!savelogs":
                         foreach (var item in Channel.Channels)
                         {
                             Logger.SaveChannelLog(item.Value.Name);
                         }
                         Logger.SaveCommonLog();
+                        Logger.ShowLineCommonMessage("Все логи сохранены!");
+                        break;
+                    case "!exit":
+                        foreach (var item in Channel.Channels)
+                        {
+                            Logger.SaveChannelLog(item.Value.Name);
+                        }
+                        Logger.SaveCommonLog();
+                        Environment.Exit(0);
                         break;
                     case "!add":
                         string chname = Console.ReadLine();
@@ -143,13 +157,16 @@ namespace DudelkaBot.system
                             chan = new Channel(chname);
                             chan.JoinRoom();
                             chan.StartShow();
+                            Logger.ShowLineCommonMessage($"Канал {chname} добавлен в список каналов!");
                         }
+                        
                         break;
                     case "!remove":
                         string name = Console.ReadLine();
                         if (Channel.Channels.Any(a => a.Key == name))
                         {
                             Channel.Channels.Remove(name);
+                            Logger.ShowLineCommonMessage($"Канал {name} удален из списка каналов!");
                         }
                         break;
                     default:

@@ -178,10 +178,10 @@ namespace DudelkaBot.system
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
+                Logger.ShowLineCommonMessage(ex.StackTrace + ex.Data + ex.Message);
                 if (ex.InnerException != null)
-                    Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
-                Console.ResetColor();
+                    Logger.ShowLineCommonMessage(ex.InnerException.StackTrace + ex.InnerException.Data + ex.InnerException.Message);
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
 
@@ -228,13 +228,13 @@ namespace DudelkaBot.system
                         countMessageQuote = 0;
                         return;
                     }
-                    int c = Rand.Next(1, or.Count);
+                    int c = Rand.Next(1, or.Count());
                     while(c == Lastqouteindex)
-                        c = Rand.Next(1, or.Count); ;
+                        c = Rand.Next(1, or.Count());
                     Lastqouteindex = c;
                     var quot = or.SingleOrDefault(a => a.Number == Lastqouteindex);
                     if (quot != null)
-                        IrcClient.SendChatBroadcastMessage(string.Format("/me Великая случайная цитата Kappa - {0}, {1:yyyy} #{2} : '{3}'", Name, quot.Date, Lastqouteindex, quot.Quote), Name);
+                        IrcClient.SendChatBroadcastMessage(string.Format("/me Великая случайная цитата LUL - {0}, {1:yyyy} #{2} : '{3}'", Name, quot.Date, Lastqouteindex, quot.Quote), Name);
                 }
             }
             countMessageQuote = 0;
@@ -250,13 +250,13 @@ namespace DudelkaBot.system
                 }
 
                 Logger.StopWrite();
+                Logger.ShowLineCommonMessage("Соединение разорвано...");
                 IrcClient.Reconnect(Process);
                 Logger.StartWrite();
                 foreach (var item in Channels)
                 {
                     item.Value.JoinRoom();
                 }
-                Logger.ShowLineCommonMessage("Соединение разорвано...");
                 Logger.ShowLineCommonMessage("Соединение установлено...");
             }
             else
@@ -310,7 +310,7 @@ namespace DudelkaBot.system
                 Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
                 if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
 
@@ -350,7 +350,7 @@ namespace DudelkaBot.system
                 Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
                 if(ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
 
@@ -454,7 +454,7 @@ namespace DudelkaBot.system
 
                     if(ActiveLog)
                         Logger.ShowLineCommonMessage(data);
-                    Console.ResetColor();
+                    Console.ForegroundColor = ConsoleColor.Gray;
                     //lock (ErrorListMessages)
                     //{
                     //    if (ErrorListMessages.Count > 50)
@@ -481,7 +481,7 @@ namespace DudelkaBot.system
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return;
             }
         }
@@ -571,7 +571,7 @@ namespace DudelkaBot.system
                                     math = AnswerReg.Match(msg.Msg);
                                     if (math.Success)
                                     {
-                                        IrcClient.SendChatBroadcastMessage(math.Groups["text"].Value, msg);
+                                        IrcClient.SendChatMessage(math.Groups["text"].Value, msg);
                                         break;
                                     }
                                 }
@@ -671,7 +671,7 @@ namespace DudelkaBot.system
                                     if (math.Success)
                                         chusStat.CountSubscriptions = int.Parse(math.Groups["sub"].Value) > chusStat.CountSubscriptions ? int.Parse(math.Groups["sub"].Value) : chusStat.CountSubscriptions;
                                     db.SaveChanges();
-                                    IrcClient.SendChatMessage("Вы написали " + chusStat.CountMessage.ToString() + " сообщений на канале" + (chusStat.CountSubscriptions > 0 ? ", также вы сексуальны уже " + chusStat.CountSubscriptions.ToString() + " месяца(ев) KappaPride" : ""), msg);
+                                    IrcClient.SendChatMessage("Вы написали " + chusStat.CountMessage.ToString() + " сообщений на канале" + (chusStat.CountSubscriptions > 0 ? ", также вы подписаны уже " + chusStat.CountSubscriptions.ToString() + " месяца(ев) FeelsLitMan " : ""), msg);
                                     break;
                                 case Command.toplist:
                                     var profiler = Profiller.Profiller.GetProfileOrDefault(Name);
@@ -763,7 +763,7 @@ namespace DudelkaBot.system
                                     var la = req.GetChannelInfo(Name, client_id);
                                     if (la.Item1 != Status.Online)
                                         break;
-                                    IrcClient.SendChatMessage($"Сейчас стрим смотрит {la.Item2} человек gachiGASM nymnCorn ", msg);
+                                    IrcClient.SendChatMessage($"Сейчас стрим смотрит {la.Item2} человек Jebaited ", msg);
                                     break;
                                 case Command.music:
                                     var prumi = Profiller.Profiller.GetProfileOrDefault(Name);
@@ -1014,14 +1014,14 @@ namespace DudelkaBot.system
                                         if (quo != null)
                                         {
                                             quo.Quote = msg.Quote;
-                                            if (msg.Date != null)
+                                            if (msg.Date != default(DateTime))
                                                 quo.Date = msg.Date;
                                             IrcClient.SendChatMessage(string.Format("Цитата№{0} - отредактирована", quo.Number), msg);
                                         }
                                         else
                                         {
 
-                                            var o = new Quotes(Id, msg.Quote, msg.Date != null ? msg.Date : DateTime.Now.Date, x);
+                                            var o = new Quotes(Id, msg.Quote, msg.Date != default(DateTime) ? msg.Date : DateTime.Now.Date, x);
                                             db.Quotes.Add(o);
                                             db.SaveChanges();
                                             IrcClient.SendChatMessage(string.Format("Цитата№{0} : {1} - добавлена", o.Number, o.Quote), msg);
@@ -1132,7 +1132,7 @@ namespace DudelkaBot.system
                 Logger.ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data + " " + ex.StackTrace);
                 if(ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Source + " " + ex.InnerException.Message + " " + ex.InnerException.Data + " " + ex.InnerException.StackTrace);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return;
             }
         }
@@ -1155,6 +1155,8 @@ namespace DudelkaBot.system
 
         private void SubscribeMessage(Message msg, ChatContext db)
         {
+            if (msg.Data.Contains("while\\syou\\swere\\saway") || msg.Data.Contains("while you were away"))
+                return;
             var userNotify = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
             int chussub = 0;
             if (userNotify != null)
@@ -1200,7 +1202,16 @@ namespace DudelkaBot.system
                 
             }
             db.SaveChanges();
-            IrcClient.SendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa {1}", chussub > msg.Subscription ? chussub : msg.Subscription, chussub > msg.Subscription ? "Псс. Я тебя помню, меня не обманешь Kappa , добро пожаловать снова! ":""), msg.SubscriberName, msg);
+
+            var p = Profiller.Profiller.GetProfileOrDefault(Name);
+            if (p == null)
+            {
+                Profiller.Profiller.TryCreateProfile(Name);
+                p = Profiller.Profiller.GetProfileOrDefault(Name);
+            }
+
+            ircClient.SendChatBroadcastMessage(p.GetRandomSubAnswer().Replace("month", chussub > msg.Subscription ? chussub.ToString() : msg.Subscription.ToString()).Replace("nick", msg.SubscriberName), Name);
+            //IrcClient.SendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa {1}", chussub > msg.Subscription ? chussub : msg.Subscription, chussub > msg.Subscription ? "Псс. Я тебя помню, меня не обманешь Kappa , добро пожаловать снова! ":""), msg.SubscriberName, msg);
         }
 
         private void UsernoticeMessage(Message msg, ChatContext db)
@@ -1250,8 +1261,16 @@ namespace DudelkaBot.system
             db.SaveChanges();
 
             var j = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userNotice.Id);
-            if (j != null)
-                ircClient.SendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
+            if (j != null) {
+                var p = Profiller.Profiller.GetProfileOrDefault(Name);
+                if (p == null) {
+                    Profiller.Profiller.TryCreateProfile(Name);
+                    p = Profiller.Profiller.GetProfileOrDefault(Name);
+                }
+
+                ircClient.SendChatBroadcastMessage(p.GetRandomResubAnswer().Replace("month", j.CountSubscriptions.ToString()).Replace("nick", msg.SubscriberName), Name);
+                //ircClient.SendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
+            }
         }
 
         private void HandlerCountMessages(Message msg, ChatContext db)
@@ -1440,7 +1459,7 @@ namespace DudelkaBot.system
             string buff = "";
             foreach (var item in message)
             {
-                if ((buff + item + "; ").Length < 480)
+                if ((buff + item + "; ").Length < 490)
                     buff += item + "; ";
                 else {
                     Req.SendPostWhisperMessage(touser_id, buff);
@@ -1450,7 +1469,7 @@ namespace DudelkaBot.system
                         Logger.ShowCommonMessage("send " + username + ": ");
                         Logger.ShowLineCommonMessage(buff);
                     }
-                    Console.ResetColor();
+                    Console.ForegroundColor = ConsoleColor.Gray;
                     buff = item + "; ";
                     Thread.Sleep(700);
                 }
@@ -1464,7 +1483,7 @@ namespace DudelkaBot.system
                     Logger.ShowCommonMessage("send " + username + ": ");
                     Logger.ShowLineCommonMessage(buff);
                 }
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
@@ -1484,7 +1503,7 @@ namespace DudelkaBot.system
                 Logger.ShowCommonMessage("send " + username + ": ");
                 Logger.ShowLineCommonMessage(message);
             }
-            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Gray;
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
         }
@@ -1524,7 +1543,7 @@ namespace DudelkaBot.system
                 try
                 {
                     if (ircClient == null)
-                        continue;
+                        ircClient = new IrcClient(Iphost, Port, UserName, Password);
 
                     ircClient.isConnect();
                     string s = ircClient.ReadMessage();
@@ -1533,7 +1552,7 @@ namespace DudelkaBot.system
                         Task.Run(() => SwitchMessage(s));
                     }
 
-                    Thread.Sleep(10);
+                    Thread.Sleep(5);
                 }
                 catch (AggregateException ex)
                 {
@@ -1541,7 +1560,7 @@ namespace DudelkaBot.system
                     Logger.ShowLineCommonMessage(ex.Data + " " + ex.Message + " " + ex.StackTrace);
                     if (ex.InnerException != null)
                         Logger.ShowLineCommonMessage(ex.InnerException.Data + ex.InnerException.Message + ex.InnerException.StackTrace);
-                    Console.ResetColor();
+                    Console.ForegroundColor = ConsoleColor.Gray;
                 }
                 catch (Exception ex)
                 {
@@ -1549,7 +1568,7 @@ namespace DudelkaBot.system
                     Logger.ShowLineCommonMessage(ex.Data + " " + ex.Message + " " + ex.StackTrace);
                     if (ex.InnerException != null)
                         Logger.ShowLineCommonMessage(ex.InnerException.Data + ex.InnerException.Message + ex.InnerException.StackTrace);
-                    Console.ResetColor();
+                    Console.ForegroundColor = ConsoleColor.Gray;
                 }
             }
         }
@@ -1561,67 +1580,67 @@ namespace DudelkaBot.system
             switch (level)
             {
                 case 200:
-                    buf = Answers.level200[Rand.Next(0, Answers.level200.Count - 1)];
+                    buf = Answers.level200[Rand.Next(0, Answers.level200.Count())];
                     break;
                 case 190:
-                    buf = Answers.level190[Rand.Next(0, Answers.level190.Count - 1)]; 
+                    buf = Answers.level190[Rand.Next(0, Answers.level190.Count())]; 
                     break;
                 case 180:
-                    buf = Answers.level180[Rand.Next(0, Answers.level180.Count - 1)];
+                    buf = Answers.level180[Rand.Next(0, Answers.level180.Count())];
                     break;
                 case 170:
-                    buf = Answers.level170[Rand.Next(0, Answers.level170.Count - 1)];
+                    buf = Answers.level170[Rand.Next(0, Answers.level170.Count())];
                     break;
                 case 160:
-                    buf = Answers.level160[Rand.Next(0, Answers.level160.Count - 1)];
+                    buf = Answers.level160[Rand.Next(0, Answers.level160.Count())];
                     break;
                 case 150:
-                    buf = Answers.level150[Rand.Next(0, Answers.level150.Count - 1)]; 
+                    buf = Answers.level150[Rand.Next(0, Answers.level150.Count())]; 
                     break;
                 case 140:
-                    buf = Answers.level140[Rand.Next(0, Answers.level140.Count - 1)];
+                    buf = Answers.level140[Rand.Next(0, Answers.level140.Count())];
                     break;
                 case 130:
-                    buf = Answers.level130[Rand.Next(0, Answers.level130.Count - 1)];
+                    buf = Answers.level130[Rand.Next(0, Answers.level130.Count())];
                     break;
                 case 120:
-                    buf = Answers.level120[Rand.Next(0, Answers.level120.Count - 1)];
+                    buf = Answers.level120[Rand.Next(0, Answers.level120.Count())];
                     break;
                 case 110:
-                    buf = Answers.level110[Rand.Next(0, Answers.level110.Count - 1)];
+                    buf = Answers.level110[Rand.Next(0, Answers.level110.Count())];
                     break;
                 case 100:
-                    buf = Answers.level100[Rand.Next(0, Answers.level100.Count - 1)];
+                    buf = Answers.level100[Rand.Next(0, Answers.level100.Count())];
                     break;
                 case 90:
-                    buf = Answers.level90[Rand.Next(0, Answers.level90.Count - 1)];
+                    buf = Answers.level90[Rand.Next(0, Answers.level90.Count())];
                     break;
                 case 80:
-                    buf = Answers.level80[Rand.Next(0, Answers.level80.Count - 1)];
+                    buf = Answers.level80[Rand.Next(0, Answers.level80.Count())];
                     break;
                 case 70:
-                    buf = Answers.level70[Rand.Next(0, Answers.level70.Count - 1)];
+                    buf = Answers.level70[Rand.Next(0, Answers.level70.Count())];
                     break;
                 case 60:
-                    buf = Answers.level60[Rand.Next(0, Answers.level60.Count - 1)];
+                    buf = Answers.level60[Rand.Next(0, Answers.level60.Count())];
                     break;
                 case 50:
-                    buf = Answers.level50[Rand.Next(0, Answers.level50.Count - 1)];
+                    buf = Answers.level50[Rand.Next(0, Answers.level50.Count())];
                     break;
                 case 40:
-                    buf = Answers.level40[Rand.Next(0, Answers.level40.Count - 1)];
+                    buf = Answers.level40[Rand.Next(0, Answers.level40.Count())];
                     break;
                 case 30:
-                    buf = Answers.level30[Rand.Next(0, Answers.level30.Count - 1)];
+                    buf = Answers.level30[Rand.Next(0, Answers.level30.Count())];
                     break;
                 case 20:
-                    buf = Answers.level20[Rand.Next(0, Answers.level20.Count - 1)];
+                    buf = Answers.level20[Rand.Next(0, Answers.level20.Count())];
                     break;
                 case 10:
-                    buf = Answers.level10[Rand.Next(0, Answers.level10.Count - 1)];
+                    buf = Answers.level10[Rand.Next(0, Answers.level10.Count())];
                     break;
                 case 0:
-                    buf = Answers.level0[Rand.Next(0, Answers.level0.Count - 1)];
+                    buf = Answers.level0[Rand.Next(0, Answers.level0.Count())];
                     break;
                 default:
                     break;

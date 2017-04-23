@@ -54,6 +54,8 @@ namespace DudelkaBot.WebClients
 
         public Tuple<Status, int, DateTime> GetChannelInfo(string channelname, string client_id)
         {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
             HttpResponseMessage message;
             try
             {
@@ -81,13 +83,13 @@ namespace DudelkaBot.WebClients
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
                 if (ex.InnerException != null)
                 {
                     Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
                 }
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return new Tuple<Status, int, DateTime>(Status.Unknown, 0, default(DateTime));
             }
 
@@ -98,6 +100,8 @@ namespace DudelkaBot.WebClients
         /// <param name="channel_id"> channel id from twitch-dj.ru/channelname , see back.php GET request url </param>
         public async Task<string> GetMusicFromTwitchDJ(string channel_id)
         {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
             HttpResponseMessage message;
             try
             {
@@ -109,9 +113,9 @@ namespace DudelkaBot.WebClients
             }
             catch (WebException ex)
             {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Message);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return "Ошибка, говнокод! Обратитесь к моему хозяину!";
             }
             string te = Encoding.UTF8.GetString(message.Content.ReadAsByteArrayAsync().Result);
@@ -133,6 +137,8 @@ namespace DudelkaBot.WebClients
 
         public async void GetChannelStatus(string to_id, string message)
         {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
             var msg = new HttpRequestMessage(new HttpMethod("POST"), url);
             msg.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
             msg.Headers.Authorization = new AuthenticationHeaderValue("OAuth", token);
@@ -146,17 +152,21 @@ namespace DudelkaBot.WebClients
             }
             catch (WebException ex)
             {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return;
             }
         }
 
         public async void SendPostWhisperMessage(string to_id, string message)
         {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
             try
             {
+                if (Channel.IrcClient != null)
+                    Channel.IrcClient.isConnect();
                 var msg = new HttpRequestMessage(new HttpMethod("POST"), url);
                 msg.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
                 msg.Headers.Authorization = new AuthenticationHeaderValue("OAuth", token);
@@ -167,17 +177,19 @@ namespace DudelkaBot.WebClients
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
                 if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return;
             }
         }
 
         internal async Task<string> MakeGetRequest()
         {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
             if (string.IsNullOrEmpty(id) && string.IsNullOrWhiteSpace(token) && string.IsNullOrWhiteSpace(token))
                 return string.Empty;
 
@@ -214,7 +226,8 @@ namespace DudelkaBot.WebClients
 
         internal async Task<string> MakePostRequest(string message, ulong to_userid, string method, string requestData = null, byte[] data = null)
         {
-
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
             if (data == null)
                 data = new UTF8Encoding().GetBytes(requestData ?? "");
             token = token?.ToLower().Replace("oauth:", "");

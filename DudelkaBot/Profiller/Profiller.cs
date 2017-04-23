@@ -12,7 +12,9 @@ namespace DudelkaBot.Profiller
     public static class Profiller
     {
         private static ConcurrentBag<ProfileChannel> profileChannels = new ConcurrentBag<ProfileChannel>();
-        private static string TemplateFilePath = "./ProfileChannels/Template.txt";
+        private static string templateCommandsPath = "./ProfileChannels/Commands/Template.txt";
+        private static string templateSubAnswersPath = "./ProfileChannels/SubAnswers/Template.txt";
+        private static string templateResubAnswersPath = "./ProfileChannels/ResubAnswers/Template.txt";
         private static string patternState = @"!(?<command>\w+)\s*=\s*(?<value>\d+)";
         private static Regex StateReg = new Regex(patternState);
 
@@ -22,7 +24,7 @@ namespace DudelkaBot.Profiller
         }
         private static void LoadProfiles()
         {
-            var filenames = Directory.GetFiles("./ProfileChannels/");
+            var filenames = Directory.GetFiles("./ProfileChannels/Commands");
 
             foreach (var item in filenames)
             {
@@ -32,10 +34,10 @@ namespace DudelkaBot.Profiller
         private static ProfileChannel FileToProfileChannel(string channelname)
         {
             string[] buf;
-            if (channelname != TemplateFilePath)
-                buf = File.ReadAllText($"./ProfileChannels/{channelname}.txt").Split(separator: new string[] { "\r\n" } , options: StringSplitOptions.RemoveEmptyEntries);
+            if (channelname != Path.GetFileNameWithoutExtension(templateCommandsPath))
+                buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(separator: new string[] { "\r\n" } , options: StringSplitOptions.RemoveEmptyEntries);
             else
-                buf = File.ReadAllText(channelname).Split(separator: new string[] { "\r\n" }, options: StringSplitOptions.RemoveEmptyEntries);
+                buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(separator: new string[] { "\r\n" }, options: StringSplitOptions.RemoveEmptyEntries);
             var dir = new Dictionary<string, int>();
             foreach (var item in buf)
             {
@@ -45,20 +47,45 @@ namespace DudelkaBot.Profiller
                     dir.Add(m.Groups["command"].Value, int.Parse(m.Groups["value"].Value));
                 }
             }
-            return new ProfileChannel(channelname, dir["vote"], dir["advert"], dir["vkid"], dir["djid"], dir["qupdate"], dir["counter"], dir["quote"], dir["sexylevel"], dir["date"], dir["help"], dir["members"], dir["mystat"], dir["toplist"], dir["citytime"], dir["music"], dir["viewers"], dir["uptime"]);
+
+            string[] sub = File.Exists($"./ProfileChannels/SubAnswers/{channelname}.txt") ? File.ReadAllLines($"./ProfileChannels/SubAnswers/{channelname}.txt") : null;
+            if(sub == null)
+            {
+                File.Copy(templateSubAnswersPath, $"./ProfileChannels/SubAnswers/{channelname}.txt");
+                sub = File.ReadAllLines($"./ProfileChannels/SubAnswers/{channelname}.txt");
+            }
+            string[] resub = File.Exists($"./ProfileChannels/ResubAnswers/{channelname}.txt") ? File.ReadAllLines($"./ProfileChannels/ResubAnswers/{channelname}.txt") : null;
+            if(resub == null)
+            {
+                File.Copy(templateResubAnswersPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
+                resub = File.ReadAllLines($"./ProfileChannels/ResubAnswers/{channelname}.txt");
+            }
+
+            return new ProfileChannel(channelname, dir["vote"], dir["advert"], dir["vkid"], dir["djid"], dir["qupdate"], dir["counter"], dir["quote"], dir["sexylevel"], dir["date"], dir["help"], dir["members"], dir["mystat"], dir["toplist"], dir["citytime"], dir["music"], dir["viewers"], dir["uptime"]) { SubAnswers = sub?.ToList(), ResubAnswers = resub?.ToList() };
         }
         public static bool TryCreateProfile(string channelname)
         {
             try
             {
-                if (!File.Exists($"./ProfileChannels/{channelname}.txt") && File.Exists(TemplateFilePath))
+                if (!File.Exists($"./ProfileChannels/Commands/{channelname}.txt") && File.Exists(templateCommandsPath))
                 {
-                    File.Copy(TemplateFilePath, $"./ProfileChannels/{channelname}.txt");
+                    File.Copy(templateCommandsPath, $"./ProfileChannels/Commands/{channelname}.txt");
+
+                    if (!File.Exists($"./ProfileChannels/SubAnswers/{channelname}.txt") && File.Exists(templateSubAnswersPath))
+                        File.Copy(templateSubAnswersPath, $"./ProfileChannels/SubAnswers/{channelname}.txt");
+                    if (!File.Exists($"./ProfileChannels/ResubAnswers/{channelname}.txt") && File.Exists(templateResubAnswersPath))
+                        File.Copy(templateResubAnswersPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
                     profileChannels.Add(FileToProfileChannel(channelname));
                     return true;
                 }
                 else
+                {
+                    if (!File.Exists($"./ProfileChannels/SubAnswers/{channelname}.txt") && File.Exists(templateSubAnswersPath))
+                        File.Copy(templateSubAnswersPath, $"./ProfileChannels/SubAnswers/{channelname}.txt");
+                    if (!File.Exists($"./ProfileChannels/ResubAnswers/{channelname}.txt") && File.Exists(templateResubAnswersPath))
+                        File.Copy(templateResubAnswersPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
                     return false;
+                }
             }
             catch (Exception ex)
             {
@@ -66,7 +93,7 @@ namespace DudelkaBot.Profiller
                 Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
                 if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
-                Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return false;
             }
         }

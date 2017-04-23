@@ -5,7 +5,7 @@
 !qupdate=1
 !counter=1
 !quote=1 
-!sexylevel=1
+!sexylevel=0
 !date=1
 !help=1
 !members=1
@@ -14,4 +14,4 @@
 !citytime=1
 !music=1
 !viewers=1
-!uptime=1
+!uptime=0

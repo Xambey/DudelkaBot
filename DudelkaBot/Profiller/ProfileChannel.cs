@@ -9,6 +9,8 @@ namespace DudelkaBot.Profiller
     public class ProfileChannel
     {
         #region Fields
+        private List<string> resubAnswers;
+        private List<string> subAnswers;
         private string name;
         private int vote;
         private int advert;
@@ -48,6 +50,9 @@ namespace DudelkaBot.Profiller
         public int Music { get => music; set => music = value; }
         public int Viewers { get => viewers; set => viewers = value; }
         public int Uptime { get => uptime; set => uptime = value; }
+        public List<string> SubAnswers { get => subAnswers; set => subAnswers = value; }
+        public List<string> ResubAnswers { get => resubAnswers; set => resubAnswers = value; }
+        private static Random rand = new Random();
         #endregion
 
         /// <summary>
@@ -91,6 +96,57 @@ namespace DudelkaBot.Profiller
             Music = music > 0 ? 1 : 0;
             Viewers = viewers > 0 ? 1 : 0;
             Uptime = uptime > 0 ? 1 : 0;
+        }
+
+        public string GetRandomSubAnswer()
+        {
+            if (SubAnswers == null || SubAnswers.Count() == 0)
+                return null;
+            List<string> buf = new List<string>();
+            string str = "";
+            foreach (var item in SubAnswers)
+            {
+                if (string.IsNullOrEmpty(item))
+                {
+                    buf.Add(str);
+                    str = "";
+                }
+                else
+                    str += item + " ";
+            }
+            if (str.Length > 0)
+            {
+                buf.Add(str);
+            }
+            if (buf.Count() == 1)
+                return buf.First();
+            return buf.ElementAt(rand.Next(0, buf.Count()));
+        }
+
+        public string GetRandomResubAnswer()
+        {
+            if (ResubAnswers == null || ResubAnswers.Count() == 0)
+                return null;
+            List<string> buf = new List<string>();
+            string str = "";
+            foreach (var item in ResubAnswers)
+            {
+                if (string.IsNullOrEmpty(item))
+                {
+                    buf.Add(str);
+                    str = "";
+                }
+                else
+                    str += item + " ";
+            }
+            if(str.Length > 0)
+            {
+                buf.Add(str);
+            }
+
+            if (buf.Count() == 1)
+                return buf.First();
+            return buf.ElementAt(rand.Next(0, buf.Count()));
         }
     }
 }
