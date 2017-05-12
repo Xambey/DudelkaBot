@@ -7,6 +7,11 @@ namespace DudelkaBot.enums
 {
     public enum Command
     {
+        wakeup,
+        sleep,
+        discord,
+        reconnect,
+        ball,
         vote,
         help,
         members,

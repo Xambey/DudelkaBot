@@ -15,6 +15,7 @@ namespace DudelkaBot.Profiller
         private static string templateCommandsPath = "./ProfileChannels/Commands/Template.txt";
         private static string templateSubAnswersPath = "./ProfileChannels/SubAnswers/Template.txt";
         private static string templateResubAnswersPath = "./ProfileChannels/ResubAnswers/Template.txt";
+        private static string templateActivitiesPath = "./ProfileChannels/Activities/Template.txt";
         private static string patternState = @"!(?<command>\w+)\s*=\s*(?<value>\d+)";
         private static Regex StateReg = new Regex(patternState);
 
@@ -61,7 +62,14 @@ namespace DudelkaBot.Profiller
                 resub = File.ReadAllLines($"./ProfileChannels/ResubAnswers/{channelname}.txt");
             }
 
-            return new ProfileChannel(channelname, dir["vote"], dir["advert"], dir["vkid"], dir["djid"], dir["qupdate"], dir["counter"], dir["quote"], dir["sexylevel"], dir["date"], dir["help"], dir["members"], dir["mystat"], dir["toplist"], dir["citytime"], dir["music"], dir["viewers"], dir["uptime"]) { SubAnswers = sub?.ToList(), ResubAnswers = resub?.ToList() };
+            string[] activities = File.Exists($"./ProfileChannels/Activities/{channelname}.txt") ? File.ReadAllLines($"./ProfileChannels/Activities/{channelname}.txt") : null;
+            if (activities == null)
+            {
+                File.Copy(templateActivitiesPath, $"./ProfileChannels/Activities/{channelname}.txt");
+                activities = File.ReadAllLines($"./ProfileChannels/Activities/{channelname}.txt");
+            }
+
+            return new ProfileChannel(channelname,activities, dir["vote"], dir["advert"], dir["vkid"], dir["djid"], dir["qupdate"], dir["counter"], dir["quote"], dir["sexylevel"], dir["date"], dir["help"], dir["members"], dir["mystat"], dir["toplist"], dir["citytime"], dir["music"], dir["viewers"], dir["uptime"], dir["8ball"], dir["reconnect"], dir["discord"]) { SubAnswers = sub?.ToList(), ResubAnswers = resub?.ToList() };
         }
         public static bool TryCreateProfile(string channelname)
         {
@@ -75,6 +83,8 @@ namespace DudelkaBot.Profiller
                         File.Copy(templateSubAnswersPath, $"./ProfileChannels/SubAnswers/{channelname}.txt");
                     if (!File.Exists($"./ProfileChannels/ResubAnswers/{channelname}.txt") && File.Exists(templateResubAnswersPath))
                         File.Copy(templateResubAnswersPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
+                    if (!File.Exists($"./ProfileChannels/Activities/{channelname}.txt") && File.Exists(templateActivitiesPath))
+                        File.Copy(templateActivitiesPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
                     profileChannels.Add(FileToProfileChannel(channelname));
                     return true;
                 }
@@ -84,6 +94,8 @@ namespace DudelkaBot.Profiller
                         File.Copy(templateSubAnswersPath, $"./ProfileChannels/SubAnswers/{channelname}.txt");
                     if (!File.Exists($"./ProfileChannels/ResubAnswers/{channelname}.txt") && File.Exists(templateResubAnswersPath))
                         File.Copy(templateResubAnswersPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
+                    if (!File.Exists($"./ProfileChannels/Activities/{channelname}.txt") && File.Exists(templateActivitiesPath))
+                        File.Copy(templateActivitiesPath, $"./ProfileChannels/ResubAnswers/{channelname}.txt");
                     return false;
                 }
             }

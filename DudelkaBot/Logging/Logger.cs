@@ -12,8 +12,8 @@ namespace DudelkaBot.Logging
     {
         #region Constants
             static readonly int timeHours = 24;
-            static readonly int countElementsForWriteChannels = 100;
-            static readonly int countElementsForWriteCommon = 50;
+            static readonly int countElementsForWriteChannels = 1000;
+            static readonly int countElementsForWriteCommon = 1000;
         #endregion
 
         #region Fields

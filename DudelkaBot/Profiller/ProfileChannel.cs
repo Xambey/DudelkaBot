@@ -9,6 +9,7 @@ namespace DudelkaBot.Profiller
     public class ProfileChannel
     {
         #region Fields
+        private Activities activities;
         private List<string> resubAnswers;
         private List<string> subAnswers;
         private string name;
@@ -29,6 +30,11 @@ namespace DudelkaBot.Profiller
         private int music;
         private int viewers;
         private int uptime;
+        private int ball8;
+        private int reconnect;
+        private int discord;
+        private int wakeup;
+        private int sleep;
         #endregion
 
         #region Properties
@@ -52,6 +58,13 @@ namespace DudelkaBot.Profiller
         public int Uptime { get => uptime; set => uptime = value; }
         public List<string> SubAnswers { get => subAnswers; set => subAnswers = value; }
         public List<string> ResubAnswers { get => resubAnswers; set => resubAnswers = value; }
+        public int Ball8 { get => ball8; set => ball8 = value; }
+        public int Reconnect { get => reconnect; set => reconnect = value; }
+        public int Discord { get => discord; set => discord = value; }
+        public int Wakeup { get => wakeup; set => wakeup = value; }
+        public int Sleep { get => sleep; set => sleep = value; }
+        public Activities Activities { get => activities; set => activities = value; }
+
         private static Random rand = new Random();
         #endregion
 
@@ -60,6 +73,7 @@ namespace DudelkaBot.Profiller
         /// </summary>
         public ProfileChannel(
             string name,
+            string[] activities,
             int vote = 1, 
             int advert = 1, 
             int vkid = 1, 
@@ -76,7 +90,12 @@ namespace DudelkaBot.Profiller
             int citytime = 1,
             int music = 1,
             int viewers = 1,
-            int uptime = 1)
+            int uptime = 1,
+            int ball8 = 1,
+            int reconnect = 1,
+            int discord = 1,
+            int wakeup = 1,
+            int sleep = 1)
         {
             Name = name;
             Vote = vote > 0 ? 1 : 0;
@@ -96,6 +115,13 @@ namespace DudelkaBot.Profiller
             Music = music > 0 ? 1 : 0;
             Viewers = viewers > 0 ? 1 : 0;
             Uptime = uptime > 0 ? 1 : 0;
+            Ball8 = ball8 > 0 ? 1 : 0;
+            Reconnect = reconnect > 0 ? 1 : 0;
+            Discord = discord > 0 ? 1 : 0;
+            Wakeup = wakeup > 0 ? 1 : 0;
+            Sleep = sleep > 0 ? 1 : 0;
+
+            Activities = new Activities(activities);
         }
 
         public string GetRandomSubAnswer()

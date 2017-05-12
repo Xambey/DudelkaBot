@@ -14,6 +14,7 @@ using System.Threading;
 using DudelkaBot.system;
 using DudelkaBot.enums;
 using DudelkaBot.Logging;
+using System.Text.RegularExpressions;
 
 namespace DudelkaBot.WebClients
 {
@@ -28,6 +29,9 @@ namespace DudelkaBot.WebClients
         private static string patternrandom = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private static string DjURL = "https://twitch-dj.ru/includes/back.php?func=playlist&channel=channel_id&c";
         private static string StreamUrl = "https://api.twitch.tv/kraken/streams/?channel=name&callback=twitch_info&client_id=";
+        private static string ChannelUrl = "https://api.twitch.tv/kraken/users?login=";
+        private static string SubscribersUrl = "https://api.twitch.tv/kraken/channels/";
+        private static string TwitchDJPageUrl = "https://twitch-dj.ru/c/";
         private int lengthid = 30;
 
         public HttpsClient(string userid, string token, string url)
@@ -52,19 +56,147 @@ namespace DudelkaBot.WebClients
             return result;
         }
 
+        public Tuple<string,string> GetWeatherInTown(string townname)
+        {
+            try
+            {
+                Channel.IrcClient.isConnect();
+                WebRequest request;
+                request = WebRequest.Create($"http://www.meteoservice.ru/weather/now/{townname}.html");
+                using (var response = request.GetResponseAsync().Result)
+                {
+                    using (var stream = response.GetResponseStream())
+                    using (var reader = new StreamReader(stream))
+                    {
+                        string data = reader.ReadToEnd();
+
+                        //var match = new Regex(")
+
+                        var match = new Regex(@"<h1>(?<town>.*)</h1>").Match(data);
+                        if (!match.Success || !match.Groups["town"].Success)
+                            return null;
+                        string temp = new Regex(@"<td class=""title"">Температура воздуха:</td>[^<]*?<td>(?<temp>[^<]+)</td>").Match(data).Groups["temp"].Value.Replace("&deg;", "°");
+                        
+
+                        string osadki = new Regex(@"<td class=""title"">Облачность:</td>[^<]*?<td>(?<osadki>[^<]+)</td>").Match(data).Groups["osadki"].Value;
+                        return new Tuple<string, string>(temp, osadki);
+                    }
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public Tuple<string, DateTime> GetChannelId(string channelname, string client_id)
+        {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
+            try
+            {
+                HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, ChannelUrl + channelname);
+                m.Method = new HttpMethod("GET");
+                m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
+                m.Headers.Add("Client-ID", client_id);
+                var task = client.SendAsync(m);
+
+                if (task.IsFaulted || !task.Result.IsSuccessStatusCode)
+                    return null;
+
+                JObject text = JObject.Parse(Encoding.UTF8.GetString(task.Result.Content.ReadAsByteArrayAsync().Result));
+                var results = text["users"];
+
+                if (results.Count() == 0)
+                    return null;
+                results = results.First;
+                var _id = results["_id"].ToObject<string>();
+                var created_at = results["created_at"].ToObject<DateTime>().ToLocalTime();
+                return new Tuple<string, DateTime>(_id,created_at);
+            }
+            catch
+            {
+                //Console.ForegroundColor = ConsoleColor.Red;
+                //Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                //if (ex.InnerException != null)
+                //{
+                //    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
+                //}
+                //Console.ForegroundColor = ConsoleColor.Gray;
+                return null;
+            }
+        }
+
+        static int TotalMonths(DateTime startDate, DateTime endDate)
+        {
+            DateTime dt1 = startDate.Date, dt2 = endDate.Date;
+            if (dt1 > dt2 || dt1 == dt2) return 0;
+
+            var m = ((dt2.Year - dt1.Year) * 12)
+                + dt2.Month - dt1.Month
+                + (dt2.Day >= dt1.Day - 1 ? 0 : -1)//поправка на числа
+                + ((dt1.Day == 1 && DateTime.DaysInMonth(dt2.Year, dt2.Month) == dt2.Day) ? 1 : 0);//если начальная дата - 1-е число меяца, а конечная - последнее число, добавляется 1 месяц
+            return m;
+        }
+
+        public Dictionary<string,int> GetChannelSubscribers(string channel_id, string client_id, string token_channel)
+        {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
+            try
+            {
+                HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, SubscribersUrl + $"{channel_id}/subscriptions");
+                m.Method = new HttpMethod("GET");
+                m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
+                m.Headers.Add("Client-ID", client_id);
+                m.Headers.Authorization = new AuthenticationHeaderValue("OAuth", token_channel);
+                var task = client.SendAsync(m);
+                task.Wait();
+                if (task.IsFaulted || !task.Result.IsSuccessStatusCode)
+                    return null;
+
+                JObject text = JObject.Parse(Encoding.UTF8.GetString(task.Result.Content.ReadAsByteArrayAsync().Result));
+                var results = text["subscriptions"].Children().ToList();
+
+                if (results.Count == 0)
+                    return null;
+                Dictionary<string, int> list = new Dictionary<string, int>();
+                foreach (var item in results)
+                {
+                    list.Add(item["user"]["name"].ToObject<string>(), TotalMonths(item["created_at"].ToObject<DateTime>(),item["user"]["updated_at"].ToObject<DateTime>()));
+                }
+
+                return list;
+            }
+            catch
+            {
+                //Console.ForegroundColor = ConsoleColor.Red;
+                //Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                //if (ex.InnerException != null)
+                //{
+                //    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
+                //}
+                //Console.ForegroundColor = ConsoleColor.Gray;
+                return null;
+            }
+        }
+
         public Tuple<Status, int, DateTime> GetChannelInfo(string channelname, string client_id)
         {
             if (Channel.IrcClient != null)
                 Channel.IrcClient.isConnect();
-            HttpResponseMessage message;
             try
             {
                 HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, StreamUrl.Replace("name", channelname) + client_id);
                 m.Method = new HttpMethod("GET");
                 m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
                 m.Headers.CacheControl = new CacheControlHeaderValue() { NoCache = true };
-                message = client.SendAsync(m).Result;
-                string te = Encoding.UTF8.GetString(message.Content.ReadAsByteArrayAsync().Result);
+                var task = client.SendAsync(m);
+
+                if (task.IsFaulted || !task.Result.IsSuccessStatusCode)
+                    return new Tuple<Status, int, DateTime>(Status.Offline, 0, default(DateTime));
+
+                string te = Encoding.UTF8.GetString(task.Result.Content.ReadAsByteArrayAsync().Result);
                 te = te.Substring(16);
                 te = te.Remove(te.Length - 1, 1);
 
@@ -81,19 +213,44 @@ namespace DudelkaBot.WebClients
                 var created_at = stream["created_at"].ToObject<DateTime>().ToLocalTime();
                 return new Tuple<Status, int, DateTime>(Status.Online, viewers, created_at);
             }
-            catch (Exception ex)
+            catch
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
-                if (ex.InnerException != null)
-                {
-                    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
-                }
-                Console.ForegroundColor = ConsoleColor.Gray;
+                //Console.ForegroundColor = ConsoleColor.Red;
+                //Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                //if (ex.InnerException != null)
+                //{
+                //    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
+                //}
+                //Console.ForegroundColor = ConsoleColor.Gray;
                 return new Tuple<Status, int, DateTime>(Status.Unknown, 0, default(DateTime));
             }
 
         }
+
+        private string GetMusicLinkFromTwitchDJ(string channel_name)
+        {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
+            HttpWebRequest request = WebRequest.CreateHttp(TwitchDJPageUrl + channel_name);
+            HttpWebResponse response = (HttpWebResponse) request.GetResponseAsync().Result;
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                Stream receiveStream = response.GetResponseStream();
+                StreamReader readStream = null;
+
+                if (response != null)
+                {
+                    readStream = new StreamReader(receiveStream, Encoding.UTF8);
+                }
+
+                string data = readStream.ReadToEnd();
+                return data;
+            }
+            else
+                return null;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -124,6 +281,9 @@ namespace DudelkaBot.WebClients
             JObject text = JObject.Parse(te);
             var results = text["1"].Children().ToList();
             string status = results[5].ToObject<string>();
+
+            //GetMusicLinkFromTwitchDJ("dariya_willis");
+
             if (status != "1")
                 return "Сейчас музыка не играет FeelsBadMan ";
             string title = results[2].ToObject<string>();
