@@ -9,6 +9,7 @@ using DudelkaBot.dataBase;
 using System.Text;
 using System.Text.RegularExpressions;
 using DudelkaBot.Logging;
+using DudelkaBot.WebClients;
 
 namespace DudelkaBot.system
 {
@@ -35,28 +36,19 @@ namespace DudelkaBot.system
             //"imaqtpie",
             //"lck1",
             //"silvername",
-<<<<<<< HEAD
             //"lenagol0vach"
             //"lenagol0vach",
             //"dota2ruhub",
             //"thijshs",
             //"pgl_dota",i
-=======
             //"lenagol0vach",
             //"dota2ruhub",
             //"thijshs",
             //"pgl_dota",
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> future
->>>>>>> test
             //"kephrii"
-=======
             //"kephrii",
             //"voyboy",
             //"lpl1"
->>>>>>> future
         };
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
@@ -112,10 +104,10 @@ namespace DudelkaBot.system
                         break;
                     case "!broadcast":
                         string m = Console.ReadLine();
-                        if (Channel.ViewChannel == null)
-                            break;
-                        if (Channel.Channels.Any(a => a.Key == Channel.ViewChannel.Name))
-                            Channel.IrcClient.SendChatBroadcastMessage(m,Channel.ViewChannel.Name);
+                        foreach ( var item in Channel.Channels)
+                        {
+                            Channel.IrcClient.SendChatBroadcastMessage(m, item.Value.Name);
+                        }
                         break;
                     case "!start show common log":
                         Logger.ShowLineCommonMessage("Запуск отображения общего лога");
@@ -124,6 +116,11 @@ namespace DudelkaBot.system
                     case "!stop show common log":
                         Logger.ShowLineCommonMessage("Остановка отображения общего лога");
                         Channel.ActiveLog = false;
+                        break;
+                    case "!whisper":
+                        string mesa = Console.ReadLine();
+                        string usernam = Console.ReadLine();
+                        Channel.IrcClient.SendChatWhisperMessage(mesa,usernam,324, "dfdf");
                         break;
                     case "!errors":
                         Console.ForegroundColor = ConsoleColor.Red;

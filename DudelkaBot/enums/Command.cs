@@ -7,15 +7,19 @@ namespace DudelkaBot.enums
 {
     public enum Command
     {
+        wakeup,
+        sleep,
+        discord,
+        reconnect,
+        ball,
         vote,
         help,
         members,
         mystat,
         toplist,
-        sexylevel,
         unknown,
-        date,
-        citytime,
+        moscowtime,
+        streamertime,
         advert,
         music,
         vkid,

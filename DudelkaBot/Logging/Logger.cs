@@ -12,8 +12,8 @@ namespace DudelkaBot.Logging
     {
         #region Constants
             static readonly int timeHours = 24;
-            static readonly int countElementsForWriteChannels = 100;
-            static readonly int countElementsForWriteCommon = 50;
+            static readonly int countElementsForWriteChannels = 1000;
+            static readonly int countElementsForWriteCommon = 1000;
         #endregion
 
         #region Fields
@@ -147,7 +147,6 @@ namespace DudelkaBot.Logging
                     channelslog.GetOrAdd(channelname, new ConcurrentQueue<string>());
                 if (!channelPaths.ContainsKey(channelname))
                     UpdateChannelPaths(channelname);
-
                 lock (channelslog[channelname])
                 {
                     if (channelslog[channelname].Count >= countElementsForWriteChannels)
@@ -178,7 +177,7 @@ namespace DudelkaBot.Logging
                 }
 
             }
-            catch (NullReferenceException ex)
+            catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
@@ -187,18 +186,6 @@ namespace DudelkaBot.Logging
                     CommonContainer = new ConcurrentQueue<string>();
                 if (channelslog == null)
                     channelslog = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
-            }
-            catch (InvalidOperationException ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
-                Console.ForegroundColor = ConsoleColor.Gray;
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
-                Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
         /// <summary>

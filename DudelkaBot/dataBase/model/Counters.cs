@@ -13,6 +13,7 @@ namespace DudelkaBot.dataBase.model
         public int Count { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Number { get; set; }
+        public string Description { get; set; }
 
         public Counters() { }
         public Counters(int id_channel, string counter_name)
@@ -20,6 +21,11 @@ namespace DudelkaBot.dataBase.model
             Channel_id = id_channel;
             Counter_name = counter_name;
             Count = 0;
+            Description = string.Empty;
+        }
+        public Counters(int id_channel, string counter_name, string description) : this(id_channel,counter_name)
+        {
+            Description = description;
         }
     }
 }

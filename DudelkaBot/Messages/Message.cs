@@ -30,7 +30,9 @@ namespace DudelkaBot.Messages
         private static string quoteUpdateWithDate = @"!qupdate\s+(?<number>\d+)\s+(?<date>\d{1,2}\.\d{1,2}\.\d{4})\s+(?<quote>.+)";
         private static string counterPattern = @"!counter\s+(?<command>[+-])\s+(?<name>\w+)$";
         private static string existedCounterPattern = @"!(?<name>\w+)\s+(?<command>v|[+-]|\d+)$";
+        private static string counterPatternWithDescriptionPattern = @"!counter\s+(?<command>[+-])\s+(?<name>\w+)\s+(?<description>[^ ].+)";
         private static string djidPattern = @"!djid (?<id>\w+)$";
+        private static string ball8Pattern = @"!8ball\s+.+";
         #endregion
 
         #region Regexes
@@ -54,7 +56,9 @@ namespace DudelkaBot.Messages
         private static Regex quoteUpdateWithDateReg = new Regex(quoteUpdateWithDate);
         private static Regex counterReg = new Regex(counterPattern);
         private static Regex existedCounterReg = new Regex(existedCounterPattern);
+        private static Regex counterWithDescriptionReg = new Regex(counterPatternWithDescriptionPattern);
         private static Regex djidReg = new Regex(djidPattern);
+        private static Regex ball8Reg = new Regex(ball8Pattern);
         #endregion
 
         #region Fields
@@ -68,6 +72,7 @@ namespace DudelkaBot.Messages
         private string subscriberName;
         private string host;
         private string msg;
+        private string description;
         private bool success = true;
         private bool ping = false;
         private string channel;
@@ -117,6 +122,7 @@ namespace DudelkaBot.Messages
         public string NewName { get => newName; set => newName = value; }
         public string OldName { get => oldName; set => oldName = value; }
         public string Djid { get => djid; set => djid = value; }
+        public string Description { get => description; set => description = value; }
 
         #endregion
 
@@ -248,8 +254,6 @@ namespace DudelkaBot.Messages
                             SubscriberName = math.Groups["username"].Value;
                             Subscription = int.Parse(math.Groups["sub"].Value);
                             Channel = math.Groups["channel"].Value;
-                            if (math.Groups["message"].Value.Contains("while\\syou\\swere\\saway"))
-                                Success = false;
                         }
                         else
                             Success = false;
@@ -274,18 +278,18 @@ namespace DudelkaBot.Messages
                         Msg = math.Groups["msg"].Value;
                         Channel = math.Groups["channel"].Value;
 
-                        if (UserName == "twitchnotify")
-                        {
-                            math = subscribeReg.Match(Msg);
-                            if (math.Success)
-                            {
-                                SubscriberName = math.Groups["username"].Value;
-                                Subscription = 1;
-                            }
-                            if (Data.Contains("while\\syou\\swere\\saway!"))
-                                Success = false;
-                            break;
-                        }
+                        //if (UserName == "twitchnotify")
+                        //{
+                        //    math = subscribeReg.Match(Msg);
+                        //    if (math.Success)
+                        //    {
+                        //        SubscriberName = math.Groups["username"].Value;
+                        //        Subscription = 1;
+                        //    }
+                        //    if (Data.Contains("while\\syou\\swere\\saway!"))
+                        //        Success = false;
+                        //    break;
+                        //}
 
                         if (Msg.StartsWith("!vote"))
                         {
@@ -318,21 +322,33 @@ namespace DudelkaBot.Messages
                         }
                         else if(Msg.StartsWith("!counter"))
                         {
-                            math = counterReg.Match(Msg);
+                            math = counterWithDescriptionReg.Match(Msg);
                             if (math.Success)
                             {
                                 Sign = math.Groups["command"].Value;
                                 NewName = math.Groups["name"].Value;
+                                Description = math.Groups["description"].Value;
                                 Command = Command.counter;
                             }
                             else
                             {
-                                if(Msg == "!counter")
+
+                                math = counterReg.Match(Msg);
+                                if (math.Success)
                                 {
+                                    Sign = math.Groups["command"].Value;
+                                    NewName = math.Groups["name"].Value;
                                     Command = Command.counter;
                                 }
                                 else
-                                    Success = false;
+                                {
+                                    if (Msg == "!counter")
+                                    {
+                                        Command = Command.counter;
+                                    }
+                                    else
+                                        Success = false;
+                                }
                             }
                         }
                         else if (Msg.StartsWith("!quote"))
@@ -393,7 +409,6 @@ namespace DudelkaBot.Messages
                                     QuoteNumber = int.Parse(math.Groups["number"].Value);
                                     Quote = math.Groups["quote"].Value;
                                     Command = Command.qupdate;
-                                    Date = default(DateTime);
                                 }
                                 else
                                     Success = false;
@@ -449,8 +464,14 @@ namespace DudelkaBot.Messages
                                 math = commandReg.Match(data);
                                 if (math.Success)
                                 {
-                                    if (!Enum.TryParse(math.Groups["command"].Value, out Command))
+                                    if (!Enum.TryParse(math.Groups["command"].Value, out Command)) { 
                                         Command = Command.unknown;
+                                        math = ball8Reg.Match(Msg);
+                                        if (math.Success)
+                                        {
+                                            Command = Command.ball;
+                                        }
+                                    }
                                 }
                                 else
                                     Success = false;

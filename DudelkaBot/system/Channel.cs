@@ -4,29 +4,28 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text;
-using Microsoft.EntityFrameworkCore.Storage;
 using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
-
 using DudelkaBot.dataBase.model;
 using DudelkaBot.vk;
 using DudelkaBot.ircClient;
 using DudelkaBot.resources;
 using DudelkaBot.WebClients;
-using System.Data.SqlClient;
 using DudelkaBot.Messages;
 using DudelkaBot.enums;
 using DudelkaBot.Logging;
+using System.IO;
+using System.Collections.Concurrent;
 
 namespace DudelkaBot.system
 {
     public class Channel
     {
         #region UserData
-            static string userId = "145466944";
-            static string OAuth = "k1vf6fr82i4inavo2odnhuaq8d8rz2";
-            static string url = "https://im.twitch.tv/v1/messages?on_site=";
-            static string client_id = "58apdkh91ows8rrfnph8ld96d7lqsrc";
+        //code: "4fbtdkbbt2vnab2ithpyimuhpvfblb"
+        static string userId = "145466944";
+        static string commonOAuth = "nti707m9f3py96px8apkvixa5iuifr";// "k1vf6fr82i4inavo2odnhuaq8d8rz2";
+        static string url = "https://im.twitch.tv/v1/messages?on_site=";
+        static string client_id = "11datgm6whw4p5kgt96h1chveoi4vo";//"11datgm6whw4p5kgt96h1chveoi4vo";
         #endregion
 
         #region ResurcesPaths
@@ -60,9 +59,14 @@ namespace DudelkaBot.system
         private Timer StreamChatTimer;
         private Timer QuoteTimer;
         private Timer StreamTimer;
+        private Timer CheckSubscriptions;
+        private Timer ShowChangedMusicTimer;
+        private static Timer connectTimer = new Timer(CheckConnect, null, 5 * 60000, 5 * 60000);
         static private int StreamStateChatUpdateTime = 3;
         static private int StreamStateUpdateTime = 1;
-        static private int QuoteShowTime = 15;
+        static private int CheckStateSubscriptionsTime = 10000;
+        static private int CheckMusicChangedTime = 20000;
+        static private int QuoteShowTime = 10;
         static private readonly int CountLimitMessagesForUpdateStreamState = 15;
         static private readonly int countLimitMessagesForShowQuote = 40;
         #endregion
@@ -74,42 +78,49 @@ namespace DudelkaBot.system
         #endregion
 
         #region References
-        private static Timer connectTimer = new Timer(CheckConnect, null, 5 * 60000, 5 * 60000);
         private static Regex answerReg = new Regex(answerpattern);
         private static Regex subReg = new Regex(subpattern);
         private static Regex idReg = new Regex(idpattern);
-        private static HttpsClient req = new HttpsClient(userId, OAuth, url);
+        private static HttpsClient httpClient = new HttpsClient(userId, commonOAuth, url);
         private static IrcClient ircClient;
         private static Dictionary<string, Channel> channels = new Dictionary<string, Channel>();
         private static Channel viewChannel;
         private static List<Message> errorListMessages = new List<Message>();
-        private Status statusChat = Status.Offline;
-        private Status statusStream = Status.Offline;
+        private Status statusChat = Status.Unknown;
+        private Status statusStream = Status.Unknown;
+        private List<int> NumbersOfQuotations = new List<int>();
 
         private static Random rand = new Random();
         private static List<string> commands;
         private Dictionary<string, List<User>> voteResult = new Dictionary<string, List<User>>();
+        private static List<string> ball8 = new List<string>(File.ReadLines("./resources/8ball.txt"));
+        private System.Collections.Concurrent.ConcurrentBag<string> subscribedList = new System.Collections.Concurrent.ConcurrentBag<string>();
+        private static Dictionary<string, int> lastNetSubscribers = new Dictionary<string, int>();
         #endregion
 
         #region Fields
+        private string Client_ID;
+        private string OAuth;
+        private int oldnumber8ball = 0;
         public int countMessageForUpdateStreamState = 0;
         public int countMessageQuote = 0;
         private string name;
-        private int lastqouteindex = 0;
         private int deathBattleCount = 0;
         private static string iphost;
         private static string userName;
         private static string password;
         private static int port;
-        private int id;   
+        private int id;
+        private string netId;
         private bool voteActive = false;
         private bool namesHandlerActive = false;
         private static bool activeLog = false;
-
+        private StatusBot statusBotOnChannel = StatusBot.Active;
+        private string lastMusic;
         #endregion
 
         #region Properties
-        public static HttpsClient Req { get => req; protected set => req = value; }
+        public static HttpsClient Req { get => httpClient; protected set => httpClient = value; }
         public static Timer ConnectTimer { get => connectTimer; protected set => connectTimer = value; }
         public static Regex AnswerReg { get => answerReg; protected set => answerReg = value; }
         public static Regex SubReg { get => subReg; protected set => subReg = value; }
@@ -123,7 +134,6 @@ namespace DudelkaBot.system
         public static List<string> Commands { get => commands; protected set => commands = value; }
         public Dictionary<string, List<User>> VoteResult { get => voteResult; protected set => voteResult = value; }
         public bool VoteActive { get => voteActive; protected set => voteActive = value; }
-        public int Lastqouteindex { get => lastqouteindex; protected set => lastqouteindex = value; }
         public int DeathBattleCount { get => deathBattleCount; protected set => deathBattleCount = value; }
         public static int Port { get => port; set => port = value; }
         public int Id { get => id; set => id = value; }
@@ -134,6 +144,9 @@ namespace DudelkaBot.system
         public Status StatusStream { get => statusStream; set => statusStream = value; }
         public bool NamesHandlerActive { get => namesHandlerActive; set => namesHandlerActive = value; }
         public static bool ActiveLog { get => activeLog; set => activeLog = value; }
+        public StatusBot StatusBotOnChannel { get => statusBotOnChannel; set => statusBotOnChannel = value; }
+        public string NetId { get => netId; set => netId = value; }
+        public string LastMusic { get => lastMusic; set => lastMusic = value; }
         #endregion
 
         public Channel(string channelName)
@@ -143,7 +156,6 @@ namespace DudelkaBot.system
                 Name = channelName;
                 if (!Channels.ContainsKey(Name))
                     Channels.Add(channelName, this);
-
                 if (Commands == null)
                 {
                     Commands = new List<string>(System.IO.File.ReadAllLines(commandsPath));
@@ -169,11 +181,46 @@ namespace DudelkaBot.system
                 if (Profiller.Profiller.GetProfileOrDefault(Name) == null)
                     Profiller.Profiller.TryCreateProfile(Name);
 
-                req.GetChannelInfo(Name, client_id);
+                httpClient.GetChannelInfo(Name, client_id);
                 Logger.UpdateChannelPaths(Name);
+
                 StreamChatTimer = new Timer(StreamStateChatUpdate, null, StreamStateChatUpdateTime * 60000, StreamStateChatUpdateTime * 60000);
-                QuoteTimer = new Timer(ShowQuote, null, QuoteShowTime * 60000, QuoteShowTime * 60000);
                 StreamTimer = new Timer(StreamStateUpdate, null, StreamStateUpdateTime * 60000, StreamStateUpdateTime * 60000);
+                var prof = Profiller.Profiller.GetProfileOrDefault(Name).Activities;
+
+                if (prof.ShowQuote == 1)
+                {
+                    QuoteTimer = new Timer(ShowRandowQuote, null, QuoteShowTime * 60000, QuoteShowTime * 60000);
+                }
+                if (prof.CheckSubscriptions == 1)
+                {
+                    OAuth = prof.Oauth;
+                    Client_ID = prof.Client_ID;
+                    do
+                    {
+                        NetId = httpClient.GetChannelId(Name, client_id).Item1;
+                        Thread.Sleep(5000);
+                    }
+                    while (NetId == null);
+                    CheckSubscriptions = new Timer(CheckStateSubscriptions, null, CheckStateSubscriptionsTime, CheckStateSubscriptionsTime);
+                }
+                if(prof.ShowChangedMusic == 1)
+                {
+                    ShowChangedMusicTimer = new Timer(CheckStateMusicStatus, null, CheckMusicChangedTime, CheckMusicChangedTime);
+                    using(var db = new ChatContext())
+                    {
+                        var ch = db.Channels.FirstOrDefault(a => a.Channel_name == Name);
+                        string b = Vkontakte.getNameTrack(ch.VkId);
+                        if (string.IsNullOrEmpty(b))
+                        {
+                            b = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
+                            if (!string.IsNullOrEmpty(b))
+                                LastMusic = b;
+                        }
+                        else
+                            LastMusic = b;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -187,7 +234,25 @@ namespace DudelkaBot.system
 
         private static void CheckConnect(object obj)
         {
-            IrcClient.isConnect();
+            try
+            {
+                if (IrcClient != null && ircClient.isDisconnect())
+                    throw new Exception();
+                else if (ircClient == null)
+                    ircClient = new IrcClient(iphost, port, userName, password);
+                IrcClient.isConnect();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Logger.ShowLineCommonMessage(ex.StackTrace + ex.Data + ex.Message);
+                if (ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.StackTrace + ex.InnerException.Data + ex.InnerException.Message);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                IrcClient.TcpClient.Dispose();
+                IrcClient.TcpClient = new System.Net.Sockets.TcpClient();
+                return;
+            }
         }
 
         private static void FindDublicateUsers(ChatContext db)
@@ -217,24 +282,28 @@ namespace DudelkaBot.system
             }
         }
 
-        private void ShowQuote(object obj)
+        private void ShowRandowQuote(object obj)
         {
-            if(countMessageQuote > countLimitMessagesForShowQuote)
+            if (StatusStream == Status.Online && countMessageQuote > countLimitMessagesForShowQuote)
             {
                 using (var db = new ChatContext()) {
+
                     var or = db.Quotes.Where(a => a.Channel_id == Id).ToList();
+
+                    if (or.Count == NumbersOfQuotations.Count)
+                        NumbersOfQuotations.Clear();
                     if (or.Count <= 0)
                     {
                         countMessageQuote = 0;
                         return;
                     }
                     int c = Rand.Next(1, or.Count());
-                    while(c == Lastqouteindex)
+                    while (NumbersOfQuotations.Contains(c))
                         c = Rand.Next(1, or.Count());
-                    Lastqouteindex = c;
-                    var quot = or.SingleOrDefault(a => a.Number == Lastqouteindex);
+                    NumbersOfQuotations.Add(c);
+                    var quot = or.SingleOrDefault(a => a.Number == c);
                     if (quot != null)
-                        IrcClient.SendChatBroadcastMessage(string.Format("/me Великая случайная цитата LUL - {0}, {1:yyyy} #{2} : '{3}'", Name, quot.Date, Lastqouteindex, quot.Quote), Name);
+                        IrcClient.SendChatBroadcastMessage(string.Format("/me Случайная цитата LUL - {0}, {1:yyyy} #{2} : '{3}'", Name, quot.Date, c, quot.Quote), Name);
                 }
             }
             countMessageQuote = 0;
@@ -251,7 +320,7 @@ namespace DudelkaBot.system
 
                 Logger.StopWrite();
                 Logger.ShowLineCommonMessage("Соединение разорвано...");
-                IrcClient.Reconnect(Process);
+                IrcClient.Reconnect();
                 Logger.StartWrite();
                 foreach (var item in Channels)
                 {
@@ -271,16 +340,189 @@ namespace DudelkaBot.system
             }
         }
 
+        private void CheckStateSubscriptions(object obj)
+        {
+            try
+            {
+                //if (StatusStream != Status.Online)
+                //    return;
+                var net = httpClient.GetChannelSubscribers(NetId, Client_ID, OAuth);
+                if (net != null && !lastNetSubscribers.LastOrDefault().Equals(net.LastOrDefault())) {
+                    lastNetSubscribers = net;
+                    using (var db = new ChatContext())
+                    {
+                        foreach (var item in net)
+                        {
+                            if (subscribedList.Contains(item.Key))
+                                continue;
+                            var user = db.Users.FirstOrDefault(a => a.Username == item.Key);
+                            if (user == null)
+                            {
+                                user = new Users(item.Key);
+                                db.Users.Add(user);
+                                db.SaveChanges();
+
+                                var chus = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == user.Id);
+                                if(chus == null)
+                                {
+                                    chus = new ChannelsUsers(user.Id, Id, item.Value + 1);
+                                    db.ChannelsUsers.Add(chus);
+                                    db.SaveChanges();
+
+                                    var prof = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (prof == null)
+                                    {
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                        return;
+                                    }
+                                    
+                                    else if(item.Value <= 0)
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomSubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                    else
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomResubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                }
+                                else
+                                {
+                                    var prof = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (prof == null)
+                                    {
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                        return;
+                                    }
+                                    else if (item.Value <= 0)
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomSubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                    else
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomResubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                    chus.CountSubscriptions++;
+                                    db.SaveChanges();
+                                }
+                            }
+                            else
+                            {
+                                var chus = db.ChannelsUsers.FirstOrDefault(a => a.User_id == user.Id);
+                                if (chus == null)
+                                {
+                                    chus = new ChannelsUsers(user.Id, Id, item.Value + 1);
+                                    db.ChannelsUsers.Add(chus);
+                                    db.SaveChanges();
+
+                                    var prof = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (prof == null)
+                                    {
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                        return;
+                                    }
+                                    subscribedList.Add(item.Key);
+                                    if (item.Value <= 0)
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomSubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                    else
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomResubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                }
+                                else
+                                {
+                                    var prof = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (prof == null)
+                                    {
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                        return;
+                                    }
+                                    if (item.Value <= 0)
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomSubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                    else
+                                        ircClient.SendChatBroadcastMessage(prof.GetRandomResubAnswer().Replace("month", (item.Value + 1).ToString()).Replace("nick", item.Key), Name);
+                                    chus.CountSubscriptions++;
+                                    subscribedList.Add(item.Key);
+                                    db.SaveChanges();
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
+                if (ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
+        }
+
+        private void CheckStateMusicStatus(object obj)
+        {
+            try
+            {
+                var prumi = Profiller.Profiller.GetProfileOrDefault(Name);
+                if (prumi == null)
+                    Profiller.Profiller.TryCreateProfile(Name);
+                if (prumi != null && prumi.Activities.ShowChangedMusic == 0)
+                    return;
+                if (StatusStream != Status.Online)
+                    return;
+                using (var db = new ChatContext())
+                {
+                    var ch = db.Channels.FirstOrDefault(a => a.Channel_id == Id);
+
+                    string trackname = Vkontakte.getNameTrack(ch.VkId);
+                    if (trackname == LastMusic)
+                        return;
+                    if (string.IsNullOrEmpty(trackname))
+                    {
+                        if (ch.DjId as object != null)
+                        {
+                            if (ch.DjId == 0)
+                            {
+                                return;
+                            }
+                            string g = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
+                            if (string.IsNullOrEmpty(g) || g == LastMusic)
+                            {
+                                return;
+                            }
+                            else
+                            {
+                                LastMusic = g;
+                                IrcClient.SendChatBroadcastMessage("/me " + g, ch.Channel_name);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        LastMusic = trackname;
+                        IrcClient.SendChatBroadcastMessage("/me Сейчас в VK играет: " + trackname + " Kreygasm", ch.Channel_name);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
+                if (ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                return;
+            }
+        }
+
         private void StreamStateUpdate(object obj)
         {
             try
             {
                 var oldstatus = StatusStream;
-                var info = req.GetChannelInfo(Name, client_id);
+                var info = httpClient.GetChannelInfo(Name, client_id);
                 switch (info.Item1)
                 {
                     case Status.Online:
                         StatusStream = Status.Online;
+                        if(NumbersOfQuotations.Count != 0)
+                            NumbersOfQuotations.Clear();
+                        if (subscribedList.Count != 0)
+                        {
+                            var Bag = new System.Collections.Concurrent.ConcurrentBag<string>();
+                            Interlocked.Exchange<ConcurrentBag<string>>(ref subscribedList, Bag);
+                        }
                         break;
                     case Status.Offline:
                         StatusStream = Status.Offline;
@@ -295,7 +537,13 @@ namespace DudelkaBot.system
 
                 if (oldstatus != StatusStream)
                 {
-                    if (StatusStream == Status.Offline || StatusChat == Status.Online)
+                    //if (StatusStream == Status.Online && oldstatus == Status.Offline)
+                    //{
+                    //    var inf = httpClient.GetWeatherInTown("ufa");
+                    //    IrcClient.SendChatBroadcastMessage($"Добро пожаловать на борт! Статус стрима On Air, полет нормальный. Температура за бортом {inf.Item1}, на небе {inf.Item2}. Просим всех прибывших занять свои места и поздороваться с чатиком <3 <3 <3 . Вкусняшки будут раздаваться через некоторое время gachiGASM nymnCorn . Спасибо что сели в наш чат DuckerZ /", Name);
+                    //}
+
+                    if (StatusStream == Status.Offline || StatusStream == Status.Online)
                     {
                         Logger.SaveChannelLog(Name);
                         Logger.SaveCommonLog();
@@ -322,14 +570,14 @@ namespace DudelkaBot.system
                 if (countMessageForUpdateStreamState <= CountLimitMessagesForUpdateStreamState)
                 {
                     StatusChat = Status.Offline;
-                    using (var db = new ChatContext())
-                    {
-                        foreach (var item in db.ChannelsUsers.Where(a => a.Active && a.Channel_id == Id))
-                        {
-                            item.Active = false;
-                        }
-                        db.SaveChanges();
-                    }
+                    //using (var db = new ChatContext())
+                    //{
+                    //    foreach (var item in db.ChannelsUsers.Where(a => a.Active && a.Channel_id == Id))
+                    //    {
+                    //        item.Active = false;
+                    //    }
+                    //    db.SaveChanges();
+                    //}
                 }
                 else
                 {
@@ -348,7 +596,7 @@ namespace DudelkaBot.system
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Source + ex.Data + ex.Message);
-                if(ex.InnerException != null)
+                if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
@@ -371,7 +619,7 @@ namespace DudelkaBot.system
             if (IrcClient == null)
             {
                 IrcClient = new IrcClient(Iphost, Port, UserName, Password);
-                IrcClient.StartProcess(Process);
+                IrcClient.StartProcess();
             }
             IrcClient.JoinRoom(Name);
             Logger.ShowLineCommonMessage($"Выполнен вход в комнату: {Name} ...");
@@ -382,7 +630,7 @@ namespace DudelkaBot.system
             if (IrcClient == null)
             {
                 IrcClient = new IrcClient(Iphost, Port, UserName, Password);
-                IrcClient.StartProcess(Process);
+                IrcClient.StartProcess();
             }
             IrcClient.LeaveRoom(Name);
             Logger.ShowLineCommonMessage($"Выполнен выход из комнаты: {Name} ...");
@@ -391,7 +639,7 @@ namespace DudelkaBot.system
         private int GetSexyLevel(string username)
         {
             int level = 0;
-            using(var db = new ChatContext())
+            using (var db = new ChatContext())
             {
                 var us = db.Users.SingleOrDefault(a => a.Username == username);
                 if (us == null)
@@ -446,13 +694,13 @@ namespace DudelkaBot.system
             {
                 Message currentMessage = new Message(data);
 
-                if(ViewChannel != null && currentMessage.Channel == ViewChannel.Name && currentMessage.Msg != null)
-                    Logger.ShowLineChannelMessage(currentMessage.UserName,currentMessage.Msg, currentMessage.Channel);
-                else if(!currentMessage.Success)
+                if (ViewChannel != null && currentMessage.Channel == ViewChannel.Name && currentMessage.Msg != null)
+                    Logger.ShowLineChannelMessage(currentMessage.UserName, currentMessage.Msg, currentMessage.Channel);
+                else if (!currentMessage.Success)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
 
-                    if(ActiveLog)
+                    if (ActiveLog)
                         Logger.ShowLineCommonMessage(data);
                     Console.ForegroundColor = ConsoleColor.Gray;
                     //lock (ErrorListMessages)
@@ -466,22 +714,23 @@ namespace DudelkaBot.system
                 else if (currentMessage.UserName == "moobot" || currentMessage.UserName == "nightbot")
                     return;
                 else if (ViewChannel != null && currentMessage.Channel != ViewChannel.Name && currentMessage.Msg != null)
-                    Logger.WriteLineMessage(currentMessage.UserName,currentMessage.Msg, currentMessage.Channel);
+                    Logger.WriteLineMessage(currentMessage.UserName, currentMessage.Msg, currentMessage.Channel);
 
                 if (currentMessage.Channel != null && Channels.ContainsKey(currentMessage.Channel))
                 {
-                        Channels[currentMessage.Channel].Handler(currentMessage);
+                    Channels[currentMessage.Channel].Handler(currentMessage);
                 }
                 else
                 {
                     Channels.First().Value?.Handler(currentMessage);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
+                SmtpClient.SendEmailAsync("dudelkabot@mail.ru", "I'm not fine master", ex.Message + " " + ex.Source + " " + ex.Data + " 733 str on Channel.cs");
                 return;
             }
         }
@@ -541,12 +790,12 @@ namespace DudelkaBot.system
                         case TypeMessage.PRIVMSG:
                             HandlerCountMessages(msg, db);
 
-                            if (msg.UserName == "twitchnotify")
-                            {
-                                SubscribeMessage(msg, db);
-                                break;
-                            }
-                            else if (VoteActive)
+                            //if (msg.UserName == "twitchnotify")
+                            //{
+                            //    SubscribeMessage(msg, db);
+                            //    break;
+                            //}
+                            if (VoteActive)
                             {
                                 VoteHandlerMessage(msg);
                                 break;
@@ -579,6 +828,78 @@ namespace DudelkaBot.system
 
                             switch (msg.Command)
                             {
+                                case Command.wakeup:
+                                    var wake = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (wake == null)
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                    var userwake = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (userwake == null)
+                                        break;
+                                    var chuwake = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userwake.Id);
+                                    if (chuwake == null)
+                                        break;
+                                    if ((chuwake.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && StatusBotOnChannel != StatusBot.Active)
+                                    {
+                                        StatusBotOnChannel = StatusBot.Active;
+                                        IrcClient.SendChatBroadcastMessage("/me Мммммм...ну еще 5 минуточек...*трясет* ну ладно, ладно, встаю я...Уже поспать не дают... ResidentSleeper ", Name);
+                                    }
+                                    break;
+                                case Command.sleep:
+                                    var sleep = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (sleep == null)
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                    var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (usersleep == null)
+                                        break;
+                                    var chusleep = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == usersleep.Id);
+                                    if (chusleep == null)
+                                        break;
+                                    if ((chusleep.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && StatusBotOnChannel != StatusBot.Sleep)
+                                    {
+                                        IrcClient.SendChatBroadcastMessage("/me Ну я не хочу спаааааать, еще 5 минуточек...Zzz ResidentSleeper ", Name);
+                                        StatusBotOnChannel = StatusBot.Sleep;
+                                    }
+                                    break;
+                                case Command.discord:
+                                    var dis = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (dis == null)
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                    if (dis != null && dis.Help == 0)
+                                        break;
+                                    var ud = IdReg.Match(msg.Data);
+                                    if (ud.Success)
+                                    {
+                                        SendWhisperMessage(ud.Groups["id"].Value, msg.UserName, "Ссылка на канал в discord: https://discordapp.com/invite/fsofbsadw");
+                                    }
+                                    break;
+                                case Command.reconnect:
+                                    var rec = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (rec == null)
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                    var userRec = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                    if (userRec == null)
+                                        break;
+                                    var churec = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userRec.Id);
+                                    if (churec == null)
+                                        break;
+                                    if ((churec.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name))
+                                    {
+                                        IrcClient.SendChatBroadcastMessage("/me Перезагружаюсь... MrDestructoid", Name);
+                                        Reconnect();
+                                    }
+                                    break;
+                                case Command.ball:
+                                    var ball = Profiller.Profiller.GetProfileOrDefault(Name);
+                                    if (ball == null)
+                                        Profiller.Profiller.TryCreateProfile(Name);
+                                    if (ball.Ball8 == 0)
+                                        break;
+                                    int n = Rand.Next(0, ball8.Count);
+                                    while (n == oldnumber8ball)
+                                        n = Rand.Next(0, ball8.Count);
+                                    IrcClient.SendChatMessage(ball8[n], msg);
+                                    oldnumber8ball = n;
+                                    break;
                                 case Command.vote:
                                     var pr = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (pr == null)
@@ -628,13 +949,15 @@ namespace DudelkaBot.system
                                         IrcClient.SendChatMessage("Объявление '" + msg.Advert + "' активировано", msg);
                                     }
                                     break;
-                                case Command.citytime:
+                                case Command.streamertime:
                                     var prof = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prof == null)
                                         Profiller.Profiller.TryCreateProfile(Name);
-                                    if (prof != null && prof.Citytime == 0)
+                                    if (prof != null && prof.Streamertime == 0)
                                         break;
-                                    IrcClient.SendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).TimeOfDay.ToString().Remove(8), msg);
+                                    //var info = httpClient.GetWeatherInTown("ufa");
+                                    //IrcClient.SendChatMessage("Время в Уфе - " + DateTime.Now.AddHours(2).TimeOfDay.ToString().Remove(8) + " " + (info != null ? info.Item1 + ", " + info.Item2 : " Погода сейчас недоступна :("), msg);
+                                    IrcClient.SendChatMessage("Время у УФЕ - " + DateTime.Now.AddHours(2).TimeOfDay.ToString().Remove(8), msg);
                                     break;
                                 case Command.help:
                                     var profi = Profiller.Profiller.GetProfileOrDefault(Name);
@@ -645,15 +968,18 @@ namespace DudelkaBot.system
                                     var u = IdReg.Match(msg.Data);
                                     if (u.Success)
                                     {
-                                        SendWhisperMessage(u.Groups["id"].Value, msg.UserName, Commands);
+                                        //SendWhisperMessage(u.Groups["id"].Value, msg.UserName, Commands);
+                                        SendWhisperMessage(u.Groups["id"].Value, msg.UserName, "Список комманд бота здесь: https://github.com/Xambey/DudelkaBot/wiki/Commands");
                                     }
                                     break;
-                                case Command.date:
+                                case Command.moscowtime:
                                     var profil = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (profil == null)
                                         Profiller.Profiller.TryCreateProfile(Name);
-                                    if (profil != null && profil.Date == 0)
+                                    if (profil != null && profil.Moscowtime == 0)
                                         break;
+                                    //var inf = httpClient.GetWeatherInTown("moskva");
+                                    //IrcClient.SendChatMessage("Время в москве: " + DateTime.Now.TimeOfDay.ToString().Remove(8) + " " + (inf != null ? inf.Item1 + ", " + inf.Item2 : " Погода сейчас недоступна :("), msg);
                                     IrcClient.SendChatMessage("Время в москве: " + DateTime.Now.TimeOfDay.ToString().Remove(8), msg);
                                     break;
                                 case Command.mystat:
@@ -679,7 +1005,7 @@ namespace DudelkaBot.system
                                         Profiller.Profiller.TryCreateProfile(Name);
                                     if (profiler != null && profiler.Toplist == 0)
                                         break;
-                                    
+
                                     if (db.ChannelsUsers.Where(a => a.Channel_id == Id).Count() < 5)
                                         break;
                                     var channelsusers = db.ChannelsUsers.Where(a => a.Channel_id == Id).OrderByDescending(a => a.CountMessage).ToList();
@@ -703,45 +1029,45 @@ namespace DudelkaBot.system
 
                                     if (StatusStream != Status.Online)
                                         break;
-                                    var value = req.GetChannelInfo(Name, client_id);
+                                    var value = httpClient.GetChannelInfo(Name, client_id);
                                     if (value.Item1 != Status.Online)
                                         break;
-                                    var time = DateTime.Now - value.Item3; 
-                                    IrcClient.SendChatMessage($"Чатику хорошо уже {time.Hours} {Helper.GetDeclension(time.Hours,"час","часа","часов")}, {time.Minutes} {Helper.GetDeclension(time.Hours, "минута", "минуты", "минуты")}, {time.Seconds} {Helper.GetDeclension(time.Hours, "секунды", "секунд", "секунды")} Kreygasm " , msg);
+                                    var time = DateTime.Now - value.Item3;
+                                    IrcClient.SendChatMessage($"Чатику хорошо уже {time.Hours} {Helper.GetDeclension(time.Hours, "час", "часа", "часов")}, {time.Minutes} {Helper.GetDeclension(time.Hours, "минута", "минуты", "минуты")}, {time.Seconds} {Helper.GetDeclension(time.Hours, "секунды", "секунд", "секунды")} Kreygasm ", msg);
                                     break;
-                                case Command.sexylevel:
-                                    var prus = Profiller.Profiller.GetProfileOrDefault(Name);
-                                    if (prus == null)
-                                        Profiller.Profiller.TryCreateProfile(Name);
-                                    if (prus != null && prus.Sexylevel == 0)
-                                        break;
-                                    var m = SubReg.Match(msg.Data);
-                                    if (msg.Channel == "dariya_willis")
-                                        break;
-                                    if (m.Success)
-                                    {
-                                        var usLevel = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
-                                        if (usLevel == null)
-                                            break;
-                                        var chan = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == usLevel.Id);
-                                        int val = int.Parse(m.Groups["sub"].Value);
-                                        if (chan.CountSubscriptions < val)
-                                            chan.CountSubscriptions = val;
-                                        db.SaveChanges();
-                                    }
+                                //case Command.sexylevel:
+                                //    var prus = Profiller.Profiller.GetProfileOrDefault(Name);
+                                //    if (prus == null)
+                                //        Profiller.Profiller.TryCreateProfile(Name);
+                                //    if (prus != null && prus.Sexylevel == 0)
+                                //        break;
+                                //    var m = SubReg.Match(msg.Data);
+                                //    if (msg.Channel == "dariya_willis")
+                                //        break;
+                                //    if (m.Success)
+                                //    {
+                                //        var usLevel = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+                                //        if (usLevel == null)
+                                //            break;
+                                //        var chan = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == usLevel.Id);
+                                //        int val = int.Parse(m.Groups["sub"].Value);
+                                //        if (chan.CountSubscriptions < val)
+                                //            chan.CountSubscriptions = val;
+                                //        db.SaveChanges();
+                                //    }
 
-                                    int level = GetSexyLevel(msg.UserName);
+                                //    int level = GetSexyLevel(msg.UserName);
 
-                                    if (msg.UserName == Name)
-                                        level = 200;
-                                    m = IdReg.Match(msg.Data);
-                                    if (m.Success)
-                                    {
-                                        SendWhisperMessage(m.Groups["id"].Value, msg.UserName, "Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + GetLevelMessage(level));
-                                        //ircClient.sendChatWhisperMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), ulong.Parse(m.Groups["id"].Value), msg);
-                                    }
+                                //    if (msg.UserName == Name)
+                                //        level = 200;
+                                //    m = IdReg.Match(msg.Data);
+                                //    if (m.Success)
+                                //    {
+                                //        SendWhisperMessage(m.Groups["id"].Value, msg.UserName, "Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + GetLevelMessage(level));
+                                //        //ircClient.sendChatWhisperMessage("Ваш уровень сексуальности " + level.ToString() + " из 200" + ", вы настолько сексуальны, что: " + getLevelMessage(level), ulong.Parse(m.Groups["id"].Value), msg);
+                                //    }
 
-                                    break;
+                                //    break;
                                 case Command.members:
                                     var prum = Profiller.Profiller.GetProfileOrDefault(Name);
                                     if (prum == null)
@@ -760,7 +1086,7 @@ namespace DudelkaBot.system
                                         Profiller.Profiller.TryCreateProfile(Name);
                                     if (prumt != null && prumt.Viewers == 0)
                                         break;
-                                    var la = req.GetChannelInfo(Name, client_id);
+                                    var la = httpClient.GetChannelInfo(Name, client_id);
                                     if (la.Item1 != Status.Online)
                                         break;
                                     IrcClient.SendChatMessage($"Сейчас стрим смотрит {la.Item2} человек Jebaited ", msg);
@@ -774,7 +1100,7 @@ namespace DudelkaBot.system
                                     if (StatusStream != Status.Online)
                                         break;
                                     var ch = db.Channels.FirstOrDefault(a => a.Channel_id == Id);
-                                    
+
                                     if (ch.VkId as object != null)
                                     {
                                         if (ch.VkId == 0)
@@ -792,7 +1118,7 @@ namespace DudelkaBot.system
                                                     IrcClient.SendChatMessage("Не установлен DjId для канала, см. !help", msg);
                                                     break;
                                                 }
-                                                string g = req.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
+                                                string g = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
                                                 if (string.IsNullOrEmpty(g))
                                                 {
                                                     IrcClient.SendChatMessage("В данный момент музыка нигде не играет FeelsBadMan !", msg);
@@ -810,7 +1136,7 @@ namespace DudelkaBot.system
                                             break;
                                         }
                                     }
-                                    
+
                                     break;
                                 case Command.djid:
                                     var prom = Profiller.Profiller.GetProfileOrDefault(Name);
@@ -823,7 +1149,7 @@ namespace DudelkaBot.system
                                     if (pe == null)
                                         break;
                                     var mode = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == pe && a.Moderator);
-                                    if (mode == null && msg.UserName != "dudelka_krasnaya") 
+                                    if (mode == null && msg.UserName != "dudelka_krasnaya")
                                         break;
                                     var chih = db.Channels.FirstOrDefault(a => a.Channel_name == Name);
                                     if (chih == null)
@@ -897,35 +1223,47 @@ namespace DudelkaBot.system
                                             break;
                                         var counters = db.Counters.Where(a => a.Channel_id == channel.Channel_id);
 
-                                        if(string.IsNullOrEmpty(msg.Sign))
+                                        if (string.IsNullOrEmpty(msg.Sign))
                                         {
                                             if (counters == null)
                                                 break;
                                             var j = IdReg.Match(msg.Data);
                                             if (j.Success)
                                             {
-                                                SendWhisperMessage(j.Groups["id"].Value, msg.UserName, counters.Select(a => a.Counter_name + " ").ToList());
+                                                SendWhisperMessage(j.Groups["id"].Value, msg.UserName, counters.Select(a => a.Counter_name + ": " +(a.Description ?? string.Empty) + " = " + a.Count.ToString()).ToList());
+                                                break;
                                             }
                                         }
 
-                                        switch(msg.Sign)
-                                        { 
+                                        switch (msg.Sign)
+                                        {
                                             case "+":
                                                 if (counters != null)
                                                 {
                                                     var y = counters.FirstOrDefault(a => a.Counter_name == msg.NewName);
                                                     if (y == null)
                                                     {
-                                                        db.Counters.Add(new Counters(Id, msg.NewName));
+                                                        if (!string.IsNullOrEmpty(msg.Description))
+                                                            db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
+                                                        else
+                                                            db.Counters.Add(new Counters(Id, msg.NewName));
                                                         db.SaveChanges();
+                                                    }
+                                                    else
+                                                    {
+                                                        IrcClient.SendChatBroadcastMessage($"/me Cчетчик {msg.NewName} уже существует! ПодУмойте над другим названием! LUL", msg);
+                                                        break;
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    db.Counters.Add(new Counters(Id, msg.NewName));
+                                                    if (!string.IsNullOrEmpty(msg.Description))
+                                                        db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
+                                                    else
+                                                        db.Counters.Add(new Counters(Id, msg.NewName));
                                                     db.SaveChanges();
                                                 }
-                                                IrcClient.SendChatBroadcastMessage($"Добавлен новый счетчик {msg.NewName}", msg);
+                                                IrcClient.SendChatBroadcastMessage($"/me Добавлен новый счетчик {msg.NewName}", msg);
                                                 break;
                                             case "-":
                                                 if (counters == null)
@@ -941,8 +1279,8 @@ namespace DudelkaBot.system
                                             default:
                                                 break;
                                         }
-                                            
-                                    }                              
+
+                                    }
                                     break;
                                 case Command.existedcounter:
                                     var promict = Profiller.Profiller.GetProfileOrDefault(Name);
@@ -980,7 +1318,10 @@ namespace DudelkaBot.system
                                                 db.SaveChanges();
                                                 break;
                                             case "v":
-                                                IrcClient.SendChatBroadcastMessage(string.Format("/me {0}: Умерли всего {1} {2} LUL", y.Counter_name ,y.Count, Helper.GetDeclension(y.Count, "раз", "раза", "раз")), Name);
+                                                if (string.IsNullOrEmpty(y.Description))
+                                                    IrcClient.SendChatBroadcastMessage(string.Format("/me {0}: Умерли всего {1} {2} LUL", y.Counter_name, y.Count, Helper.GetDeclension(y.Count, "раз", "раза", "раз")), Name);
+                                                else
+                                                    IrcClient.SendChatBroadcastMessage(string.Format("/me {0}: {1} {2} {3} LUL", y.Counter_name, y.Description, y.Count, Helper.GetDeclension(y.Count, "раз", "раза", "раз")), Name);
                                                 break;
                                             default:
                                                 int val;
@@ -991,8 +1332,13 @@ namespace DudelkaBot.system
                                                 }
                                                 break;
                                         }
-                                        if(oldvalue != y.Count)
-                                            IrcClient.SendChatBroadcastMessage(string.Format("/me {0}: Умерли всего {1} {2} FeelsBadMan", y.Counter_name, y.Count, Helper.GetDeclension(y.Count, "раз", "раза", "раз")), Name);
+                                        if (oldvalue != y.Count)
+                                        {
+                                            if (string.IsNullOrEmpty(y.Description))
+                                                IrcClient.SendChatBroadcastMessage(string.Format("/me {0}: Умерли всего {1} {2} FeelsBadMan", y.Counter_name, y.Count, Helper.GetDeclension(y.Count, "раз", "раза", "раз")), Name);
+                                            else
+                                                IrcClient.SendChatBroadcastMessage(string.Format("/me {0}: {1} {2} {3} FeelsBadMan", y.Counter_name, y.Description , y.Count, Helper.GetDeclension(y.Count, "раз", "раза", "раз")), Name);
+                                        }
                                     }
                                     break;
                                 case Command.qupdate:
@@ -1003,7 +1349,7 @@ namespace DudelkaBot.system
                                         break;
 
                                     var Userqupdate = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
-                                    if ((Userqupdate != null && db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == Userqupdate.Id && a.Moderator) != null) || msg.UserName == "dudelka_krasnaya")
+                                    if ((Userqupdate != null && db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == Userqupdate.Id && a.Moderator && Userqupdate.Username == "plotoiadnuikeksik") != null) || msg.UserName == "dudelka_krasnaya")
                                     {
                                         int x = msg.QuoteNumber;
                                         if (x <= 0)
@@ -1014,14 +1360,14 @@ namespace DudelkaBot.system
                                         if (quo != null)
                                         {
                                             quo.Quote = msg.Quote;
-                                            if (msg.Date != default(DateTime))
+                                            if (msg.Date != null)
                                                 quo.Date = msg.Date;
                                             IrcClient.SendChatMessage(string.Format("Цитата№{0} - отредактирована", quo.Number), msg);
                                         }
                                         else
                                         {
 
-                                            var o = new Quotes(Id, msg.Quote, msg.Date != default(DateTime) ? msg.Date : DateTime.Now.Date, x);
+                                            var o = new Quotes(Id, msg.Quote, msg.Date != null ? msg.Date : DateTime.Now, x);
                                             db.Quotes.Add(o);
                                             db.SaveChanges();
                                             IrcClient.SendChatMessage(string.Format("Цитата№{0} : {1} - добавлена", o.Number, o.Quote), msg);
@@ -1059,7 +1405,8 @@ namespace DudelkaBot.system
                                         chusModer = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userModer.Id);
                                         if (chusModer == null)
                                             break;
-                                        Moder = chusModer.Moderator;
+
+                                        Moder = chusModer.Moderator && userModer.Username == "plotoiadnuikeksik";
                                         var l = SubReg.Match(msg.Data);
                                         if (l.Success)
                                         {
@@ -1068,8 +1415,6 @@ namespace DudelkaBot.system
                                                 chusModer.CountSubscriptions = b;
                                             db.SaveChanges();
                                         }
-                                        if (chusModer.CountSubscriptions >= 6)
-                                            Moder = true;
                                     }
                                     switch (msg.QuoteOperation)
                                     {
@@ -1130,7 +1475,7 @@ namespace DudelkaBot.system
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data + " " + ex.StackTrace);
-                if(ex.InnerException != null)
+                if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Source + " " + ex.InnerException.Message + " " + ex.InnerException.Data + " " + ex.InnerException.StackTrace);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 return;
@@ -1155,28 +1500,29 @@ namespace DudelkaBot.system
 
         private void SubscribeMessage(Message msg, ChatContext db)
         {
+            Logger.WriteLineMessage(msg.Data);
             if (msg.Data.Contains("while\\syou\\swere\\saway") || msg.Data.Contains("while you were away"))
                 return;
             var userNotify = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
-            int chussub = 0;
+            int chussub = 1;
             if (userNotify != null)
             {
                 var chus = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userNotify.Id);
                 if (chus != null)
                 {
-                    chussub = chus.CountSubscriptions;
                     chus.Active = true;
                     if (msg.Subscription > chus.CountSubscriptions)
                         chus.CountSubscriptions = msg.Subscription;
                     else
                         chus.CountSubscriptions++;
+                    chussub = chus.CountSubscriptions;
                 }
                 else
                 {
                     chus = new ChannelsUsers(userNotify.Id, Id, msg.Subscription) { Active = true };
                     db.ChannelsUsers.Add(chus);
                 }
-                
+
             }
             else
             {
@@ -1187,19 +1533,19 @@ namespace DudelkaBot.system
                 var chus = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == userNotify.Id);
                 if (chus != null)
                 {
-                    chussub = chus.CountSubscriptions;
                     chus.Active = true;
                     if (msg.Subscription > chus.CountSubscriptions)
                         chus.CountSubscriptions = msg.Subscription;
                     else
                         chus.CountSubscriptions++;
+                    chussub = chus.CountSubscriptions;
                 }
                 else
                 {
                     chus = new ChannelsUsers(userNotify.Id, Id, msg.Subscription) { Active = true };
                     db.ChannelsUsers.Add(chus);
                 }
-                
+
             }
             db.SaveChanges();
 
@@ -1210,12 +1556,21 @@ namespace DudelkaBot.system
                 p = Profiller.Profiller.GetProfileOrDefault(Name);
             }
 
-            ircClient.SendChatBroadcastMessage(p.GetRandomSubAnswer().Replace("month", chussub > msg.Subscription ? chussub.ToString() : msg.Subscription.ToString()).Replace("nick", msg.SubscriberName), Name);
+            ircClient.SendChatBroadcastMessage(p.GetRandomSubAnswer().Replace("month", chussub.ToString()).Replace("nick", msg.SubscriberName), Name);
             //IrcClient.SendChatMessage(string.Format("Спасибо за подписку! Добро пожаловать к нам, с {0} - месяцем тебя Kappa {1}", chussub > msg.Subscription ? chussub : msg.Subscription, chussub > msg.Subscription ? "Псс. Я тебя помню, меня не обманешь Kappa , добро пожаловать снова! ":""), msg.SubscriberName, msg);
         }
 
         private void UsernoticeMessage(Message msg, ChatContext db)
         {
+            //Logger.WriteLineMessage(msg.Data);
+            if (subscribedList.Contains(msg.UserName))
+                return;
+            bool isSub = msg.Subscription == 1 ? true : false;
+
+            var prof = Profiller.Profiller.GetProfileOrDefault(msg.Channel);
+            if (prof == null || isSub && prof.Activities.Subscriptions == 0 || !isSub && prof.Activities.Resubscriptions == 0)
+                return;
+
             var userNotice = db.Users.FirstOrDefault(a => a.Username == msg.SubscriberName);
 
             if (userNotice != null)
@@ -1267,9 +1622,11 @@ namespace DudelkaBot.system
                     Profiller.Profiller.TryCreateProfile(Name);
                     p = Profiller.Profiller.GetProfileOrDefault(Name);
                 }
-
-                ircClient.SendChatBroadcastMessage(p.GetRandomResubAnswer().Replace("month", j.CountSubscriptions.ToString()).Replace("nick", msg.SubscriberName), Name);
-                //ircClient.SendChatMessage(string.Format("Спасибо за переподписку! Ты снова с нами, с {0} - месяцем тебя Kappa", j.CountSubscriptions), msg.SubscriberName, msg);
+                subscribedList.Add(msg.SubscriberName);
+                if (isSub)
+                    ircClient.SendChatBroadcastMessage(p.GetRandomSubAnswer().Replace("month", j.CountSubscriptions.ToString()).Replace("nick", msg.SubscriberName), Name);
+                else
+                    ircClient.SendChatBroadcastMessage(p.GetRandomResubAnswer().Replace("month", j.CountSubscriptions.ToString()).Replace("nick", msg.SubscriberName), Name);
             }
         }
 
@@ -1450,7 +1807,7 @@ namespace DudelkaBot.system
             db.SaveChanges();
         }
 
-        private static void SendWhisperMessage(string touser_id, string username, List<string> message)
+        public static void SendWhisperMessage(string touser_id, string username, List<string> message)
         {
             if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
                 return;
@@ -1489,7 +1846,7 @@ namespace DudelkaBot.system
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
         }
 
-        private static void SendWhisperMessage(string touser_id, string username, string message)
+        public static void SendWhisperMessage(string touser_id, string username, string message)
         {
             if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
                 return;
@@ -1536,31 +1893,30 @@ namespace DudelkaBot.system
             }
         }
 
-        private static void Process()
+        public static void Process()
         {
             while (true)
             {
                 try
                 {
+                    if (IrcClient.TokenProcess != null && IrcClient.TokenProcess.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     if (ircClient == null)
                         ircClient = new IrcClient(Iphost, Port, UserName, Password);
 
                     ircClient.isConnect();
-                    string s = ircClient.ReadMessage();
+                    string s = ircClient.ReadMessageAsync();
+
+                    //if (s == null)
+                    //    return;
                     if (!string.IsNullOrEmpty(s))
                     {
                         Task.Run(() => SwitchMessage(s));
                     }
 
                     Thread.Sleep(5);
-                }
-                catch (AggregateException ex)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Logger.ShowLineCommonMessage(ex.Data + " " + ex.Message + " " + ex.StackTrace);
-                    if (ex.InnerException != null)
-                        Logger.ShowLineCommonMessage(ex.InnerException.Data + ex.InnerException.Message + ex.InnerException.StackTrace);
-                    Console.ForegroundColor = ConsoleColor.Gray;
                 }
                 catch (Exception ex)
                 {
@@ -1569,6 +1925,7 @@ namespace DudelkaBot.system
                     if (ex.InnerException != null)
                         Logger.ShowLineCommonMessage(ex.InnerException.Data + ex.InnerException.Message + ex.InnerException.StackTrace);
                     Console.ForegroundColor = ConsoleColor.Gray;
+                    SmtpClient.SendEmailAsync("dudelkabot@mail.ru", "I'm not fine master", ex.Message + " " + ex.Source + " " + ex.Data + " 1928 str on Channel.cs");
                 }
             }
         }
