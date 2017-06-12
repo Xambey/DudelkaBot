@@ -13,6 +13,7 @@ namespace DudelkaBot.enums
         reconnect,
         ball,
         vote,
+        voteLite,
         help,
         members,
         mystat,
@@ -29,7 +30,8 @@ namespace DudelkaBot.enums
         existedcounter,
         djid,
         viewers,
-        uptime
+        uptime,
+        sexylevel
     };
 
 }

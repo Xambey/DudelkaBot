@@ -18,6 +18,7 @@ namespace DudelkaBot.enums
         RECONNECT,
         ROOMSTATE,
         USERNOTICE,
+        WHISPER,
         Tags,
         PRIVMSG,
         GLOBALUSERSTATE,

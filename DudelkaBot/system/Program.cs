@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using DudelkaBot.Logging;
 using DudelkaBot.WebClients;
+using System.Resources;
 
 namespace DudelkaBot.system
 {

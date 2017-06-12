@@ -32,6 +32,7 @@ namespace DudelkaBot.WebClients
         private static string ChannelUrl = "https://api.twitch.tv/kraken/users?login=";
         private static string SubscribersUrl = "https://api.twitch.tv/kraken/channels/";
         private static string TwitchDJPageUrl = "https://twitch-dj.ru/c/";
+        private static string CountChattersUrl = "http://tmi.twitch.tv/group/user/channel_name/chatters";
         private int lengthid = 30;
 
         public HttpsClient(string userid, string token, string url)
@@ -44,6 +45,40 @@ namespace DudelkaBot.WebClients
             handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
             handler.ClientCertificateOption = ClientCertificateOption.Automatic;
             client = new HttpClient(handler);
+        }
+
+        public Tuple<string, string> GetCountChattersAndModerators(string channel_name)
+        {
+            if (Channel.IrcClient != null)
+                Channel.IrcClient.isConnect();
+            try
+            {
+                HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, CountChattersUrl.Replace("channel_name",channel_name));
+                m.Method = new HttpMethod("GET");
+                m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.twitchtv.v5+json"));
+                var task = client.SendAsync(m);
+
+                if (task.IsFaulted || !task.Result.IsSuccessStatusCode)
+                    return new Tuple<string, string>("error", "error");
+
+                JObject text = JObject.Parse(Encoding.UTF8.GetString(task.Result.Content.ReadAsByteArrayAsync().Result));
+                var results = text["chatter_count"];
+
+                var moderators = text["chatters"].Children().First().First.ToList();
+
+                return new Tuple<string, string>(results.ToObject<string>(),moderators.Count.ToString());
+            }
+            catch
+            {
+                //Console.ForegroundColor = ConsoleColor.Red;
+                //Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                //if (ex.InnerException != null)
+                //{
+                //    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
+                //}
+                //Console.ForegroundColor = ConsoleColor.Gray;
+                return new Tuple<string, string>("error", "error");
+            }
         }
 
         private string UniqueMessageId()
@@ -227,7 +262,7 @@ namespace DudelkaBot.WebClients
 
         }
 
-        private string GetMusicLinkFromTwitchDJ(string channel_name)
+        public string GetMusicLinkFromTwitchDJ(string channel_name)
         {
             if (Channel.IrcClient != null)
                 Channel.IrcClient.isConnect();
