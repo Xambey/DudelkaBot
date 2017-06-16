@@ -61,7 +61,7 @@ namespace DudelkaBot.system
         private Timer StreamTimer;
         private Timer CheckSubscriptions;
         private Timer ShowChangedMusicTimer;
-        private static Timer connectTimer = new Timer(CheckConnect, null, 5 * 60000, 5 * 60000);
+        private static Timer connectTimer = new Timer(CheckConnect, null, 1 * 60000, 1 * 60000);
         static private int StreamStateChatUpdateTime = 3;
         static private int StreamStateUpdateTime = 1;
         static private int CheckStateSubscriptionsTime = 10000;
@@ -1830,15 +1830,15 @@ namespace DudelkaBot.system
                                         IrcClient.SendChatBroadcastMessage("/color " + math.Groups["color"].Value, msg);
                                     break;
                                 }
-                                else
-                                {
-                                    math = AnswerReg.Match(msg.Msg);
-                                    if (math.Success)
-                                    {
-                                        IrcClient.SendChatMessage(math.Groups["text"].Value, msg);
-                                        break;
-                                    }
-                                }
+                                //else
+                                //{
+                                //    math = AnswerReg.Match(msg.Msg);
+                                //    if (math.Success)
+                                //    {
+                                //        IrcClient.SendChatMessage(math.Groups["text"].Value, msg);
+                                //        break;
+                                //    }
+                                //}
                             }
 
                             switch (msg.Command)
@@ -1947,7 +1947,6 @@ namespace DudelkaBot.system
         }
 
         #endregion
-
 
         public Channel(string channelName)
         {

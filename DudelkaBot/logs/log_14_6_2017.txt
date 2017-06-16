@@ -1,0 +1,34 @@
+Title: Thread Exception
+Message: Значение не может быть неопределенным.
+Имя параметра: dc
+Source: System.Windows.Forms
+TargetSite: Void DrawBackground(System.Drawing.IDeviceContext, System.Drawing.Rectangle, System.Drawing.Rectangle)
+StackTrace:    в System.Windows.Forms.VisualStyles.VisualStyleRenderer.DrawBackground(IDeviceContext dc, Rectangle bounds, Rectangle clipRectangle)
+   в System.Windows.Forms.UpDownBase.OnPaint(PaintEventArgs e)
+   в System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)
+   в System.Windows.Forms.Control.WmPaint(Message& m)
+   в System.Windows.Forms.Control.WndProc(Message& m)
+   в System.Windows.Forms.UpDownBase.WndProc(Message& m)
+   в System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+Date/Time: 14.06.2017 20:24:02
+==============================
+Title: Unhandled Exception
+Message: Недостаточно памяти.
+Source: System.Drawing
+TargetSite: System.Drawing.Graphics FromHdcInternal(IntPtr)
+StackTrace:    в System.Drawing.Graphics.FromHdcInternal(IntPtr hdc)
+   в System.Drawing.Font.GetHeight()
+   в System.Drawing.Font.get_Height()
+   в System.Windows.Forms.Control.get_FontHeight()
+   в System.Windows.Forms.TextBoxBase.get_PreferredHeight()
+   в System.Windows.Forms.TextBoxBase.get_DefaultSize()
+   в System.Windows.Forms.Control..ctor(Boolean autoInstallSyncContext)
+   в System.Windows.Forms.TextBoxBase..ctor()
+   в ScreenToGif.Pages.ExceptionViewer.InitializeComponent()
+   в ScreenToGif.Pages.ExceptionViewer..ctor(Exception ex)
+   в ScreenToGif.Program.Application_ThreadException(Object sender, ThreadExceptionEventArgs e)
+   в System.Windows.Forms.Application.ThreadContext.OnThreadException(Exception t)
+   в System.Windows.Forms.Control.WndProcException(Exception e)
+   в System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+Date/Time: 14.06.2017 20:24:02
+==============================

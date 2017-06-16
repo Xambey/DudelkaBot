@@ -424,14 +424,6 @@ namespace DudelkaBot.ircClient
 
                 return task.Result;
             }
-            catch (ObjectDisposedException ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Logger.ShowLineCommonMessage(ex.Message + ex.StackTrace + ex.Data);
-                if (ex.InnerException != null)
-                    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.StackTrace + ex.InnerException.Data);
-                return string.Empty;
-            }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
