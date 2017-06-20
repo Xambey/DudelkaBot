@@ -290,7 +290,7 @@ namespace DudelkaBot.ircClient
                 }
 
                 while (DateTime.Now - lastMessageTime < TimeSpan.FromMilliseconds(600))
-                    Thread.Sleep(600);
+                    Thread.Sleep(700);
                 if(messageCount++ < messageLimit) { 
                     outputStream.WriteLine(message);
                     outputStream.Flush();

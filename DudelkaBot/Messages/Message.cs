@@ -23,7 +23,7 @@ namespace DudelkaBot.Messages
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
         private static string usernoticePattern = @".*login=(?<username>\w+).+msg-id=(?<id>\w+).+msg-param-months=(?<sub>\d*).* USERNOTICE #(?<channel>\w+)";
         private static string subscribePattern = @"(?<username>\w+).+";
-        private static string votePattern = @"!vote (?<theme>.+):(?<time>\d+):(?<variants>.+)";
+        private static string votePattern = @"!vote (?<theme>.+)\s+:\s+(?<time>\d+)\s+:\s+(?<variants>.+)";
         private static string voteLitePattern = @"!vote\s+(?<variants>.+)";
         private static string advertPattern = @"!advert (?<time>\d+) (?<count>\d+) (?<advert>.+)";
         private static string vkidPattern = @"!vkid (?<id>\w+)$";
@@ -565,7 +565,7 @@ namespace DudelkaBot.Messages
                             }
                         }
                         if (buf.Count() > 0)
-                            Variants.Add(buf);
+                            Variants.Add(buf.Trim());
                         Command = Command.voteLite;
                         Time = 0;
                         VoteActive = true;

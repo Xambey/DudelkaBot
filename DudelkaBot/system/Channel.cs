@@ -92,7 +92,7 @@ namespace DudelkaBot.system
 
         private static Random rand = new Random();
         private static List<string> commands;
-        private Dictionary<string, List<User>> voteResult = new Dictionary<string, List<User>>();
+        private ConcurrentDictionary<string, ConcurrentBag<User>> voteResult = new ConcurrentDictionary<string, ConcurrentBag<User>>(); 
         private static List<string> ball8 = new List<string>(File.ReadLines("./resources/8ball.txt"));
         private System.Collections.Concurrent.ConcurrentBag<string> subscribedList = new System.Collections.Concurrent.ConcurrentBag<string>();
         private static Dictionary<string, int> lastNetSubscribers = new Dictionary<string, int>();
@@ -134,7 +134,7 @@ namespace DudelkaBot.system
         public Status StatusChat { get => statusChat; protected set => statusChat = value; }
         public static Random Rand { get => rand; protected set => rand = value; }
         public static List<string> Commands { get => commands; protected set => commands = value; }
-        public Dictionary<string, List<User>> VoteResult { get => voteResult; protected set => voteResult = value; }
+        public ConcurrentDictionary<string, ConcurrentBag<User>> VoteResult { get => voteResult; protected set => voteResult = value; }
         public bool VoteActive { get => voteActive; protected set => voteActive = value; }
         public int DeathBattleCount { get => deathBattleCount; protected set => deathBattleCount = value; }
         public static int Port { get => port; set => port = value; }
@@ -254,26 +254,56 @@ namespace DudelkaBot.system
 
             if ((chusl.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && msg.VoteActive && !VoteActive)
             {
-                VoteTimer = new Timer(StopVote, msg, 30000, 30000);
-                lock (VoteResult)
+                VoteTimer = new Timer(StopVote, msg, 35000, 35000);
+                for (int i = 0; i < msg.Variants.Count; i++)
                 {
-                    for (int i = 0; i < msg.Variants.Count; i++)
-                    {
-                        VoteResult.Add(msg.Variants[i], new List<User>());
-                        msg.Variants[i] = (i + 1).ToString() + ")" + msg.Variants[i];
-                    }
-                    msg.Variants.Insert(0, "/me Начинается голосование (30 сек) Squid1 Squid2 DuckerZ Squid3 Squid4 " + " ВАРИАНТЫ: ");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
-                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
+                    VoteResult.TryAdd(msg.Variants[i], new ConcurrentBag<User>());
+                    //msg.Variants[i] = (i + 1).ToString() + ")" + msg.Variants[i];
                 }
+                //msg.Variants.Insert(0, "/me Начинается голосование (30 сек) Squid1 Squid2 DuckerZ Squid3 Squid4 "/* + " ВАРИАНТЫ: "*/);
+                //msg.Variants.Add(" Пишите НОМЕР варианта !" /*или САМ вариант!*/ + " SwiftRage  SwiftRage SwiftRage");
+                
                 VoteActive = true;
-                IrcClient.SendChatBroadcastChatMessage(msg.Variants, msg);
+                IrcClient.SendChatBroadcastChatMessage(/*msg.Variants*/ new List<string>() { "/me Начинается голосование (30 сек) Squid1 Squid2 DuckerZ Squid3 Squid4 ", "Пишите НОМЕР варианта ! SwiftRage  SwiftRage SwiftRage" }, msg);
             }
+        }
+
+        private void StopVote(object s)
+        {
+            VoteActive = false;
+            StringBuilder builder = new StringBuilder(VoteResult.Count);
+            if ((s as Message).Theme != null)
+                builder.Append($"/me Голосование по теме ' {(s as Message).Theme} ' окончено!");
+            else
+                builder.Append($"/me Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage ");
+            IrcClient.SendChatBroadcastMessage(builder.ToString(), Name);
+            builder.Clear();
+            Thread.Sleep(2000);
+            string win = VoteResult.First().Key;
+            int max = VoteResult.First().Value.Count;
+            builder.Append("РЕЗУЛЬТАТЫ: ");
+            foreach (var item in VoteResult)
+            {
+                int current = item.Value.Count;
+                if (max < current)
+                {
+                    max = current;
+                    win = item.Key;
+                }
+                builder.Append(item.Key + " [ " + current + " ] , ");
+            }
+            if (VoteResult.Count(a => a.Value.Count == max) > 1)
+                builder.Append(" ПОБЕДИЛИ с ОДИНАКОВЫМ результатом - < " + string.Join(", ", VoteResult.Where(a => a.Value.Count == max).Select(a => a.Key)) + " > с результатом в " + max.ToString() + " голосов.");
+            else
+                builder.Append(" ПОБЕДИЛ - < " + win + " > с результатом в [ " + max.ToString() + " ] голосов.");
+
+            IrcClient.SendChatBroadcastMessage("#1 " + builder.ToString(), Name);
+            Thread.Sleep(3000);
+            IrcClient.SendChatBroadcastMessage("#2 " + builder.ToString(), Name);
+            Thread.Sleep(3000);
+            IrcClient.SendChatBroadcastMessage("#3 " + builder.ToString(), Name);
+            VoteResult.Clear();
+            VoteTimer.Dispose();
         }
 
         private void CommandVote(ChatContext db, Message msg)
@@ -298,7 +328,7 @@ namespace DudelkaBot.system
                 {
                     for (int i = 0; i < msg.Variants.Count; i++)
                     {
-                        VoteResult.Add(msg.Variants[i], new List<User>());
+                        VoteResult.TryAdd(msg.Variants[i], new ConcurrentBag<User>());
                         msg.Variants[i] = (i + 1).ToString() + ")" + msg.Variants[i];
                     }
                     msg.Variants.Insert(0, "/me Начинается голосование по теме: ' " + msg.Theme + " ' Время: " + msg.Time.ToString() + "мин." + " Варианты: ");
@@ -1349,19 +1379,16 @@ namespace DudelkaBot.system
 
         #region Handlers
 
-        private bool isUserVote(Message msg)
+        private bool isUserVoted(Message msg)
         {
-            lock (VoteResult)
+            foreach (var item in VoteResult)
             {
-                foreach (var item in VoteResult)
+                if (item.Value.FirstOrDefault(a => a.UserName == msg.UserName) != null)
                 {
-                    if (item.Value.All(a => a.UserName != msg.UserName) == false)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                return false;
             }
+            return false;
         }
 
         private void HandlerNoticeMessage(Message msg)
@@ -1392,17 +1419,14 @@ namespace DudelkaBot.system
 
         private void VoteHandlerMessage(Message msg)
         {
-            lock (VoteResult)
+            if ((VoteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= VoteResult.Count ? true : false)) && !isUserVoted(msg))
             {
-                if ((VoteResult.ContainsKey(msg.Msg) || (msg.Msg.All(char.IsDigit) && int.Parse(msg.Msg) <= VoteResult.Count ? true : false)) && !isUserVote(msg))
+                if (msg.Msg.All(char.IsDigit) && !VoteResult.ContainsKey(msg.Msg))
                 {
-                    if (msg.Msg.All(char.IsDigit))
-                    {
-                        VoteResult[VoteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
-                    }
-                    else
-                        VoteResult[msg.Msg].Add(new User(msg.UserName));
+                    VoteResult[VoteResult.ElementAt(int.Parse(msg.Msg) - 1).Key].Add(new User(msg.UserName));
                 }
+                else
+                    VoteResult[msg.Msg].Add(new User(msg.UserName));
             }
         }
 
@@ -2571,38 +2595,6 @@ namespace DudelkaBot.system
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
         }
 
-        private void StopVote(object s)
-        {
-            lock (VoteResult)
-            {
-                VoteActive = false;
-                StringBuilder builder = new StringBuilder(VoteResult.Count);
-                if((s as Message).Theme != null)
-                    builder.Append($"/me Голосование по теме ' {(s as Message).Theme} ' окончено! Результаты: ");
-                else
-                    builder.Append($"/me Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage  Результаты: ");
-                string win = VoteResult.First().Key;
-                int max = VoteResult.First().Value.Count;
-                foreach (var item in VoteResult)
-                {
-                    int current = item.Value.Count;
-                    if (max < current)
-                    {
-                        max = current;
-                        win = item.Key;
-                    }
-                    builder.Append(item.Key + " - " + current + ", ");
-                }
-                if(VoteResult.Count(a => a.Value.Count == max) > 1)
-                    builder.Append(" Победили с одинаковым результатом - < " + string.Join(", ",VoteResult.Where(a => a.Value.Count == max).Select(a => a.Key)) + " > с результатом в " + max.ToString() + " голосов.");
-                else
-                    builder.Append(" Победил - < " + win + " > с результатом в " + max.ToString() + " голосов.");
-
-                IrcClient.SendChatBroadcastMessage(builder.ToString(), Name);
-                VoteResult.Clear();
-                VoteTimer.Dispose();
-            }
-        }
 
         public static void Process()
         {
