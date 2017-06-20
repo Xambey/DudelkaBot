@@ -89,12 +89,6 @@ namespace DudelkaBot.system
                         Logger.ShowLineCommonMessage("Запуск переподключения к серверу...");
                         Channel.Reconnect();
                         break;
-                    case "!Dariya":
-                        Channel.Channels["dariya_willis"].StartShow();
-                        break;
-                    case "!Black":
-                        Channel.Channels["blackufa_twitch"].StartShow();
-                        break;
                     case "!send":
                         string mes = Console.ReadLine();
                         string o = Console.ReadLine();
@@ -108,6 +102,13 @@ namespace DudelkaBot.system
                         foreach ( var item in Channel.Channels)
                         {
                             Channel.IrcClient.SendChatBroadcastMessage(m, item.Value.Name);
+                        }
+                        break;
+                    case "!news":
+                        string me = Console.ReadLine();
+                        foreach (var item in Channel.Channels)
+                        {
+                            Channel.IrcClient.SendChatBroadcastMessage(@"/me" + me, item.Value.Name);
                         }
                         break;
                     case "!start show common log":
@@ -142,7 +143,7 @@ namespace DudelkaBot.system
                         Console.WriteLine("List channels:");
                         foreach (var item in Channel.Channels)
                         {
-                            Console.WriteLine($"Статус {item.Value.Name} чата: - {item.Value.StatusChat} | канала: {item.Value.StatusStream}");
+                            Console.WriteLine($"\tСтатус {item.Value.Name} чата: - {item.Value.StatusChat} | канала: {item.Value.StatusStream}");
                         }
                         Console.ForegroundColor = ConsoleColor.Gray;
                         Thread.Sleep(2000);
@@ -181,6 +182,25 @@ namespace DudelkaBot.system
                             Channel.Channels.Remove(name);
                             Logger.ShowLineCommonMessage($"Канал {name} удален из списка каналов!");
                         }
+                        break;
+                    case "!help":
+                        Console.WriteLine("Command list:");
+                        Console.WriteLine("\t!stop show channel log - Остановка отображения лога канала");
+                        Console.WriteLine("\t!start show channel log - Запуск отображения лога канала");
+                        Console.WriteLine("\t!reconnect - переподключение к серверу");
+                        Console.WriteLine("\t!send ENTER [сообщение] ENTER [название канала] - отправить сообщение в чат");
+                        Console.WriteLine("\t!broadcast ENTER [сообщение] - массовая рассылка сообщений");
+                        Console.WriteLine("\t!news ENTER [сообщение] - массовая рассылка сообщений c подсветкой для уведомлений");
+                        Console.WriteLine("\t!stop show common log - Остановка отображения общего лога");
+                        Console.WriteLine("\t!start show common log - Запуск отображения общего лога");
+                        Console.WriteLine("\t!whisper ENTER [сообщение] ENTER [имя получателя]");
+                        Console.WriteLine("\t!status - статус каналов");
+                        Console.WriteLine("\t!savelogs - сохранить все логи");
+                        Console.WriteLine("\t!add ENTER [название канала] - подключить канал с отслеживанию");
+                        Console.WriteLine("\t!remove ENTER [название канала] - отключить от отслеживания канал");
+                        Console.WriteLine("\t![название канала] - включить отображение чата");
+                        Console.WriteLine("\t!exit - выключение с сохранением логов");
+                        Thread.Sleep(10000);
                         break;
                     default:
                         var math = reg.Match(cmd);

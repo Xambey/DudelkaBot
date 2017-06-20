@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DudelkaBot.Logging;
 
 namespace DudelkaBot.dataBase.model
 {
@@ -19,7 +20,18 @@ namespace DudelkaBot.dataBase.model
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DudelkaBotBase;Trusted_Connection=True;");
+            try
+            {
+                optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DudelkaBotBase;Trusted_Connection=True;");
+            }
+            catch(Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Logger.ShowLineCommonMessage(ex.StackTrace + ex.Data + ex.Message);
+                if (ex.InnerException != null)
+                    Logger.ShowLineCommonMessage(ex.InnerException.StackTrace + ex.InnerException.Data + ex.InnerException.Message);
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

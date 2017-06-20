@@ -23,6 +23,7 @@ namespace DudelkaBot.ircClient
         private int messageCount;
         private readonly int messageLimit = 10;
         private DateTime lastMessageTime;
+        private DateTime lastPingResponseMessageTime = DateTime.Now;
         #endregion
 
         #region References
@@ -33,7 +34,7 @@ namespace DudelkaBot.ircClient
         private Task process;
         private CancellationTokenSource tokenProcess;
         private CancellationTokenSource tokenRead;
-        private static Dictionary<Users, Timer> whisperBlock = new Dictionary<Users, Timer>(); 
+        private static Dictionary<Users, Timer> whisperBlock = new Dictionary<Users, Timer>();
         #endregion
 
         #region Properties
@@ -51,6 +52,7 @@ namespace DudelkaBot.ircClient
         public CancellationTokenSource TokenProcess { get => tokenProcess; protected set => tokenProcess = value; }
         public static Dictionary<Users, Timer> WhisperBlock { get => whisperBlock; protected set => whisperBlock = value; }
         public CancellationTokenSource TokenRead { get => tokenRead; set => tokenRead = value; }
+        public DateTime LastPingResponseMessageTime { get => lastPingResponseMessageTime; set => lastPingResponseMessageTime = value; }
         #endregion
 
         public void Reconnect()
@@ -100,19 +102,19 @@ namespace DudelkaBot.ircClient
         {
 
             messageCount = 0;
-            if (isConnect())
-            {
-                lock (queueMessages)
-                    while (messageCount < messageLimit && queueMessages.Count != 0)
-                    {
-                        lock (outputStream)
-                        {
-                            outputStream.WriteLine(queueMessages.Dequeue());
-                            outputStream.Flush();
-                        }
-                        messageCount++;
-                    }
-            }
+            //if (isConnect())
+            //{
+            //    lock (queueMessages)
+            //        while (messageCount < messageLimit && queueMessages.Count != 0)
+            //        {
+            //            lock (outputStream)
+            //            {
+            //                outputStream.WriteLine(queueMessages.Dequeue());
+            //                outputStream.Flush();
+            //            }
+            //            messageCount++;
+            //        }
+            //}
         }
 
         public bool isDisconnect()
@@ -237,7 +239,7 @@ namespace DudelkaBot.ircClient
             this.port = port;
             this.userName = userName;
             this.password = password;
-            Timer timer = new Timer(TimerTick, null, 30000, 30000);
+            //Timer timer = new Timer(TimerTick, null, 30000, 30000);
 
             SignIn();
         }
@@ -263,7 +265,6 @@ namespace DudelkaBot.ircClient
             {
                 outputStream.WriteLine("JOIN #" + channel);
                 outputStream.Flush();
-                //sendChatBroadcastMessage("/me Свеженький Дуделка Бот входит в чат *Обнимашки* KappaPride ", channel);
             }
         }
 
@@ -410,6 +411,7 @@ namespace DudelkaBot.ircClient
         public void PingResponse()
         {
             SendIrcMessage("PONG twi.twitch.tv");
+            LastPingResponseMessageTime = DateTime.Now;
         }
 
         public string ReadMessageAsync()
@@ -420,16 +422,16 @@ namespace DudelkaBot.ircClient
                     return null;
                 var task = inputStream.ReadLineAsync();
                 TokenRead = new CancellationTokenSource();
-                task.Wait(60000, TokenRead.Token);
+                task.Wait(Timeout.Infinite, TokenRead.Token);
 
                 return task.Result;
             }
-            catch (Exception ex)
+            catch /*(Exception ex)*/
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Logger.ShowLineCommonMessage(ex.Message + ex.StackTrace + ex.Data);
-                if (ex.InnerException != null)
-                    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.StackTrace + ex.InnerException.Data);
+                //Console.ForegroundColor = ConsoleColor.Red;
+                //Logger.ShowLineCommonMessage(ex.Message + ex.StackTrace + ex.Data);
+                //if (ex.InnerException != null)
+                //    Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.StackTrace + ex.InnerException.Data);
                 return string.Empty;
             }
         }

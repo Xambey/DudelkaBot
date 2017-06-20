@@ -254,7 +254,7 @@ namespace DudelkaBot.system
 
             if ((chusl.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name) && msg.VoteActive && !VoteActive)
             {
-                VoteTimer = new Timer(StopVote, msg, 60000, 60000);
+                VoteTimer = new Timer(StopVote, msg, 30000, 30000);
                 lock (VoteResult)
                 {
                     for (int i = 0; i < msg.Variants.Count; i++)
@@ -262,7 +262,13 @@ namespace DudelkaBot.system
                         VoteResult.Add(msg.Variants[i], new List<User>());
                         msg.Variants[i] = (i + 1).ToString() + ")" + msg.Variants[i];
                     }
-                    msg.Variants.Insert(0, "/me Начинается голосование Squid1 Squid2 Squid3 Squid4 " + " ВАРИАНТЫ: ");
+                    msg.Variants.Insert(0, "/me Начинается голосование (30 сек) Squid1 Squid2 DuckerZ Squid3 Squid4 " + " ВАРИАНТЫ: ");
+                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
+                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
+                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
+                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
+                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
+                    msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
                     msg.Variants.Add(" Пишите НОМЕР варианта или САМ вариант! SwiftRage");
                 }
                 VoteActive = true;
@@ -2040,6 +2046,12 @@ namespace DudelkaBot.system
         {
             try
             {
+                if (IrcClient != null && DateTime.Now - IrcClient.LastPingResponseMessageTime > TimeSpan.FromMinutes(10))
+                {
+                    Reconnect();
+                    IrcClient.LastPingResponseMessageTime = DateTime.Now;
+                    return;
+                }
                 if (IrcClient != null && ircClient.isDisconnect())
                     throw new Exception();
                 else if (ircClient == null)
@@ -2053,8 +2065,7 @@ namespace DudelkaBot.system
                 if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.StackTrace + ex.InnerException.Data + ex.InnerException.Message);
                 Console.ForegroundColor = ConsoleColor.Gray;
-                IrcClient.TcpClient.Dispose();
-                IrcClient.TcpClient = new System.Net.Sockets.TcpClient();
+                IrcClient.isConnect();
                 return;
             }
         }
@@ -2401,14 +2412,6 @@ namespace DudelkaBot.system
                 if (countMessageForUpdateStreamState <= CountLimitMessagesForUpdateStreamState)
                 {
                     StatusChat = Status.Offline;
-                    //using (var db = new ChatContext())
-                    //{
-                    //    foreach (var item in db.ChannelsUsers.Where(a => a.Active && a.Channel_id == Id))
-                    //    {
-                    //        item.Active = false;
-                    //    }
-                    //    db.SaveChanges();
-                    //}
                 }
                 else
                 {
@@ -2481,12 +2484,6 @@ namespace DudelkaBot.system
                     if (ActiveLog)
                         Logger.ShowLineCommonMessage(data);
                     Console.ForegroundColor = ConsoleColor.Gray;
-                    //lock (ErrorListMessages)
-                    //{
-                    //    if (ErrorListMessages.Count > 50)
-                    //        ErrorListMessages.Clear();
-                    //    ErrorListMessages.Add(currentMessage);
-                    //}
                     return;
                 }
                 else if (currentMessage.UserName == "moobot" || currentMessage.UserName == "nightbot")
@@ -2583,7 +2580,7 @@ namespace DudelkaBot.system
                 if((s as Message).Theme != null)
                     builder.Append($"/me Голосование по теме ' {(s as Message).Theme} ' окончено! Результаты: ");
                 else
-                    builder.Append($"/me Голосование окончено! SwiftRage Результаты: ");
+                    builder.Append($"/me Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage Голосование окончено! SwiftRage  Результаты: ");
                 string win = VoteResult.First().Key;
                 int max = VoteResult.First().Value.Count;
                 foreach (var item in VoteResult)
@@ -2594,9 +2591,12 @@ namespace DudelkaBot.system
                         max = current;
                         win = item.Key;
                     }
-                    builder.Append(item.Key + " - " + current + ",");
+                    builder.Append(item.Key + " - " + current + ", ");
                 }
-                builder.Append(" Победил - < " + win + " > с результатом в " + max.ToString() + " голосов.");
+                if(VoteResult.Count(a => a.Value.Count == max) > 1)
+                    builder.Append(" Победили с одинаковым результатом - < " + string.Join(", ",VoteResult.Where(a => a.Value.Count == max).Select(a => a.Key)) + " > с результатом в " + max.ToString() + " голосов.");
+                else
+                    builder.Append(" Победил - < " + win + " > с результатом в " + max.ToString() + " голосов.");
 
                 IrcClient.SendChatBroadcastMessage(builder.ToString(), Name);
                 VoteResult.Clear();

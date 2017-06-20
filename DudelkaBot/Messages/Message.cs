@@ -567,6 +567,7 @@ namespace DudelkaBot.Messages
                         if (buf.Count() > 0)
                             Variants.Add(buf);
                         Command = Command.voteLite;
+                        Time = 0;
                         VoteActive = true;
                     }
                     else
