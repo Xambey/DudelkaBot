@@ -31,7 +31,12 @@ namespace DudelkaBot.enums
         djid,
         viewers,
         uptime,
-        sexylevel
+        sexylevel,
+        startsubday,
+        joinsubgames,
+        subgame,
+        subgames,
+        clearsubgames
     };
 
 }

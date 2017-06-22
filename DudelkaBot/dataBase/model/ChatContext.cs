@@ -15,6 +15,8 @@ namespace DudelkaBot.dataBase.model
         public DbSet<ChannelsUsers> ChannelsUsers { get; set; }
         public DbSet<Quotes> Quotes { get; set; }
         public DbSet<Counters> Counters { get; set; }
+        public DbSet<SubDayGames> SubDayGames { get; set; }
+        public DbSet<SubDayVotes> SubDayVotes { get; set; }
 
         public ChatContext() : base() { }
 
@@ -39,6 +41,10 @@ namespace DudelkaBot.dataBase.model
             modelBuilder.Entity<ChannelsUsers>().HasKey(p => new { p.User_id, p.Channel_id });
             modelBuilder.Entity<Quotes>().HasKey(p => new { p.Channel_id, p.Number });
             modelBuilder.Entity<Counters>().HasKey(p => new { p.Channel_id, p.Number});
+            modelBuilder.Entity<SubDayGames>().HasKey(p => new { p.Channel_id, p.Game_id });
+            modelBuilder.Entity<SubDayVotes>().HasKey(p => new { p.Game_id, p.Number});
+
         }
+
     }
 }

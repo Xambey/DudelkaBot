@@ -17,7 +17,7 @@ namespace DudelkaBot.Messages
         private static string typePattern = @" (?<type>[A-Z]+) #";
         private static string typeWhisperPattern = @"twitch.tv WHISPER ";
         private static string commandPattern = @"#(?<channel>\w+) :!(?<command>.+)$";
-        private static string commandWhisperPattern = @"\s*(?<channel>\w+)\s+!(?<command>[a-zA-Zа-яА-Я_]+)$";
+        private static string commandWhisperPattern = @"\s*(?<channel>\w+)\s+!(?<command>\w+)$";
         private static string pingPattern = @"PING\s+";
         private static string namesPattern = @":\S+ \d+ \S+\w+ = #(?<channel>\w+) :(?<users>.*)";
         private static string modePattern = @":.+ #(?<channel>\w+) (?<sign>.)o (?<username>\w+)";
@@ -48,6 +48,10 @@ namespace DudelkaBot.Messages
         private static string djidWhisperPattern = @"\s*(?<channel>\w+)\s+!djid (?<id>\w+)$";
         private static string ball8Pattern = @"!8ball\s+.+";
         private static string noticeSlowModePattern = @".*msg-id=(?<id>\w+).*NOTICE #(?<channel>\w+) :(?<message>.*)";
+        private static string joinSubGamesPattern = @"!joinsubgames\s+(?<numbers>[\d ]+)\s+(?<game>[a-zA-ZА-Яа-я].*)";
+        private static string joinWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!joinsubgames\s+(?<numbers>[\d ]+)\s+(?<game>[a-zA-ZА-Яа-я].*)";
+        private static string subGamePattern = @"!subgame\s+(?<game>.+)";
+        private static string subWhisperGamePattern = @"\s*(?<channel>\w+)\s+!subgame\s+(?<game>.+)";
         #endregion
 
         #region Regexes
@@ -89,6 +93,10 @@ namespace DudelkaBot.Messages
         private static Regex djidWhisperReg = new Regex(djidWhisperPattern);
         private static Regex ball8Reg = new Regex(ball8Pattern);
         private static Regex noticeSlowModeReg = new Regex(noticeSlowModePattern);
+        private static Regex joinSubGamesReg = new Regex(joinSubGamesPattern);
+        private static Regex joinWhisperSubGamesReg = new Regex(joinWhisperSubGamesPattern);
+        private static Regex subGameReg = new Regex(subGamePattern);
+        private static Regex subWhisperGameReg = new Regex(subWhisperGamePattern);
         #endregion
 
         #region Fields
@@ -124,6 +132,8 @@ namespace DudelkaBot.Messages
         private string oldName;
         private string newName;
         private ChatMode _chatMode;
+        private List<int> game_numbers;
+        private string game_name;
         #endregion
 
         #region Properties
@@ -156,6 +166,8 @@ namespace DudelkaBot.Messages
         public string Description { get => description; set => description = value; }
         public string Msg_id { get => msg_id; set => msg_id = value; }
         public ChatMode ChatMode { get => _chatMode; set => _chatMode = value; }
+        public List<int> Game_numbers { get => game_numbers; set => game_numbers = value; }
+        public string Game_name { get => game_name; set => game_name = value; }
 
         #endregion
 
@@ -356,7 +368,7 @@ namespace DudelkaBot.Messages
         private void CommandWhisperCase()
         {
             Match math = null;
-            
+
             if (Msg.Contains("!counter"))
             {
                 math = counterWhisperWithDescriptionReg.Match(Msg);
@@ -485,6 +497,27 @@ namespace DudelkaBot.Messages
                 else
                     Success = false;
             }
+            else if (Msg.Contains("!joinsubgames"))
+            {
+                math = joinWhisperSubGamesReg.Match(Msg);
+                if (math.Success)
+                {
+                    Channel = math.Groups["channel"].Value;
+                    Game_name = math.Groups["game"].Value;
+                    Game_numbers = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
+                    Command = Command.joinsubgames;
+                }
+            }
+            else if(Msg.Contains("!subgame") && !Msg.Contains("!subgames"))
+            {
+                math = subWhisperGameReg.Match(Msg);
+                if (math.Success)
+                {
+                    Channel = math.Groups["channel"].Value;
+                    Game_name = math.Groups["game"].Value;
+                    Command = Command.subgame;
+                }
+            }
             else if (Msg.Contains("!"))
             {
                 math = existedCounterWhisperReg.Match(Msg);
@@ -512,8 +545,14 @@ namespace DudelkaBot.Messages
                         }
                     }
                     else
-                        Success = false;
+                    {
+                        Command = Command.unknown;
+                    }
                 }
+            }
+            else
+            {
+                Success = false;
             }
         }
 
@@ -705,6 +744,25 @@ namespace DudelkaBot.Messages
                 }
                 else
                     Success = false;
+            }
+            else if(Msg.StartsWith("!joinsubgames"))
+            {
+                math = joinSubGamesReg.Match(Msg);
+                if(math.Success)
+                {
+                    Game_name = math.Groups["game"].Value;
+                    Game_numbers = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
+                    Command = Command.joinsubgames;
+                }
+            }
+            else if(Msg.StartsWith("!subgame") && !Msg.StartsWith("!subgames"))
+            {
+                math = subGameReg.Match(Msg);
+                if (math.Success)
+                {
+                    Game_name = math.Groups["game"].Value;
+                    Command = Command.subgame;
+                }
             }
             else if (Msg.StartsWith("!"))
             {

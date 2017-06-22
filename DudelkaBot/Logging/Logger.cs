@@ -38,7 +38,7 @@ namespace DudelkaBot.Logging
                 channelPaths.Add(channelname, channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.') }.txt");
             else
                 channelPaths[channelname] = channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.') }.txt";
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
         }
 
         public static void SaveChannelLog(string channelname)
