@@ -222,6 +222,25 @@ namespace DudelkaBot.system
 
             var game = gm.FirstOrDefault(a => a.Name == msg.Game_name);
 
+            string buf = "";
+            int i = 0;
+            foreach (var item in msg.Game_name.ToLower())
+            {
+                if(item == ' ')
+                {
+                    i++;
+                    if(i <= 1)
+                        buf += ' ';
+                }
+                else
+                {
+                    i = 0;
+                    buf += item;
+                }
+            }
+            msg.Game_name = buf;
+            
+
             if(game != null)
             {
                 var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
@@ -236,7 +255,7 @@ namespace DudelkaBot.system
                 var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName && gm.FirstOrDefault(b => b.Game_id == a.Game_id) != null);
                 if (vt == null)
                 {
-                    db.SubDayGames.Add(new SubDayGames(msg.Game_name, Id));
+                    db.SubDayGames.Add(new SubDayGames(msg.Game_name, id));
                     db.SaveChanges();
                     db.SubDayVotes.Add(new SubDayVotes(msg.UserName, db.SubDayGames.First(a => a.Name == msg.Game_name).Game_id));
                 }
