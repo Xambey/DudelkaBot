@@ -74,7 +74,7 @@ namespace DudelkaBot.system
 
         #region Patterns
         private static string answerpattern = @"(dudelkabot|DudelkaBot)[, ]*(?<text>.+)";
-        private static string subpattern = @".+subscriber\/(?<sub>\d+).+";
+        private static string subpattern = @".+subscriber=(?<sub>\d+).+";
         private static string idpattern = @".+user-id=(?<id>\d+);.+";
         #endregion
 
@@ -227,7 +227,7 @@ namespace DudelkaBot.system
             }
             else
             {
-                var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
+                var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName && gm.FirstOrDefault(b => b.Game_id == a.Game_id) != null);
                 if (vt == null)
                 {
                     db.SubDayGames.Add(new SubDayGames(msg.Game_name, Id));
