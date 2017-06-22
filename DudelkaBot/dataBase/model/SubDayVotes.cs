@@ -10,7 +10,7 @@ namespace DudelkaBot.dataBase.model
 {
     public class SubDayVotes
     {
-        [Key]
+       // [Key]
         public int Game_id { get; set; }
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
         public int Number { get; set; }

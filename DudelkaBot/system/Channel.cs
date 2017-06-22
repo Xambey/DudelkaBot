@@ -180,11 +180,7 @@ namespace DudelkaBot.system
                 }
                 SendWhisperMessage(httpClient.GetChannelId(Name, client_id).Item1, Name, builder.ToString());
 
-                IrcClient.SendChatBroadcastMessage("/me #1 " + builder.ToString(), Name);
-                Thread.Sleep(3000);
-                IrcClient.SendChatBroadcastMessage("/me #2 " + builder.ToString(), Name);
-                Thread.Sleep(3000);
-                IrcClient.SendChatBroadcastMessage("/me #3 " + builder.ToString(), Name);
+                IrcClient.SendChatBroadcastMessage("/me " + builder.ToString(), Name);
             }
         }
 
@@ -350,9 +346,9 @@ namespace DudelkaBot.system
                 var gmlist = new Dictionary<int, int>(); // game_id : value of counter
                 for (int i = 0; i < msg.Game_numbers.Count; i++)
                     msg.Game_numbers[i]--;
-                if(games.Count() == 0)
+                if (games.Count() == 0)
                 {
-                    ircClient.SendChatMessage($"Список игр пуст!", msg);
+                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Список игр пуст!");
                     return;
                 }
                 foreach (var item in msg.Game_numbers)
@@ -364,28 +360,50 @@ namespace DudelkaBot.system
                     }
                     else
                     {
-                        ircClient.SendChatMessage($"Игры под номером {item + 1} не существует в списке игр!",msg);
+                        SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игры под номером {item + 1} не существует в списке игр!");
                         return;
                     }
                 }
+
+                string buf = "";
+                int j = 0;
+                foreach (var item in msg.Game_name.ToLower())
+                {
+                    if (item == ' ')
+                    {
+                        if (++j <= 1)
+                            buf += ' ';
+                    }
+                    else
+                    {
+                        j = 0;
+                        buf += item;
+                    }
+                }
+
                 for (int i = 0; i < games.Count(); i++)
                 {
-                    var g = games.ElementAtOrDefault(i,true);
-                    if (gmlist.ContainsKey(g.Game_id))
+                    var g = games.ElementAtOrDefault(i, true);
+                    if (g != null && gmlist.ContainsKey(g.Game_id))
                     {
                         db.SubDayGames.Remove(g);
                     }
                 }
                 db.SubDayGames.Add(new SubDayGames(msg.Game_name, Id, gmlist.Select(a => a.Value).Sum()));
                 db.SaveChanges();
+
                 var id_game = db.SubDayGames.First(a => a.Name == msg.Game_name).Game_id;
-                for (int i = 0; i < db.SubDayVotes.Count(); i++)
+                foreach (var item in gmlist)
                 {
-                    var f = db.SubDayVotes.ElementAtOrDefault(i,true);
+                    var f = db.SubDayVotes.Where(a => a.Game_id == item.Key);
                     if (f != null)
                     {
-                        db.SubDayVotes.Add(new SubDayVotes(f.UserName, id_game));
-                        db.SubDayVotes.Remove(f);
+                        for (int i = 0; i < f.Count(); i++)
+                        {
+                            var v = f.ElementAtOrDefault(i, true);
+                            if (v != null)
+                                v.Game_id = id_game;
+                        }
                     }
                 }
 
@@ -522,7 +540,7 @@ namespace DudelkaBot.system
             Thread.Sleep(2000);
             string win = VoteResult.First().Key;
             int max = VoteResult.First().Value.Count;
-            builder.Append("/me РЕЗУЛЬТАТЫ: ");
+            builder.Append("РЕЗУЛЬТАТЫ: ");
             foreach (var item in VoteResult)
             {
                 int current = item.Value.Count;
@@ -531,7 +549,7 @@ namespace DudelkaBot.system
                     max = current;
                     win = item.Key;
                 }
-                builder.Append(item.Key + " [ " + current + " ] , ");
+                builder.Append(item.Key + " - [ " + current + " ] , ");
             }
             if (VoteResult.Count(a => a.Value.Count == max) > 1)
                 builder.Append(" ПОБЕДИЛИ с ОДИНАКОВЫМ результатом - < " + string.Join(", ", VoteResult.Where(a => a.Value.Count == max).Select(a => a.Key)) + " > с результатом в " + max.ToString() + " голосов.");
@@ -540,11 +558,7 @@ namespace DudelkaBot.system
 
             SendWhisperMessage(httpClient.GetChannelId(Name, client_id).Item1, Name, builder.ToString());
 
-            IrcClient.SendChatBroadcastMessage("#1 " + builder.ToString(), Name);
-            Thread.Sleep(3000);
-            IrcClient.SendChatBroadcastMessage("#2 " + builder.ToString(), Name);
-            Thread.Sleep(3000);
-            IrcClient.SendChatBroadcastMessage("#3 " + builder.ToString(), Name);
+            IrcClient.SendChatBroadcastMessage("/me " + builder.ToString(), Name);
             VoteResult.Clear();
             VoteTimer.Dispose();
         }
@@ -1298,21 +1312,25 @@ namespace DudelkaBot.system
                 for (int i = 0; i < games.Count(); i++)
                 {
                     var g = games.ElementAtOrDefault(i, true);
-                    if (gmlist.ContainsKey(g.Game_id))
+                    if (g != null && gmlist.ContainsKey(g.Game_id))
                     {
                         db.SubDayGames.Remove(g);
                     }
                 }
                 db.SubDayGames.Add(new SubDayGames(msg.Game_name, Id, gmlist.Select(a => a.Value).Sum()));
                 db.SaveChanges();
+
                 var id_game = db.SubDayGames.First(a => a.Name == msg.Game_name).Game_id;
-                for (int i = 0; i < db.SubDayVotes.Count(); i++)
+                foreach (var item in gmlist)
                 {
-                    var f = db.SubDayVotes.ElementAtOrDefault(i, true);
+                    var f = db.SubDayVotes.Where(a => a.Game_id == item.Key);
                     if (f != null)
                     {
-                        db.SubDayVotes.Add(new SubDayVotes(f.UserName, id_game));
-                        db.SubDayVotes.Remove(f);
+                        for (int i = 0; i < f.Count(); i++) {
+                            var v = f.ElementAtOrDefault(i, true);
+                            if (v != null)
+                                v.Game_id = id_game;
+                        }
                     }
                 }
 

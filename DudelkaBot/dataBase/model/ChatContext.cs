@@ -42,7 +42,7 @@ namespace DudelkaBot.dataBase.model
             modelBuilder.Entity<Quotes>().HasKey(p => new { p.Channel_id, p.Number });
             modelBuilder.Entity<Counters>().HasKey(p => new { p.Channel_id, p.Number});
             modelBuilder.Entity<SubDayGames>().HasKey(p => new { p.Channel_id, p.Game_id });
-            modelBuilder.Entity<SubDayVotes>().HasKey(p => new { p.Game_id, p.Number});
+           // modelBuilder.Entity<SubDayVotes>().HasKey(p => new { p.Game_id, p.Number});
 
         }
 
