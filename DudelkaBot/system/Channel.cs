@@ -190,11 +190,17 @@ namespace DudelkaBot.system
 
         private void CommandSubGame(ChatContext db, Message msg)
         {
-            var ch = db.Channels.First(a => a.Channel_name == msg.Channel);
+            var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
+            if (ch == null)
+                return;
 
-            var id = db.Users.First(a => a.Username == msg.UserName).Id;
+            var us = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (us == null)
+                return;
 
-            var chus = db.ChannelsUsers.Where(a => a.Channel_id == ch.Channel_id).First(a => a.User_id == id);
+            var chus = db.ChannelsUsers.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(a => a.User_id == us.Id);
+            if (chus == null)
+                return;
 
             var math = SubReg.Match(msg.Data);
             if (math.Success && chus.CountSubscriptions == 0)
@@ -268,11 +274,14 @@ namespace DudelkaBot.system
 
         private void CommandSubGames(ChatContext db, Message msg)
         {
-            var ch_id = db.Channels.First(a => a.Channel_name == msg.Channel).Channel_id;
 
-            var id = db.Users.First(a => a.Username == msg.UserName).Id;
+            var us = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (us == null)
+                return;
 
-            var chus = db.ChannelsUsers.Where(a=> a.Channel_id == ch_id).First(a => a.User_id == id);
+            var chus = db.ChannelsUsers.Where(a=> a.Channel_id == id).FirstOrDefault(a => a.User_id == us.Id);
+            if (chus == null)
+                return;
 
             var math = SubReg.Match(msg.Data);
             if (math.Success && chus.CountSubscriptions == 0)
@@ -290,7 +299,7 @@ namespace DudelkaBot.system
                 return;
             }
 
-            var gm = db.SubDayGames.Where(a => a.Channel_id == ch_id);
+            var gm = db.SubDayGames.Where(a => a.Channel_id == id);
 
             if(gm.Count() == 0)
             {
@@ -1160,6 +1169,8 @@ namespace DudelkaBot.system
 
         private void CommandWhisperClearSubGames(ChatContext db, Message msg)
         {
+            if (db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel) == null)
+                return;
             var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
             if (usersleep == null)
                 return;
@@ -1188,6 +1199,9 @@ namespace DudelkaBot.system
 
         private void CommandWhisperSubGames(ChatContext db, Message msg)
         {
+            if (db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel) == null)
+                return;
+
             var ch_id = db.Channels.First(a => a.Channel_name == msg.Channel).Channel_id;
 
             var id = db.Users.First(a => a.Username == msg.UserName).Id;
@@ -1230,6 +1244,8 @@ namespace DudelkaBot.system
 
         private void CommandWhisperJoinSubGames(ChatContext db, Message msg)
         {
+            if (db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel) == null)
+                return;
             var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
             if (usersleep == null)
                 return;
