@@ -52,6 +52,7 @@ namespace DudelkaBot.Messages
         private static string joinWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!joinsubgames\s+(?<numbers>[\d ]+)\s+(?<game>[a-zA-ZА-Яа-я].*)";
         private static string subGamePattern = @"!subgame\s+(?<game>.+)";
         private static string subWhisperGamePattern = @"\s*(?<channel>\w+)\s+!subgame\s+(?<game>.+)";
+        private static string emailSubGamesPattern = @"\s*(?<channel>\w+)\s+!emailsubgames\s+(?<email>.+)";
         #endregion
 
         #region Regexes
@@ -97,6 +98,8 @@ namespace DudelkaBot.Messages
         private static Regex joinWhisperSubGamesReg = new Regex(joinWhisperSubGamesPattern);
         private static Regex subGameReg = new Regex(subGamePattern);
         private static Regex subWhisperGameReg = new Regex(subWhisperGamePattern);
+        private static Regex emailSubGamesReg = new Regex(emailSubGamesPattern);
+
         #endregion
 
         #region Fields
@@ -134,6 +137,7 @@ namespace DudelkaBot.Messages
         private ChatMode _chatMode;
         private List<int> game_numbers;
         private string game_name;
+        private string email;
         #endregion
 
         #region Properties
@@ -168,6 +172,7 @@ namespace DudelkaBot.Messages
         public ChatMode ChatMode { get => _chatMode; set => _chatMode = value; }
         public List<int> Game_numbers { get => game_numbers; set => game_numbers = value; }
         public string Game_name { get => game_name; set => game_name = value; }
+        public string Email { get => email; set => email = value; }
 
         #endregion
 
@@ -516,6 +521,16 @@ namespace DudelkaBot.Messages
                     Channel = math.Groups["channel"].Value;
                     Game_name = math.Groups["game"].Value;
                     Command = Command.subgame;
+                }
+            }
+            else if (Msg.Contains("!emailsubgames"))
+            {
+                math = emailSubGamesReg.Match(Msg);
+                if(math.Success)
+                {
+                    Channel = math.Groups["channel"].Value;
+                    Email = math.Groups["email"].Value;
+                    Command = Command.emailsubgames;
                 }
             }
             else if (Msg.Contains("!"))

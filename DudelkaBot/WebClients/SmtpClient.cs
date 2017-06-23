@@ -14,7 +14,7 @@ namespace DudelkaBot.WebClients
     {
         static SmtpClient() { }
 
-        public static async void SendEmailAsync(string email, string subject, string message)
+        public static async void SendEmailAsync(string email, string subject, string message, string attached_file = null)
         {
             try
             {
@@ -23,8 +23,11 @@ namespace DudelkaBot.WebClients
                 emailMessage.From.Add(new MailboxAddress("DudelkaBot", "dmtgenerator@gmail.com"));
                 emailMessage.To.Add(new MailboxAddress("", email));
                 emailMessage.Subject = subject;
-                emailMessage.Body = new TextPart("plain") { Text = message };
+                var builder = new BodyBuilder() { TextBody = message };
 
+                if (!string.IsNullOrEmpty(attached_file))
+                    builder.Attachments.Add(attached_file);
+                emailMessage.Body = builder.ToMessageBody();
 
                 using (var client = new MailKit.Net.Smtp.SmtpClient())
                 {

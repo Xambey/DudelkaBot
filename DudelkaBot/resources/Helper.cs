@@ -48,5 +48,17 @@ namespace DudelkaBot.resources
             }
             return default(TSource);
         }
+
+        public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index, bool unused)
+        {
+            int i = 0;
+            foreach (var item in source)
+            {
+                if (i == index)
+                    return item;
+                i++;
+            }
+            return default(TSource);
+        }
     }
 }

@@ -76,6 +76,8 @@ namespace DudelkaBot.system
         private static string answerpattern = @"(dudelkabot|DudelkaBot)[, ]*(?<text>.+)";
         private static string subpattern = @".+subscriber=(?<sub>\d+).+";
         private static string idpattern = @".+user-id=(?<id>\d+);.+";
+        private static string newTablePattern = @"\s*(?<numbers>[\d ]+)\s+(?<game>[a-zA-ZА-Яа-я].*)$";
+        private static string oldTablePattern = @"\s*(?<number>\d+)\s*\)\s*(?<game>.*)$";
         #endregion
 
         #region References
@@ -93,7 +95,7 @@ namespace DudelkaBot.system
 
         private static Random rand = new Random();
         private static List<string> commands;
-        private ConcurrentDictionary<string, ConcurrentBag<User>> voteResult = new ConcurrentDictionary<string, ConcurrentBag<User>>(); 
+        private ConcurrentDictionary<string, ConcurrentBag<User>> voteResult = new ConcurrentDictionary<string, ConcurrentBag<User>>();
         private static List<string> ball8 = new List<string>(File.ReadLines("./resources/8ball.txt"));
         private System.Collections.Concurrent.ConcurrentBag<string> subscribedList = new System.Collections.Concurrent.ConcurrentBag<string>();
         private static Dictionary<string, int> lastNetSubscribers = new Dictionary<string, int>();
@@ -120,6 +122,8 @@ namespace DudelkaBot.system
         private string lastMusic;
         private ChatMode _chatMode = ChatMode.none;
         private TimeSpan _chatModeInterval = TimeSpan.Zero;
+        private Regex newTableReg = new Regex(newTablePattern);
+        private Regex oldTableReg = new Regex(oldTablePattern);
         #endregion
 
         #region Properties
@@ -176,7 +180,7 @@ namespace DudelkaBot.system
                 builder.Append("ТОП РЕЗУЛЬТАТОВ ГОЛОСОВАНИЯ Squid1 Squid2 Squid3 Squid4 : ");
                 for (int i = 0; i < n; i++)
                 {
-                    builder.Append($"{i + 1} место - {res.ElementAtOrDefault(i,true).Name} [ {res.ElementAtOrDefault(i,true).Value.ToString()} ] SwiftRage SwiftRage ");
+                    builder.Append($"{i + 1} место - {res.ElementAtOrDefault(i, true).Name} [ {res.ElementAtOrDefault(i, true).Value.ToString()} ] SwiftRage SwiftRage ");
                 }
                 SendWhisperMessage(httpClient.GetChannelId(Name, client_id).Item1, Name, builder.ToString());
 
@@ -209,10 +213,10 @@ namespace DudelkaBot.system
                 }
             }
 
-            if (chus.CountSubscriptions == 0 && !chus.Moderator)
-            {
-                return;
-            }
+            //if (chus.CountSubscriptions == 0 && !chus.Moderator)
+            //{
+            //    return;
+            //}
 
             var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id);
 
@@ -222,10 +226,10 @@ namespace DudelkaBot.system
             int i = 0;
             foreach (var item in msg.Game_name.ToLower())
             {
-                if(item == ' ')
+                if (item == ' ')
                 {
                     i++;
-                    if(i <= 1)
+                    if (i <= 1)
                         buf += ' ';
                 }
                 else
@@ -235,9 +239,9 @@ namespace DudelkaBot.system
                 }
             }
             msg.Game_name = buf;
-            
 
-            if(game != null)
+
+            if (game != null)
             {
                 var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
                 if (vt == null)
@@ -294,7 +298,7 @@ namespace DudelkaBot.system
             if (us == null)
                 return;
 
-            var chus = db.ChannelsUsers.Where(a=> a.Channel_id == id).FirstOrDefault(a => a.User_id == us.Id);
+            var chus = db.ChannelsUsers.Where(a => a.Channel_id == id).FirstOrDefault(a => a.User_id == us.Id);
             if (chus == null)
                 return;
 
@@ -308,7 +312,7 @@ namespace DudelkaBot.system
                     db.SaveChanges();
                 }
             }
-            
+
             if (chus.CountSubscriptions == 0 && !chus.Moderator)
             {
                 return;
@@ -316,7 +320,7 @@ namespace DudelkaBot.system
 
             var gm = db.SubDayGames.Where(a => a.Channel_id == id);
 
-            if(gm.Count() == 0)
+            if (gm.Count() == 0)
             {
                 IrcClient.SendChatMessage("Список игр для голосования пуст!", msg);
                 return;
@@ -380,6 +384,7 @@ namespace DudelkaBot.system
                         buf += item;
                     }
                 }
+                msg.Game_name = buf;
 
                 for (int i = 0; i < games.Count(); i++)
                 {
@@ -521,7 +526,7 @@ namespace DudelkaBot.system
                 }
                 //msg.Variants.Insert(0, "/me Начинается голосование (30 сек) Squid1 Squid2 DuckerZ Squid3 Squid4 "/* + " ВАРИАНТЫ: "*/);
                 //msg.Variants.Add(" Пишите НОМЕР варианта !" /*или САМ вариант!*/ + " SwiftRage  SwiftRage SwiftRage");
-                
+
                 VoteActive = true;
                 IrcClient.SendChatBroadcastChatMessage(/*msg.Variants*/ new List<string>() { "/me Начинается голосование (30 сек) Squid1 Squid2 DuckerZ Squid3 Squid4 ", "Пишите НОМЕР варианта ! SwiftRage  SwiftRage SwiftRage" }, msg);
             }
@@ -1200,6 +1205,41 @@ namespace DudelkaBot.system
 
         #region WhisperChatCommands
 
+        private void CommandWhisperEmailSubGames(ChatContext db, Message msg)
+        {
+            var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (usersleep == null)
+                return;
+            var chusleep = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == usersleep.Id);
+            if (chusleep == null)
+                return;
+            if (chusleep.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name)
+            {
+                var gm = db.SubDayGames.Where(a => a.Channel_id == id);
+
+                if (gm.Count() == 0)
+                {
+                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Список игр для голосования пуст!");
+                    return;
+                }
+                var builder = new StringBuilder();
+                Directory.CreateDirectory($"./Votes/{Name}/");
+
+                string attach = $"./Votes/{Name}/games.txt";
+                using (var stream = new StreamWriter(File.Open(attach, FileMode.Create)))
+                {
+                    int i = 0;
+                    foreach (var item in gm)
+                    {
+                        stream.WriteLine($"{++i}) {item.Name}"/* - [ {item.Value} ] "*/);
+                    }
+                    stream.Flush();
+                }
+
+                SmtpClient.SendEmailAsync(msg.Email, "Sub Day", "Список игр для дня платных подписчиков! \r\n Ответ должен быть в файле txt вида: \r\n 1 2 7 Новое название игры | продолжение с новой строки!!!", attach);
+            }
+        }
+
         private void CommandWhisperClearSubGames(ChatContext db, Message msg)
         {
             if (db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel) == null)
@@ -1309,6 +1349,24 @@ namespace DudelkaBot.system
                         return;
                     }
                 }
+
+                string buf = "";
+                int j = 0;
+                foreach (var item in msg.Game_name.ToLower())
+                {
+                    if (item == ' ')
+                    {
+                        if (++j <= 1)
+                            buf += ' ';
+                    }
+                    else
+                    {
+                        j = 0;
+                        buf += item;
+                    }
+                }
+                msg.Game_name = buf;
+
                 for (int i = 0; i < games.Count(); i++)
                 {
                     var g = games.ElementAtOrDefault(i, true);
@@ -1775,6 +1833,111 @@ namespace DudelkaBot.system
 
         #region Handlers
 
+        public void UpdateDbGameVote(string new_file)
+        {
+            string old_file = $"./Votes/{Name}/games.txt";
+            if (File.Exists(new_file) && File.Exists(old_file))
+            {
+                
+                using (var db = new ChatContext())
+                {
+                    var games = db.SubDayGames.Where(a => a.Channel_id == Id);
+                    if (games == null)
+                        return;
+                    var new_dic = new Dictionary<string, IEnumerable<int>>();
+                    foreach(var item in File.ReadAllLines(new_file, Encoding.UTF8))
+                    {
+                        var math = newTableReg.Match(item);
+                        if (math.Success)
+                        {
+                            var numb = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => (int.Parse(a)) - 1);
+                            string name = "";
+                            int i = 0;
+                            foreach (var s in math.Groups["game"].Value.ToLower().Trim())
+                            {
+                                if(s == ' ')
+                                {
+                                    if (++i <= 1)
+                                        name += s;
+                                }
+                                else
+                                {
+                                    i = 0;
+                                    name += s;
+                                }
+                            }
+                            new_dic.Add(name, numb);
+                        }
+                    }
+                    var old_dic = new Dictionary<int, string>();
+                    foreach (var item in File.ReadAllLines(old_file))
+                    {
+                        var math = oldTableReg.Match(item);
+                        if (math.Success)
+                        {
+                            int i = 0;
+                            string name = "";
+                            foreach (var s in math.Groups["game"].Value.ToLower().Trim())
+                            {
+                                if (s == ' ')
+                                {
+                                    if (++i <= 1)
+                                        name += s;
+                                }
+                                else
+                                {
+                                    i = 0;
+                                    name += s;
+                                }
+                            }
+                            old_dic.Add(int.Parse(math.Groups["number"].Value) - 1, name);
+                        }
+                    }
+
+                    foreach (var nov in new_dic)
+                    {
+                        var current = old_dic.Where(a => nov.Value.Contains(a.Key)).ToDictionary(b => b.Key, b => b.Value);
+                        if(current != null)
+                        {
+                            var g = games.Where(a => current.ContainsValue(a.Name));
+                            if(g != null && g.Count() == current.Count())
+                            {
+                                List<SubDayGames> y = new List<SubDayGames>(); //game_id | name | value
+                                int sum = 0;
+                                var h = games.FirstOrDefault(a => a.Name == nov.Key);
+                                if (h != null) {
+                                    y.Add(h);
+                                    sum += h.Value;
+                                }
+                                foreach (var ge in g)
+                                {
+                                    y.Add(ge);
+                                    sum += ge.Value;
+                                }
+                                var ides = y.Select(a => a.Game_id);
+                                for (int i = 0; i < y.Count(); i++)
+                                {
+                                    var val = y.ElementAtOrDefault(i, true);
+                                    db.SubDayGames.Remove(val);
+                                }
+                                db.SaveChanges();
+                                var n_name = new SubDayGames(nov.Key, Id, sum);
+                                db.SubDayGames.Add(n_name);
+                                db.SaveChanges();
+
+                                foreach (var item in ides)
+                                {
+                                    var u = db.SubDayVotes.FirstOrDefault(a => a.Game_id == item);
+                                    if (u != null)
+                                        u.Game_id = n_name.Game_id;
+                                }
+                                db.SaveChanges();
+                            }
+                        }
+                    }
+                }
+            }
+        }
         private bool isUserVoted(Message msg)
         {
             foreach (var item in VoteResult)
@@ -2189,6 +2352,9 @@ namespace DudelkaBot.system
                         case TypeMessage.WHISPER:
                             switch (msg.Command)
                             {
+                                case Command.emailsubgames:
+                                    CommandWhisperEmailSubGames(db, msg);
+                                    break;
                                 case Command.subgame:
                                     CommandSubGame(db, msg);
                                     break;

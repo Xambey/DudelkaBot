@@ -77,6 +77,18 @@ namespace DudelkaBot.system
 
                 switch (cmd)
                 {
+                    case "!load sub games":
+                        string filename = Console.ReadLine();
+                        string ch = Console.ReadLine();
+                        if (!string.IsNullOrEmpty(filename) && !string.IsNullOrEmpty(ch))
+                        {
+                            var ds = Channel.Channels.FirstOrDefault(a => a.Key == ch).Value;
+                            if(ds != null)
+                            {
+                                ds.UpdateDbGameVote(filename);
+                            }
+                        }
+                        break;
                     case "!stop show channel log":
                         Logger.ShowLineCommonMessage("Остановка отображения лога канала");
                         Channel.Channels.First().Value.StopShow();
@@ -123,20 +135,6 @@ namespace DudelkaBot.system
                         string mesa = Console.ReadLine();
                         string usernam = Console.ReadLine();
                         Channel.IrcClient.SendChatWhisperMessage(mesa,usernam,324, "dfdf");
-                        break;
-                    case "!errors":
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        lock (Channel.ErrorListMessages)
-                        {
-                            var ch = Channel.ErrorListMessages;
-                            var l = ch.Count;
-                            for (int i = 0; i < l; i++)
-                            { 
-                                Console.WriteLine(ch[i].Data);
-                            }
-                        }
-                        Console.ForegroundColor = ConsoleColor.Gray;
-
                         break;
                     case "!status":
                         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -200,6 +198,7 @@ namespace DudelkaBot.system
                         Console.WriteLine("\t!remove ENTER [название канала] - отключить от отслеживания канал");
                         Console.WriteLine("\t![название канала] - включить отображение чата");
                         Console.WriteLine("\t!exit - выключение с сохранением логов");
+                        Console.WriteLine("\t!load sub games - [путь к файлу] [название канала] - обновить список игр для саб. дня");
                         Thread.Sleep(10000);
                         break;
                     default:
