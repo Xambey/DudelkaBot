@@ -35,9 +35,11 @@ namespace DudelkaBot.enums
         startsubday,
         joinsubgames,
         subgame,
+        nosubgame,
         subgames,
         clearsubgames,
-        emailsubgames
+        emailsubgames,
+        tryautojoin,
     };
 
 }

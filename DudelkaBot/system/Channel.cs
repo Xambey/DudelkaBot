@@ -160,6 +160,154 @@ namespace DudelkaBot.system
 
         #region CommonChatCommands
 
+        private static int LevenshteinDistance(string left, string right)
+        {
+            if (left == null) throw new ArgumentNullException("left");
+            if (right == null) throw new ArgumentNullException("right");
+            int diff;
+            int[,] m = new int[left.Length + 1, right.Length + 1];
+
+            for (int i = 0; i <= left.Length; i++) { m[i, 0] = i; }
+            for (int j = 0; j <= right.Length; j++) { m[0, j] = j; }
+
+            for (int i = 1; i <= left.Length; i++)
+            {
+                for (int j = 1; j <= right.Length; j++)
+                {
+                    diff = (left[i - 1] == right[j - 1]) ? 0 : 1;
+
+                    m[i, j] = Math.Min(Math.Min(m[i - 1, j] + 1,
+                                             m[i, j - 1] + 1),
+                                             m[i - 1, j - 1] + diff);
+                }
+            }
+            return m[left.Length, right.Length];
+        }
+
+        private void CommandTryAutoJoin(ChatContext db, Message msg)
+        {
+            var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (usersleep == null)
+                return;
+            var chusleep = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == usersleep.Id);
+            if (chusleep == null)
+                return;
+            if (chusleep.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name)
+            {
+                var games = db.SubDayGames.Where(a => a.Channel_id == id);
+                List<SubDayGames> victim_table = new List<SubDayGames>(games);
+                int count = 0;
+                for(int i = 0; i < games.Count(); i++)
+                {
+                    for(int j = i + 1; j < games.Count(); j++)
+                    {
+                        var left = games.ElementAtOrDefault(i, true);
+                        var right = games.ElementAtOrDefault(j, true);
+                        if (left != null && right != null && LevenshteinDistance(left.Name,right.Name) <= (((double)left.Name.Length + (double)right.Name.Length) * 23 / 100))
+                        {
+                            Dictionary<int, int> gmlist = new Dictionary<int, int>();
+                            gmlist.Add(left.Game_id, left.Game_id);
+                            gmlist.Add(right.Game_id, right.Game_id);
+                            for (int k = 0; k < games.Count(); k++)
+                            {
+                                var g = games.ElementAtOrDefault(k, true);
+                                if (g != null && gmlist.ContainsKey(g.Game_id))
+                                {
+                                    victim_table.Remove(g);
+                                }
+                            }
+                            victim_table.Add(new SubDayGames(left.Name, Id, left.Value + right.Value));
+                            db.SaveChanges();
+
+                            var id_game = db.SubDayGames.First(a => a.Name == left.Name).Game_id;
+                            foreach (var item in gmlist)
+                            {
+                                var f = db.SubDayVotes.Where(a => a.Game_id == item.Key);
+                                if (f != null)
+                                {
+                                    for (int s = 0; s < f.Count(); s++)
+                                    {
+                                        var v = f.ElementAtOrDefault(s, true);
+                                        if (v != null)
+                                            v.Game_id = id_game;
+                                    }
+                                }
+                            }
+
+                            db.SaveChanges();
+                            count += 2;
+                        }
+                    }
+                }
+                for (int i = 0; i < games.Count(); i++)
+                {
+                    db.SubDayGames.Remove(games.ElementAtOrDefault(i, true));
+                }
+                db.SaveChanges();
+                //db.Database.ExecuteSqlCommand(@"SET IDENTITY_INSERT db0.SubDayGames ON");
+
+                foreach (var item in victim_table)
+                {
+                    db.SubDayGames.Add(new SubDayGames(item.Name, Id, item.Value));
+                }
+
+                db.SaveChanges();
+                //db.Database.ExecuteSqlCommand(@"SET IDENTITY_INSERT db0.SubDayGames OFF");
+                IrcClient.SendChatBroadcastMessage($"Автообъединение игр завершилось успешно! Было объединено {count} игр! Kreygasm", msg);
+            }
+        }
+
+        private void CommandNoSubGame(ChatContext db, Message msg)
+        {
+            var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
+            if (ch == null)
+                return;
+
+            var us = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (us == null)
+                return;
+
+            var chus = db.ChannelsUsers.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(a => a.User_id == us.Id);
+            if (chus == null)
+                return;
+
+            if (chus.CountSubscriptions == 0)
+            {
+                var math = SubReg.Match(msg.Data);
+                if (math.Success)
+                {
+                    var v = int.Parse(math.Groups["sub"].Value);
+                    if (v > 0)
+                    {
+                        chus.CountSubscriptions = v;
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+            if (chus.CountSubscriptions == 0 && !chus.Moderator)
+            {
+                return;
+            }
+
+            var vote = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
+            if (vote == null)
+                return;
+            
+
+            var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(b => b.Game_id == vote.Game_id);
+            if(gm != null)
+            {
+                db.SubDayVotes.Remove(vote);
+                if (gm.Value == 1)
+                    db.SubDayGames.Remove(gm);
+                else
+                    gm.Value--;
+                db.SaveChanges();
+            }
+            
+        }
+
         private void CommandStartSubDay(ChatContext db, Message msg)
         {
             var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -202,25 +350,24 @@ namespace DudelkaBot.system
             if (chus == null)
                 return;
 
-            var math = SubReg.Match(msg.Data);
-            if (math.Success && chus.CountSubscriptions == 0)
+            if (chus.CountSubscriptions == 0)
             {
-                var v = int.Parse(math.Groups["sub"].Value);
-                if (v > 0)
+                var math = SubReg.Match(msg.Data);
+                if (math.Success)
                 {
-                    chus.CountSubscriptions = v;
-                    db.SaveChanges();
+                    var v = int.Parse(math.Groups["sub"].Value);
+                    if (v > 0)
+                    {
+                        chus.CountSubscriptions = v;
+                        db.SaveChanges();
+                    }
                 }
             }
 
-            //if (chus.CountSubscriptions == 0 && !chus.Moderator)
-            //{
-            //    return;
-            //}
-
-            var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id);
-
-            var game = gm.FirstOrDefault(a => a.Name == msg.Game_name);
+            if (chus.CountSubscriptions == 0 && !chus.Moderator)
+            {
+                return;
+            }  
 
             string buf = "";
             int i = 0;
@@ -240,6 +387,9 @@ namespace DudelkaBot.system
             }
             msg.Game_name = buf;
 
+            var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id);
+
+            var game = gm.FirstOrDefault(a => a.Name == msg.Game_name);
 
             if (game != null)
             {
@@ -252,12 +402,13 @@ namespace DudelkaBot.system
             }
             else
             {
-                var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName && gm.FirstOrDefault(b => b.Game_id == a.Game_id) != null);
+                var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
                 if (vt == null)
                 {
-                    db.SubDayGames.Add(new SubDayGames(msg.Game_name, id));
+                    var d = new SubDayGames(msg.Game_name, id);
+                    db.SubDayGames.Add(d);
                     db.SaveChanges();
-                    db.SubDayVotes.Add(new SubDayVotes(msg.UserName, db.SubDayGames.First(a => a.Name == msg.Game_name).Game_id));
+                    db.SubDayVotes.Add(new SubDayVotes(msg.UserName, d.Game_id));
                 }
             }
             db.SaveChanges();
@@ -325,15 +476,15 @@ namespace DudelkaBot.system
                 IrcClient.SendChatMessage("Список игр для голосования пуст!", msg);
                 return;
             }
-            var builder = new StringBuilder();
+            var builder = new List<string>();
             int i = 1;
             builder.Append("СПИСОК ИГР, за которые проголосовали Squid1 Squid2 Squid3 Squid4 : ");
             foreach (var item in gm)
             {
-                builder.Append($"{i}) {item.Name} - [ {item.Value} ]; ");
+                builder.Add($"{i}) {item.Name} - [ {item.Value} ]");
                 i++;
             }
-            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, builder.ToString());
+            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, builder);
         }
 
         private void CommandJoinSubGames(ChatContext db, Message msg)
@@ -384,37 +535,41 @@ namespace DudelkaBot.system
                         buf += item;
                     }
                 }
-                msg.Game_name = buf;
 
-                for (int i = 0; i < games.Count(); i++)
-                {
-                    var g = games.ElementAtOrDefault(i, true);
-                    if (g != null && gmlist.ContainsKey(g.Game_id))
-                    {
-                        db.SubDayGames.Remove(g);
-                    }
-                }
-                db.SubDayGames.Add(new SubDayGames(msg.Game_name, Id, gmlist.Select(a => a.Value).Sum()));
-                db.SaveChanges();
-
-                var id_game = db.SubDayGames.First(a => a.Name == msg.Game_name).Game_id;
-                foreach (var item in gmlist)
-                {
-                    var f = db.SubDayVotes.Where(a => a.Game_id == item.Key);
-                    if (f != null)
-                    {
-                        for (int i = 0; i < f.Count(); i++)
-                        {
-                            var v = f.ElementAtOrDefault(i, true);
-                            if (v != null)
-                                v.Game_id = id_game;
-                        }
-                    }
-                }
-
-                db.SaveChanges();
+                JoinGames(db, buf, ref games, gmlist);
                 ircClient.SendChatMessage("Игры успешно объеденены под одним названием!", msg);
             }
+        }
+
+        private void JoinGames(ChatContext db, string NewGameName, ref IQueryable<SubDayGames> games, Dictionary<int, int> gmlist)
+        {
+            for (int i = 0; i < games.Count(); i++)
+            {
+                var g = games.ElementAtOrDefault(i, true);
+                if (g != null && gmlist.ContainsKey(g.Game_id))
+                {
+                    db.SubDayGames.Remove(g);
+                }
+            }
+            db.SubDayGames.Add(new SubDayGames(NewGameName, Id, gmlist.Select(a => a.Value).Sum()));
+            db.SaveChanges();
+
+            var id_game = db.SubDayGames.First(a => a.Name == NewGameName).Game_id;
+            foreach (var item in gmlist)
+            {
+                var f = db.SubDayVotes.Where(a => a.Game_id == item.Key);
+                if (f != null)
+                {
+                    for (int i = 0; i < f.Count(); i++)
+                    {
+                        var v = f.ElementAtOrDefault(i, true);
+                        if (v != null)
+                            v.Game_id = id_game;
+                    }
+                }
+            }
+
+            db.SaveChanges();
         }
 
         private void CommandWakeUp(ChatContext db, Message msg)
@@ -1205,6 +1360,46 @@ namespace DudelkaBot.system
 
         #region WhisperChatCommands
 
+        private void CommandWhisperTryAutoJoin(ChatContext db, Message msg)
+        {
+            var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (usersleep == null)
+                return;
+            var chusleep = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == usersleep.Id);
+            if (chusleep == null)
+                return;
+            if (chusleep.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name)
+            {
+                var games = db.SubDayGames.Where(a => a.Channel_id == id);
+                IQueryable<SubDayGames> victim_table = new List<SubDayGames>(games).AsQueryable();
+                int count = 0;
+                for (int i = 0; i < games.Count(); i++)
+                {
+                    for (int j = i + 1; j < games.Count(); j++)
+                    {
+                        var left = games.ElementAtOrDefault(i, true);
+                        var right = games.ElementAtOrDefault(j, true);
+                        if (left != null && right != null && LevenshteinDistance(left.Name, right.Name) <= (((double)left.Name.Length + (double)right.Name.Length) * 23 / 100))
+                        {
+                            JoinGames(db, left.Name, ref victim_table, new Dictionary<int, int>() { { left.Game_id, left.Value }, { right.Game_id, right.Value } });
+                            count++;
+                        }
+                    }
+                }
+                for (int i = 0; i < games.Count(); i++)
+                {
+                    db.SubDayGames.Remove(games.ElementAtOrDefault(i, true));
+                }
+                db.SaveChanges();
+                foreach (var item in victim_table)
+                {
+                    db.SubDayGames.Add(item);
+                }
+                db.SaveChanges();
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName,client_id).Item1,msg.UserName, $"Автообъединение игр завершилось успешно! Было объединено {count} игр! Kreygasm");
+            }
+        }
+
         private void CommandWhisperEmailSubGames(ChatContext db, Message msg)
         {
             var usersleep = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
@@ -1304,15 +1499,15 @@ namespace DudelkaBot.system
                 SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Список игр для голосования пуст!");
                 return;
             }
-            var builder = new StringBuilder();
+            var builder = new List<string>();
             int i = 1;
             builder.Append("СПИСОК ИГР, за которые проголосовали Squid1 Squid2 Squid3 Squid4 : ");
             foreach (var item in gm)
             {
-                builder.Append($"{i}) {item.Name} - [ {item.Value} ]; ");
+                builder.Add($"{i}) {item.Name} - [ {item.Value} ]");
                 i++;
             }
-            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, builder.ToString());
+            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, builder);
         }
 
         private void CommandWhisperJoinSubGames(ChatContext db, Message msg)
@@ -1938,6 +2133,7 @@ namespace DudelkaBot.system
                 }
             }
         }
+
         private bool isUserVoted(Message msg)
         {
             foreach (var item in VoteResult)
@@ -2352,6 +2548,12 @@ namespace DudelkaBot.system
                         case TypeMessage.WHISPER:
                             switch (msg.Command)
                             {
+                                case Command.tryautojoin:
+                                    CommandWhisperTryAutoJoin(db, msg);
+                                    break;
+                                case Command.nosubgame:
+                                    CommandNoSubGame(db, msg);
+                                    break;
                                 case Command.emailsubgames:
                                     CommandWhisperEmailSubGames(db, msg);
                                     break;
@@ -2446,6 +2648,12 @@ namespace DudelkaBot.system
 
                             switch (msg.Command)
                             {
+                                case Command.tryautojoin:
+                                    CommandTryAutoJoin(db, msg);
+                                    break;
+                                case Command.nosubgame:
+                                    CommandNoSubGame(db, msg);
+                                    break;
                                 case Command.startsubday:
                                     CommandStartSubDay(db, msg);
                                     break;
@@ -2454,9 +2662,6 @@ namespace DudelkaBot.system
                                     break;
                                 case Command.clearsubgames:
                                     CommandClearSubGames(db, msg);
-                                    break;
-                                case Command.subgames:
-                                    CommandSubGames(db, msg);
                                     break;
                                 case Command.joinsubgames:
                                     CommandJoinSubGames(db, msg);
@@ -2628,7 +2833,7 @@ namespace DudelkaBot.system
                 }
                 if (prof.ShowChangedMusic == 1)
                 {
-                    ShowChangedMusicTimer = new Timer(CheckStateMusicStatus, null, CheckMusicChangedTime, CheckMusicChangedTime);
+                    ShowChangedMusicTimer = new Timer(CheckStateMusicStatus, null, 30000, CheckMusicChangedTime);
                     using (var db = new ChatContext())
                     {
                         var ch = db.Channels.FirstOrDefault(a => a.Channel_name == Name);
@@ -3127,8 +3332,6 @@ namespace DudelkaBot.system
 
         public static void SendWhisperMessage(string touser_id, string username, List<string> message)
         {
-            if (IrcClient.WhisperBlock.Any(a => a.Key.Username == username))
-                return;
             if (message.Count <= 0)
                 return;
             string buff = "";
@@ -3180,7 +3383,6 @@ namespace DudelkaBot.system
             var ig = new Users(username);
             IrcClient.WhisperBlock.Add(ig, new Timer(IrcClient.BlockWhisperCancel, ig, 60000, 60000));
         }
-
 
         public static void Process()
         {
