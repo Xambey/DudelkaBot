@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace DudelkaBot.dataBase.model
 {
     public class Counters
     {
+        [Required]
         public int Channel_id { get; set; }
+        [MaxLength, Required]
         public string Counter_name { get; set; }
+        [DefaultValue(0), Required]
         public int Count { get; set; }
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
         public int Number { get; set; }
+        [MaxLength, Required]
         public string Description { get; set; }
 
         public Counters() { }

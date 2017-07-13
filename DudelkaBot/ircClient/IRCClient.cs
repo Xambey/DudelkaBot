@@ -165,10 +165,10 @@ namespace DudelkaBot.ircClient
                     {
                         tcpClient = new TcpClient();
                         tcpClient.LingerState = new LingerOption(false, 0);
-                        var color = Console.ForegroundColor;
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Logger.ShowLineCommonMessage("Подключение не удалось \n" + ex.Message);
-                        Console.ForegroundColor = ConsoleColor.Gray;
+                        //var color = Console.ForegroundColor;
+                        //Console.ForegroundColor = ConsoleColor.Red;
+                        //Logger.ShowLineCommonMessage("Подключение не удалось \n" + ex.Message);
+                        //Console.ForegroundColor = ConsoleColor.Gray;
                     }
                     catch(Exception ex)
                     {

@@ -53,6 +53,8 @@ namespace DudelkaBot.Messages
         private static string subGamePattern = @"!subgame\s+(?<game>.+)";
         private static string subWhisperGamePattern = @"\s*(?<channel>\w+)\s+!subgame\s+(?<game>.+)";
         private static string emailSubGamesPattern = @"\s*(?<channel>\w+)\s+!emailsubgames\s+(?<email>.+)";
+        private static string removeSubGamesPattern = @"!removesubgames\s+(?<numbers>[\d ]+)$";
+        private static string removeWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!removesubgames\s+(?<numbers>[\d ]+)$";
         #endregion
 
         #region Regexes
@@ -99,6 +101,8 @@ namespace DudelkaBot.Messages
         private static Regex subGameReg = new Regex(subGamePattern);
         private static Regex subWhisperGameReg = new Regex(subWhisperGamePattern);
         private static Regex emailSubGamesReg = new Regex(emailSubGamesPattern);
+        private static Regex removeSubGamesReg = new Regex(removeSubGamesPattern);
+        private static Regex removeWhisperSubGamesReg = new Regex(removeWhisperSubGamesPattern);
 
         #endregion
 
@@ -533,6 +537,16 @@ namespace DudelkaBot.Messages
                     Command = Command.emailsubgames;
                 }
             }
+            else if (Msg.Contains("!removesubgames"))
+            {
+                math = removeWhisperSubGamesReg.Match(Msg);
+                if (math.Success)
+                {
+                    Game_numbers = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
+                    Command = Command.removesubgames;
+                    Channel = math.Groups["channel"].Value;
+                }
+            }
             else if (Msg.Contains("!"))
             {
                 math = existedCounterWhisperReg.Match(Msg);
@@ -777,6 +791,15 @@ namespace DudelkaBot.Messages
                 {
                     Game_name = math.Groups["game"].Value;
                     Command = Command.subgame;
+                }
+            }
+            else if (Msg.StartsWith("!removesubgames"))
+            {
+                math = removeSubGamesReg.Match(Msg);
+                if (math.Success)
+                {
+                    Game_numbers = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
+                    Command = Command.removesubgames;
                 }
             }
             else if (Msg.StartsWith("!"))

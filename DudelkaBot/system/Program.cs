@@ -28,7 +28,9 @@ namespace DudelkaBot.system
         {
             "dudelka_krasnaya",
             "blackufa_twitch",
-            "dariya_willis"
+            "dariya_willis",
+            "customstories",
+            "artgameslp"
             //"c9sneaky",
             //"nl_kripp",
             //"fairlight_excalibur",

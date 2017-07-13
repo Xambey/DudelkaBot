@@ -47,6 +47,8 @@ namespace DudelkaBot.Logging
             {
                 if (!channelslog.ContainsKey(channelname) || channelslog[channelname].IsEmpty)
                     return;
+                if (!File.Exists(channelPaths[channelname]))
+                    File.Create(channelPaths[channelname]);
                 using (var stream = new StreamWriter(File.Open(channelPaths[channelname], FileMode.Append), Encoding.Unicode))
                 {
                     while (!channelslog[channelname].IsEmpty)
@@ -62,10 +64,14 @@ namespace DudelkaBot.Logging
                     stream.Flush();
                 }
             }
+            catch(IOException)
+            {
+                return;
+            }
             catch(Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                ShowLineCommonMessage("74 " + ex.Message + ex.Data + ex.StackTrace);
                 if (ex.InnerException != null)
                     ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -177,6 +183,10 @@ namespace DudelkaBot.Logging
                 }
 
             }
+            catch (IOException)
+            {
+                return;
+            }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -186,6 +196,7 @@ namespace DudelkaBot.Logging
                     CommonContainer = new ConcurrentQueue<string>();
                 if (channelslog == null)
                     channelslog = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
+                return;
             }
         }
         /// <summary>
@@ -230,7 +241,7 @@ namespace DudelkaBot.Logging
             catch (NullReferenceException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("244 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 if (CommonContainer == null)
                     CommonContainer = new ConcurrentQueue<string>();
@@ -238,7 +249,7 @@ namespace DudelkaBot.Logging
             catch (InvalidOperationException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("252 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 WriteLineMessage(ex.Message);
                 Thread.Sleep(10000);
@@ -246,7 +257,7 @@ namespace DudelkaBot.Logging
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("260 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
@@ -298,7 +309,7 @@ namespace DudelkaBot.Logging
             catch (NullReferenceException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("312 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 if (CommonContainer == null)
                     CommonContainer = new ConcurrentQueue<string>();
@@ -308,13 +319,13 @@ namespace DudelkaBot.Logging
             catch (InvalidOperationException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("322 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("328 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
@@ -360,7 +371,7 @@ namespace DudelkaBot.Logging
             catch (NullReferenceException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("374 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 if (CommonContainer == null)
                     CommonContainer = new ConcurrentQueue<string>();
@@ -368,7 +379,7 @@ namespace DudelkaBot.Logging
             catch (InvalidOperationException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("382 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 WriteLineMessage(ex.Message);
                 Thread.Sleep(10000);
@@ -376,7 +387,7 @@ namespace DudelkaBot.Logging
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                ShowLineCommonMessage(ex.Source + " " + ex.Message + " " + ex.Data);
+                ShowLineCommonMessage("390 " + ex.Source + " " + ex.Message + " " + ex.Data);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
         }

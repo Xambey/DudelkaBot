@@ -264,8 +264,11 @@ namespace DudelkaBot.WebClients
 
         public string GetMusicLinkFromTwitchDJ(string channel_name)
         {
+            if (channel_name == "customstories")
+                channel_name = "Customstories";
             if (Channel.IrcClient != null)
                 Channel.IrcClient.isConnect();
+
             HttpWebRequest request = WebRequest.CreateHttp(TwitchDJPageUrl + channel_name);
             HttpWebResponse response = (HttpWebResponse) request.GetResponseAsync().Result;
 
@@ -373,7 +376,7 @@ namespace DudelkaBot.WebClients
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Logger.ShowLineCommonMessage(ex.Message + ex.Data + ex.StackTrace);
+                Logger.ShowLineCommonMessage("379 " + ex.Message + ex.Data + ex.StackTrace);
                 if (ex.InnerException != null)
                     Logger.ShowLineCommonMessage(ex.InnerException.Message + ex.InnerException.Data + ex.InnerException.StackTrace);
                 Console.ForegroundColor = ConsoleColor.Gray;

@@ -11,10 +11,13 @@ namespace DudelkaBot.dataBase.model
 {
     public class Channels
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
         public int Channel_id { get; set; }
+        [MaxLength]
         public string Channel_name { get; set; }
+        [DefaultValue(0),Required]
         public int VkId { get; set; }
+        [DefaultValue(0), Required]
         public int DjId { get; set; }
 
         public Channels() { }

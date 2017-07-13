@@ -9,9 +9,13 @@ namespace DudelkaBot.dataBase.model
 {
     public class Quotes
     {
+        [Required]
         public int Channel_id { get; set; }
+        [Required]
         public int Number { get; set; }
+        [Required]
         public DateTime Date { get; set; }
+        [MaxLength, Required]
         public string Quote { get; set; }
 
         public Quotes() { }

@@ -9,8 +9,9 @@ namespace DudelkaBot.dataBase.model
 {
     public class Users
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Column(Order = 0)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
         public int Id { get; set; }
+        [MaxLength, Required]
         public string Username { get; set; }
         public Users() { }
         public Users(string username)

@@ -9,13 +9,17 @@ namespace DudelkaBot.dataBase.model
 {
     public class ChannelsUsers
     {
-        //[Key, Column(Order = 0)]
+        [Required]
         public int User_id { get; set; }
-        //[Key, Column(Order = 1)]
+        [Required]
         public int Channel_id { get; set; }
-        public int CountMessage { get; set; }
-        public int CountSubscriptions { get; set; }
+        [Required]
         public bool Active { get; set; }
+        [Required]
+        public int CountMessage { get; set; }
+        [Required]
+        public int CountSubscriptions { get; set; }
+        [Required]
         public bool Moderator { get; set; }
 
         public ChannelsUsers(){ } 
