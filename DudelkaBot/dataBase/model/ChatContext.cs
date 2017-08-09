@@ -17,6 +17,7 @@ namespace DudelkaBot.dataBase.model
         public DbSet<Counters> Counters { get; set; }
         public DbSet<SubDayGames> SubDayGames { get; set; }
         public DbSet<SubDayVotes> SubDayVotes { get; set; }
+        public DbSet<Gamers> Gamers { get; set; }
 
         public ChatContext() : base() { }
 
@@ -36,13 +37,14 @@ namespace DudelkaBot.dataBase.model
             }
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelbuilder)
         {
-            modelBuilder.Entity<ChannelsUsers>().HasKey(p => new { p.User_id, p.Channel_id });
-            modelBuilder.Entity<Quotes>().HasKey(p => new { p.Channel_id, p.Number });
-            modelBuilder.Entity<Counters>().HasKey(p => new { p.Channel_id, p.Number});
-            modelBuilder.Entity<SubDayGames>().HasKey(p => new { p.Channel_id, p.Game_id });
-           // modelBuilder.Entity<SubDayVotes>().HasKey(p => new { p.Game_id, p.Number});
+            modelbuilder.Entity<ChannelsUsers>().HasKey(p => new { p.User_id, p.Channel_id});
+            modelbuilder.Entity<Quotes>().HasKey(p => new { p.Channel_id, p.Number});
+            modelbuilder.Entity<Counters>().HasKey(p => new { p.Channel_id, p.Number });
+            modelbuilder.Entity<SubDayGames>().HasKey(p => new { p.Channel_id, p.Game_id});
+            modelbuilder.Entity<Gamers>().HasKey(p => new { p.Channel_ID, p.User_ID });
+            // modelbuilder.entity<subdayvotes>().haskey(p => new { p.game_id, p.number});
 
         }
 

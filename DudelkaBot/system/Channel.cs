@@ -482,7 +482,7 @@ namespace DudelkaBot.system
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ваш голос за игру {game.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс) одну из двух команд: !subgames или !subsortgames");
                 }
                 else
-                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Ты уже голосовал, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
+                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ты уже голосовал за {gm.FirstOrDefault(a => a.Game_id == vt.Game_id)?.Name}, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
             }
             else
             {
@@ -496,7 +496,7 @@ namespace DudelkaBot.system
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игра добавлена! TakeNRG  Ваш голос за игру {d.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay  Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper  . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс боту) одну из двух комманд: !subgames или !subsortgames");
                 }
                 else
-                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Ты уже голосовал, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
+                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ты уже голосовал за {gm.FirstOrDefault(a => a.Game_id == vt.Game_id)?.Name}, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
             }
             db.SaveChanges();
         }
@@ -1101,21 +1101,23 @@ namespace DudelkaBot.system
                         //    IrcClient.SendChatMessage("Не установлен DjId для канала, см. !help", msg, ChatModeInterval);
                         //    return;
                         //}
-                        string g = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
+                        var t = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
+                        string g = t.Item1;
                         if (string.IsNullOrEmpty(g))
                         {
                             IrcClient.SendChatMessage("В данный момент музыка нигде не играет FeelsBadMan !", msg, ChatModeInterval);
                         }
                         else
                         {
-                            IrcClient.SendChatMessage(g, msg, ChatModeInterval);
+                            IrcClient.SendChatBroadcastMessage($"/me @{msg.UserName} " + g, msg);
+                            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ссылка на клип: {t.Item2}");
                             return;
                         }
                     }
                 }
                 else
                 {
-                    IrcClient.SendChatMessage("Сейчас в VK играет: " + trackname + " Kreygasm", msg, ChatModeInterval);
+                    IrcClient.SendChatBroadcastMessage($"/me @{msg.UserName} Сейчас в VK играет: " + trackname + " Kreygasm", msg);
                 }
             }
         }
@@ -1447,6 +1449,127 @@ namespace DudelkaBot.system
                     break;
             }
             db.SaveChanges();
+        }
+
+        private void CommandRandGamer(ChatContext db, Message msg)
+        {
+            var exCounter = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (exCounter == null)
+                return;
+            var chexCounter = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == exCounter.Id);
+            if (chexCounter == null)
+                return;
+            if (chexCounter.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name)
+            {
+                var gamers = db.Gamers.Where(a => a.Channel_ID == Id).Where(a => a.Played == false);
+                if (gamers.Count() == 0)
+                    return;
+                int num = Rand.Next(0, gamers.Count());
+                var gamer = gamers.ElementAtOrDefault(num, true);
+                string mes = $"/me Случайный игрок: {db.Users.FirstOrDefault(a => a.Id == gamer.User_ID).Username} TakeNRG ";
+                IrcClient.SendChatBroadcastMessage(mes, msg);
+                SendWhisperMessage(httpClient.GetChannelId(Name,client_id).Item1, Name, mes);
+                gamer.Played = true;
+                db.SaveChanges();
+            }
+        }
+
+        private void CommandGamer(ChatContext db, Message msg)
+        {
+            var exCounter = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (exCounter == null)
+                return;
+            var chexCounter = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == exCounter.Id);
+            if (chexCounter == null)
+                return;
+            if (chexCounter.CountSubscriptions == 0)
+            {
+                var math = SubReg.Match(msg.Data);
+                if (math.Success)
+                {
+                    var v = int.Parse(math.Groups["sub"].Value);
+                    if (v > 0)
+                    {
+                        chexCounter.CountSubscriptions = v;
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+            if (chexCounter.CountSubscriptions == 0 && !chexCounter.Moderator)
+            {
+                return;
+            }
+            var gamer = db.Gamers.Where(a => a.Channel_ID == Id).FirstOrDefault(a => a.User_ID == exCounter.Id);
+            if (gamer == null)
+            {
+                db.Gamers.Add(new Gamers(Id, exCounter.Id));
+                db.SaveChanges();
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Вы добавлены в список игроков! Ждите и молитесь Kappa");
+            }
+            else
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Ты уже есть в списке, хватит спамить! Kappa");
+        }
+
+        private void CommandClearGamers(ChatContext db, Message msg)
+        {
+            var exCounter = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (exCounter == null)
+                return;
+            var chexCounter = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == exCounter.Id);
+            if (chexCounter == null)
+                return;
+            if (chexCounter.Moderator || msg.UserName == "dudelka_krasnaya" || msg.UserName == Name)
+            {
+                var gamers = db.Gamers.Where(a => a.Channel_ID == Id);
+                if (gamers.Count() == 0)
+                {
+                    IrcClient.SendChatBroadcastMessage($"/me @{msg.UserName} Список игроков ПУСТ! SwiftRage ", msg);
+                    return;
+                }
+                for (int i = 0; i < gamers.Count(); i++)
+                {
+                    db.Gamers.Remove(gamers.ElementAtOrDefault(i, true));
+                }
+                db.SaveChanges();
+                IrcClient.SendChatBroadcastMessage($"/me @{msg.UserName} Список игроков очищен! SwiftRage ", msg);
+            }
+        }
+
+        private void CommandGamers(ChatContext db, Message msg)
+        {
+            var exCounter = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (exCounter == null)
+                return;
+            var chexCounter = db.ChannelsUsers.Where(a => a.Channel_id == Id).FirstOrDefault(a => a.User_id == exCounter.Id);
+            if (chexCounter == null)
+                return;
+            if (chexCounter.CountSubscriptions == 0)
+            {
+                var math = SubReg.Match(msg.Data);
+                if (math.Success)
+                {
+                    var v = int.Parse(math.Groups["sub"].Value);
+                    if (v > 0)
+                    {
+                        chexCounter.CountSubscriptions = v;
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+            if (chexCounter.CountSubscriptions == 0 && !chexCounter.Moderator)
+            {
+                return;
+            }
+            var gamers = db.Gamers.Where(a => a.Channel_ID == Id);
+            if (gamers.Count() == 0)
+            {
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1,msg.UserName,$"Список игроков ПУСТ! SwiftRage ");
+                return;
+            }
+            var message = gamers.Select(a => $"{db.Users.First(b => b.Id == a.User_ID).Username} - {(a.Played ? "уже играл" : "не играл")}").ToList();
+            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, message);
         }
         #endregion
 
@@ -2963,6 +3086,18 @@ namespace DudelkaBot.system
 
                             switch (msg.Command)
                             {
+                                case Command.gamers:
+                                    CommandGamers(db, msg);
+                                    break;
+                                case Command.gamer:
+                                    CommandGamer(db, msg);
+                                    break;
+                                case Command.cleargamers:
+                                    CommandClearGamers(db, msg);
+                                    break;
+                                case Command.randgamer:
+                                    CommandRandGamer(db, msg);
+                                    break;
                                 case Command.removesubgames:
                                     CommandRemoveSubGames(db, msg);
                                     break;
@@ -3152,19 +3287,7 @@ namespace DudelkaBot.system
                 if (prof.ShowChangedMusic == 1)
                 {
                     ShowChangedMusicTimer = new Timer(CheckStateMusicStatus, null, 30000, CheckMusicChangedTime);
-                    using (var db = new ChatContext())
-                    { 
-                        var ch = db.Channels.FirstOrDefault(a => a.Channel_name == Name);
-                        string b = Vkontakte.getNameTrack(ch.VkId);
-                        if (string.IsNullOrEmpty(b))
-                        {
-                            b = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
-                            if (!string.IsNullOrEmpty(b))
-                                LastMusic = b;
-                        }
-                        else
-                            LastMusic = b;
-                    }
+
                 }
             }
             catch (Exception ex)
@@ -3447,8 +3570,7 @@ namespace DudelkaBot.system
                             {
                                 return;
                             }
-                            string g = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result;
-                            httpClient.GetMusicLinkFromTwitchDJ("dariya_willis");
+                            string g = httpClient.GetMusicFromTwitchDJ(ch.DjId.ToString()).Result.Item1;
                             if (string.IsNullOrEmpty(g) || g == LastMusic)
                             {
                                 return;
@@ -3469,11 +3591,11 @@ namespace DudelkaBot.system
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Logger.ShowLineCommonMessage("3473 " + ex.Source + ex.Data + ex.Message);
-                if (ex.InnerException != null)
-                    Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
-                Console.ForegroundColor = ConsoleColor.Gray;
+                //Console.ForegroundColor = ConsoleColor.Red;
+                //Logger.ShowLineCommonMessage("3473 " + ex.Source + ex.Data + ex.Message);
+                //if (ex.InnerException != null)
+                //    Logger.ShowLineCommonMessage(ex.InnerException.Source + ex.InnerException.Data + ex.InnerException.Message);
+                //Console.ForegroundColor = ConsoleColor.Gray;
                 return;
             }
         }
@@ -3515,14 +3637,13 @@ namespace DudelkaBot.system
 
                 if (oldstatus != StatusStream)
                 {
-                    //if (StatusStream == Status.Online && oldstatus == Status.Offline)
-                    //{
-                    //    var inf = httpClient.GetWeatherInTown("ufa");
-                    //    IrcClient.SendChatBroadcastMessage($"Добро пожаловать на борт! Статус стрима On Air, полет нормальный. Температура за бортом {inf.Item1}, на небе {inf.Item2}. Просим всех прибывших занять свои места и поздороваться с чатиком <3 <3 <3 . Вкусняшки будут раздаваться через некоторое время gachiGASM nymnCorn . Спасибо что сели в наш чат DuckerZ /", Name);
-                    //}
-
                     if (StatusStream == Status.Offline || StatusStream == Status.Online)
                     {
+                        using (var db = new ChatContext())
+                        {
+                            db.ChannelsUsers.Where(a => a.Channel_id == Id && a.Active == true).ForEachAsync(a => { a.Active = false; }).Wait();
+                            db.SaveChanges();
+                        }
                         Logger.SaveChannelLog(Name);
                         Logger.SaveCommonLog();
                         Logger.UpdateChannelPaths(Name);

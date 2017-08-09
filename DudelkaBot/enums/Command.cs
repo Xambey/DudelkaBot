@@ -41,7 +41,11 @@ namespace DudelkaBot.enums
         clearsubgames,
         emailsubgames,
         tryautojoin,
-        removesubgames
+        removesubgames,
+        gamer,
+        cleargamers,
+        randgamer,
+        gamers
     };
 
 }

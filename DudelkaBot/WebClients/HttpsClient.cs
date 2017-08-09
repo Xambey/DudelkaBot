@@ -27,7 +27,8 @@ namespace DudelkaBot.WebClients
         private WinHttpHandler handler;
         private static Random random = new Random();
         private static string patternrandom = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private static string DjURL = "https://twitch-dj.ru/includes/back.php?func=playlist&channel=channel_id&c";
+        private static string DjURL = "https://twitch-dj.ru/api/get_track/channel_id";
+        private static string yidUrl = "https://www.youtube.com/watch?v=";
         private static string StreamUrl = "https://api.twitch.tv/kraken/streams/?channel=name&callback=twitch_info&client_id=";
         private static string ChannelUrl = "https://api.twitch.tv/kraken/users?login=";
         private static string SubscribersUrl = "https://api.twitch.tv/kraken/channels/";
@@ -293,7 +294,7 @@ namespace DudelkaBot.WebClients
         /// 
         /// </summary>
         /// <param name="channel_id"> channel id from twitch-dj.ru/channelname , see back.php GET request url </param>
-        public async Task<string> GetMusicFromTwitchDJ(string channel_id)
+        public async Task<Tuple<string, string>> GetMusicFromTwitchDJ(string channel_id)
         {
             if (Channel.IrcClient != null)
                 Channel.IrcClient.isConnect();
@@ -303,34 +304,51 @@ namespace DudelkaBot.WebClients
                 HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, DjURL.Replace("channel_id", channel_id));
                 m.Method = new HttpMethod("GET");
                 m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
-                m.Headers.CacheControl = new CacheControlHeaderValue() { NoCache = true };
+                m.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("gzip"));
+                m.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("deflate"));
+                m.Headers.UserAgent.ParseAdd("runscope/0.1");
+
+                //m.Headers.CacheControl = new CacheControlHeaderValue() { NoCache = true };
+                //handler = new WinHttpHandler();
+                //handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                //handler.ClientCertificateOption = ClientCertificateOption.Automatic;
+
                 message = await client.SendAsync(m);
+
+                var task = message.Content.ReadAsByteArrayAsync();
+                task.Wait();
+                string te = Encoding.UTF8.GetString(task.Result);
+                if (te == "null" || te == null)
+                    return new Tuple<string, string>(string.Empty,string.Empty);
+                JObject text = JObject.Parse(te);
+                var yid = text["yid"].ToObject<string>();
+                var title = text["title"].ToObject<string>();
+                var author = text["author"].ToObject<string>();
+                var time = text["start_time"].ToObject<string>();
+                var math = Regex.Split(time, @"[.:\-]").Select(a => int.Parse(a)).ToArray();
+                var startTime = new DateTime(math[2],math[1],math[0],math[3],math[4], 0);
+                //var results = text["1"].Children().ToList();
+                //string status = results[5].ToObject<string>();
+
+                ////GetMusicLinkFromTwitchDJ("dariya_willis");
+
+                //if (status != "1")
+                //    return "Сейчас музыка не играет FeelsBadMan ";
+                //string title = results[2].ToObject<string>();
+                //string author = results[6].ToObject<string>();
+                //DateTime startTime = results[4].ToObject<DateTime>();
+
+                if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(author) && DateTime.Now.Subtract(startTime) < TimeSpan.FromMinutes(20))  
+                    return new Tuple<string, string>($"Сейчас играет: {title} Kreygasm Заказал: {author} Kappa ", yidUrl + yid);
+                return new Tuple<string, string>(string.Empty, string.Empty);
             }
-            catch (WebException ex)
+            catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Logger.ShowLineCommonMessage(ex.Message);
                 Console.ForegroundColor = ConsoleColor.Gray;
-                return "Ошибка, говнокод! Обратитесь к моему хозяину!";
+                return new Tuple<string, string>("Ошибка загрузки FeelsBadMan", string.Empty);
             }
-            string te = Encoding.UTF8.GetString(message.Content.ReadAsByteArrayAsync().Result);
-            if (te == "null" || te == null)
-                return string.Empty;
-            JObject text = JObject.Parse(te);
-            var results = text["1"].Children().ToList();
-            string status = results[5].ToObject<string>();
-
-            //GetMusicLinkFromTwitchDJ("dariya_willis");
-
-            if (status != "1")
-                return "Сейчас музыка не играет FeelsBadMan ";
-            string title = results[2].ToObject<string>();
-            string author = results[6].ToObject<string>();
-            DateTime startTime = results[4].ToObject<DateTime>();
-
-            if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(author) && startTime.Date == DateTime.Now.Date)
-                return $"Сейчас играет: {title} Kreygasm Заказал: {author} Kappa ";
-            return string.Empty;
         }
 
         public async void GetChannelStatus(string to_id, string message)
