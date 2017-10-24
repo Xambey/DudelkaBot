@@ -3647,7 +3647,7 @@ namespace DudelkaBot.system
                             db.SaveChanges();
                         }
                         Logger.SaveChannelLog(Name);
-                        Logger.SaveCommonLog();
+                        Thread.Sleep(1000);
                         Logger.UpdateChannelPaths(Name);
                     }
                     Logger.ShowLineCommonMessage($"Channel {Name} changed status {StatusStream.ToString().ToUpper()}");
