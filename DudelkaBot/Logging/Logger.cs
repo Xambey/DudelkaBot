@@ -157,7 +157,7 @@ namespace DudelkaBot.Logging
                 {
                     if (channelslog[channelname].Count >= countElementsForWriteChannels)
                     {
-                        channelslog[channelname].Enqueue(DateTime.Now.ToString() + $" {username}: " + message + "\n");
+                        channelslog[channelname].Enqueue(DateTime.Now.ToString() + $" {username}: " + message + Environment.NewLine);
                         if (!TryCreateSUBDirectory(channelPath, channelname))
                             throw new InvalidOperationException("Директория не создана!");
 
@@ -178,7 +178,7 @@ namespace DudelkaBot.Logging
                     }
                     else
                     {
-                        channelslog[channelname].Enqueue(DateTime.Now.ToString() + $" {username}: " + message + "\n");
+                        channelslog[channelname].Enqueue(DateTime.Now.ToString() + $" {username}: " + message + Environment.NewLine);
                     }
                 }
 
@@ -215,7 +215,7 @@ namespace DudelkaBot.Logging
                         CommonContainer = new ConcurrentQueue<string>();
                     if (CommonContainer.Count >= countElementsForWriteCommon)
                     {
-                        CommonContainer.Enqueue(DateTime.Now.ToString() + ": " + message + "\n");
+                        CommonContainer.Enqueue(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
                         using (var stream = new StreamWriter(File.Open(CommonPath, FileMode.Append),Encoding.Unicode))
                         {
                             while (!CommonContainer.IsEmpty)
@@ -234,7 +234,7 @@ namespace DudelkaBot.Logging
                     }
                     else
                     {
-                        CommonContainer.Enqueue(DateTime.Now.ToString() + ": " + message + "\n");
+                        CommonContainer.Enqueue(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
                     }
                 }
             }
