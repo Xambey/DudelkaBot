@@ -28,11 +28,11 @@ namespace DudelkaBot
             Console.WriteLine(profileChannels != null);
             Console.WriteLine(Directory.GetCurrentDirectory());
             var filenames = Directory.GetFiles("./ProfileChannels/Commands");
-            Console.WriteLine(filenames);
+             
             foreach (var item in filenames)
             {
+                Console.WriteLine(item);
                 profileChannels.Add(FileToProfileChannel(Path.GetFileNameWithoutExtension(item)));
-                Console.WriteLine(Path.GetFileNameWithoutExtension(item));
             }
         }
         private static ProfileChannel FileToProfileChannel(string channelname)
