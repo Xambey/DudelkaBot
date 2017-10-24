@@ -36,7 +36,7 @@ namespace DudelkaBot
         private static ProfileChannel FileToProfileChannel(string channelname)
         {
             string[] buf;
-            buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(separator: new string[] { "\r\n" }, options: StringSplitOptions.RemoveEmptyEntries);
+            buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(new string[] { Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
 
             var dir = new Dictionary<string, int>();
 
