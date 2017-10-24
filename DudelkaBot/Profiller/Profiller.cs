@@ -30,6 +30,7 @@ namespace DudelkaBot
             foreach (var item in filenames)
             {
                 profileChannels.Add(FileToProfileChannel(Path.GetFileNameWithoutExtension(item)));
+                Console.WriteLine(Path.GetFileNameWithoutExtension(item));
             }
         }
         private static ProfileChannel FileToProfileChannel(string channelname)
