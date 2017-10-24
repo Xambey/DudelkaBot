@@ -9,5 +9,7 @@ c# chatbot for twitch.tv, IRC client + TWITCH API(for whisper)
   https://www.twitch.tv/blackufa_twitch
   
   https://www.twitch.tv/dariya_willis
+  
+  P.S ТРЕБУЕТ наличия MS SQL Server
 
 
