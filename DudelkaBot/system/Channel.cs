@@ -3051,7 +3051,7 @@ namespace DudelkaBot.system
                         case TypeMessage.PRIVMSG:
                             //учет кол-ва сообщений
                             //TODO: сделать с этим что-нибудь
-                            //HandlerCountMessages(msg, db);
+                            HandlerCountMessages(msg, db);
 
                             if (VoteActive)
                             {
