@@ -25,11 +25,7 @@ namespace DudelkaBot
         }
         private static void LoadProfiles()
         {
-            Console.WriteLine(profileChannels != null);
-            Console.WriteLine(Directory.GetCurrentDirectory());
             var filenames = Directory.GetFiles("./ProfileChannels/Commands");
-
-            filenames.ToList().ForEach(Console.WriteLine);
 
             foreach (var item in filenames)
             {
@@ -40,11 +36,12 @@ namespace DudelkaBot
         private static ProfileChannel FileToProfileChannel(string channelname)
         {
             string[] buf;
-            if (channelname != Path.GetFileNameWithoutExtension(templateCommandsPath))
-                buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(separator: new string[] { "\r\n" } , options: StringSplitOptions.RemoveEmptyEntries);
-            else
-                buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(separator: new string[] { "\r\n" }, options: StringSplitOptions.RemoveEmptyEntries);
+            buf = File.ReadAllText($"./ProfileChannels/Commands/{channelname}.txt").Split(separator: new string[] { "\r\n" }, options: StringSplitOptions.RemoveEmptyEntries);
+
             var dir = new Dictionary<string, int>();
+
+            buf.ToList().ForEach(Console.WriteLine);
+
             foreach (var item in buf)
             {
                 var m = StateReg.Match(item);
@@ -73,16 +70,6 @@ namespace DudelkaBot
                 File.Copy(templateActivitiesPath, $"./ProfileChannels/Activities/{channelname}.txt");
                 activities = File.ReadAllLines($"./ProfileChannels/Activities/{channelname}.txt");
             }
-
-            Console.WriteLine("Dir: ");
-            foreach (var item in dir)
-            {
-                Console.WriteLine(item.Key + ":" + item.Value);
-            }
-
-            Console.WriteLine($"channelname: {channelname}");
-            Console.WriteLine("activities:");
-            activities.ToList().ForEach(Console.WriteLine);
 
             return new ProfileChannel(channelname,activities,dir["vote"],dir["advert"],dir["vkid"],dir["djid"],dir["qupdate"],dir["counter"],dir["quote"],dir["moscowtime"],dir["help"],dir["members"],dir["mystat"],dir["toplist"],dir["streamertime"],dir["music"],dir["viewers"],dir["uptime"],dir["8ball"],dir["reconnect"],dir["discord"],dir["wakeup"],dir["sleep"]) { SubAnswers = sub?.ToList(), ResubAnswers = resub?.ToList() };
         }
