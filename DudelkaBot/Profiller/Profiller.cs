@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DudelkaBot.Logging;
 
-namespace DudelkaBot.Profiller
+namespace DudelkaBot
 {
     public static class Profiller
     {

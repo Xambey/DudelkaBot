@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace DudelkaBot.Profiller
+namespace DudelkaBot
 {
     public class Activities
     {
