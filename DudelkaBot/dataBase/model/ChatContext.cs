@@ -29,7 +29,7 @@ namespace DudelkaBot.dataBase.model
             try
             {
                 //optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DudelkaBotBase;Trusted_Connection=True;");
-                optionsBuilder.UseMySql(@"Server=localhost;Database=DudelkaBotBase;Uid=root;Pwd=Passw0rd;");
+                optionsBuilder.UseMySql(@"Server=194.87.99.218;Database=DudelkaBotBase;Uid=root;Pwd=Passw0rd;");
             }
             catch(Exception ex)
             {

@@ -3259,7 +3259,9 @@ namespace DudelkaBot.system
                     //findDublicateUsers(db);
                 }
                 if (Profiller.Profiller.GetProfileOrDefault(Name) == null)
+                {
                     Profiller.Profiller.TryCreateProfile(Name);
+                }
 
                 httpClient.GetChannelInfo(Name, client_id);
                 Logger.UpdateChannelPaths(Name);
