@@ -74,6 +74,16 @@ namespace DudelkaBot
                 activities = File.ReadAllLines($"./ProfileChannels/Activities/{channelname}.txt");
             }
 
+            Console.WriteLine("Dir: ");
+            foreach (var item in dir)
+            {
+                Console.WriteLine(item.Key + ":" + item.Value);
+            }
+
+            Console.WriteLine($"channelname: {channelname}");
+            Console.WriteLine("activities:");
+            activities.ToList().ForEach(Console.WriteLine);
+
             return new ProfileChannel(channelname,activities,dir["vote"],dir["advert"],dir["vkid"],dir["djid"],dir["qupdate"],dir["counter"],dir["quote"],dir["moscowtime"],dir["help"],dir["members"],dir["mystat"],dir["toplist"],dir["streamertime"],dir["music"],dir["viewers"],dir["uptime"],dir["8ball"],dir["reconnect"],dir["discord"],dir["wakeup"],dir["sleep"]) { SubAnswers = sub?.ToList(), ResubAnswers = resub?.ToList() };
         }
         public static bool TryCreateProfile(string channelname)
