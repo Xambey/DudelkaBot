@@ -40,8 +40,6 @@ namespace DudelkaBot
 
             var dir = new Dictionary<string, int>();
 
-            buf.ToList().ForEach(Console.WriteLine);
-
             foreach (var item in buf)
             {
                 var m = StateReg.Match(item);
