@@ -85,7 +85,7 @@ namespace DudelkaBot.ircClient
             tokenProcess = new CancellationTokenSource();
             process = new Task(Channel.Process, tokenProcess.Token);
             process.Start();
-            Logger.ShowLineCommonMessage("Запущен обработчик сообщений...");
+            Logger.ShowLineCommonMessage("Start message handler...");
         }
 
         public void StopProcess()
@@ -94,7 +94,7 @@ namespace DudelkaBot.ircClient
             {
                 tokenProcess.Cancel();
                 tokenProcess.Dispose();
-                Logger.ShowLineCommonMessage("Обработчик сообщений остановлен...");
+                Logger.ShowLineCommonMessage("Stop message handler...");
             }
         }
 
@@ -159,7 +159,7 @@ namespace DudelkaBot.ircClient
                             outputStream.Dispose();
                         inputStream = new StreamReader(tcpClient.GetStream());
                         outputStream = new StreamWriter(tcpClient.GetStream());
-                        Logger.ShowLineCommonMessage($"Соединение с сервером установлено...");
+                        Logger.ShowLineCommonMessage($"Connection to the server is established...");
                     }
                     catch(ObjectDisposedException)
                     {
@@ -176,7 +176,7 @@ namespace DudelkaBot.ircClient
                         //    return true;
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Logger.ShowLineCommonMessage("Подключение не удалось \n" + ex.Message);
+                        Logger.ShowLineCommonMessage("Connection failed \n" + ex.Message);
                         Console.ForegroundColor = ConsoleColor.Gray;
                         if (ex.InnerException != null && (ex.InnerException as SocketException)?.SocketErrorCode == SocketError.IsConnected)
                         {
@@ -207,13 +207,13 @@ namespace DudelkaBot.ircClient
                             outputStream.Dispose();
                         inputStream = new StreamReader(tcpClient.GetStream());
                         outputStream = new StreamWriter(tcpClient.GetStream());
-                        Console.WriteLine($"Соединение с сервером установлено...");
+                        Console.WriteLine($"Connection to the server is established...");
                     }
                     catch (Exception ex)
                     {
                         var color = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Подключение не удалось \n" + ex.Message);
+                        Console.WriteLine("Connection failed \n" + ex.Message);
                         Console.ForegroundColor = ConsoleColor.Gray;
                         if (ex.InnerException != null && (ex.InnerException as SocketException)?.SocketErrorCode == SocketError.IsConnected)
                         {
@@ -255,7 +255,7 @@ namespace DudelkaBot.ircClient
                 outputStream.WriteLine("CAP REQ :twitch.tv/tags");
                 //outputStream.WriteLine("");
                 outputStream.Flush();
-                Logger.ShowLineCommonMessage("Инициализация аккаунта...");
+                Logger.ShowLineCommonMessage("Initializing account...");
             }
         }
 

@@ -22,38 +22,11 @@ namespace DudelkaBot.system
         static string password = /*"oauth:gqqqwtjj03paeehisajfojfpvapk33";*/"oauth:k1vf6fr82i4inavo2odnhuaq8d8rz2";
         static string host = "irc.chat.twitch.tv";//"199.9.253.119";//
         static int port = 6667;
+        static string channelNamesPath = "./ProfileChannels/ChannelsNames.txt";
         #endregion`
 
-        static List<string> channels_names = new List<string>()
-        {
-            "dudelka_krasnaya",
-            "blackufa_twitch",
-            "dariya_willis",
-            "customstories",
-            "artgameslp"
-			//"elajjaz"
-            //"c9sneaky",
-            //"nl_kripp",
-            //"fairlight_excalibur",
-            //"lirik",
-            //"domingo",
-            //"imaqtpie",
-            //"lck1",
-            //"silvername",
-            //"lenagol0vach"
-            //"lenagol0vach",
-            //"dota2ruhub",
-            //"thijshs",
-            //"pgl_dota",i
-            //"lenagol0vach",
-            //"dota2ruhub",
-            //"thijshs",
-            //"pgl_dota",
-            //"kephrii"
-            //"kephrii",
-            //"voyboy",
-            //"lpl1"
-        };
+        static List<string> channels_names = System.IO.File.ReadAllLines(channelNamesPath).ToList();
+
         static string pattern = @"!(?<channel>\w+)";
         static Regex reg = new Regex(pattern);
 

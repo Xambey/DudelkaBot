@@ -3412,14 +3412,14 @@ namespace DudelkaBot.system
                 }
 
                 Logger.StopWrite();
-                Logger.ShowLineCommonMessage("Соединение разорвано...");
+                Logger.ShowLineCommonMessage("Connection disconnected...");
                 IrcClient.Reconnect();
                 Logger.StartWrite();
                 foreach (var item in Channels)
                 {
                     item.Value.JoinRoom();
                 }
-                Logger.ShowLineCommonMessage("Соединение установлено...");
+                Logger.ShowLineCommonMessage("Connection established...");
             }
             else
             {
@@ -3428,8 +3428,8 @@ namespace DudelkaBot.system
                 {
                     IrcClient.JoinRoom(item.Key);
                 }
-                Logger.ShowLineCommonMessage("Соединение разорвано...");
-                Logger.ShowLineCommonMessage("Соединение установлено...");
+                Logger.ShowLineCommonMessage("Connection disconnected...");
+                Logger.ShowLineCommonMessage("Connection established...");
             }
         }
 
@@ -3648,7 +3648,7 @@ namespace DudelkaBot.system
                         Logger.SaveCommonLog();
                         Logger.UpdateChannelPaths(Name);
                     }
-                    Logger.ShowLineCommonMessage($"Канал {Name} сменил статус на {StatusStream.ToString().ToUpper()}");
+                    Logger.ShowLineCommonMessage($"Channel {Name} changed status {StatusStream.ToString().ToUpper()}");
                 }
             }
             catch (Exception ex)
@@ -3680,7 +3680,7 @@ namespace DudelkaBot.system
                 {
                     //if(StatusChat == Status.Offline)
                     //    Logger.UpdateChannelPaths(Name);
-                    Logger.ShowLineCommonMessage($"Чат канала {Name} сменил статус на {StatusChat.ToString().ToUpper()}");
+                    Logger.ShowLineCommonMessage($"Chat of channel {Name} changed status {StatusChat.ToString().ToUpper()}");
                 }
             }
             catch (Exception ex)
@@ -3696,13 +3696,13 @@ namespace DudelkaBot.system
         public void StartShow()
         {
             ViewChannel = this;
-            Logger.ShowLineCommonMessage($"Включено отображение чата {Name} ...");
+            Logger.ShowLineCommonMessage($"Chat enabled {Name} ...");
         }
 
         public void StopShow()
         {
             ViewChannel = null;
-            Logger.ShowLineCommonMessage($"Отображение чата отключено...");
+            Logger.ShowLineCommonMessage($"Chat disconnected...");
         }
 
         public void JoinRoom()
@@ -3713,7 +3713,7 @@ namespace DudelkaBot.system
                 IrcClient.StartProcess();
             }
             IrcClient.JoinRoom(Name);
-            Logger.ShowLineCommonMessage($"Выполнен вход в комнату: {Name} ...");
+            Logger.ShowLineCommonMessage($"Entrance to the room: {Name} ...");
         }
 
         public void LeaveRoom()
@@ -3724,7 +3724,7 @@ namespace DudelkaBot.system
                 IrcClient.StartProcess();
             }
             IrcClient.LeaveRoom(Name);
-            Logger.ShowLineCommonMessage($"Выполнен выход из комнаты: {Name} ...");
+            Logger.ShowLineCommonMessage($"Exit the room: {Name} ...");
         }
 
         private static void SwitchMessage(string data)
