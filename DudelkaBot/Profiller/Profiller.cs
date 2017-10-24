@@ -29,7 +29,6 @@ namespace DudelkaBot
 
             foreach (var item in filenames)
             {
-                Console.WriteLine(Path.GetFileNameWithoutExtension(item));
                 profileChannels.Add(FileToProfileChannel(Path.GetFileNameWithoutExtension(item)));
             }
         }
