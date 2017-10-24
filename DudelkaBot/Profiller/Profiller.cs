@@ -26,7 +26,8 @@ namespace DudelkaBot
         private static void LoadProfiles()
         {
             var filenames = Directory.GetFiles("./ProfileChannels/Commands");
-
+            Console.WriteLine(Directory.GetCurrentDirectory());
+            Console.WriteLine(filenames);
             foreach (var item in filenames)
             {
                 profileChannels.Add(FileToProfileChannel(Path.GetFileNameWithoutExtension(item)));
