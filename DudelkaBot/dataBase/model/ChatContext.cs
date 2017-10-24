@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
 using System.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DudelkaBot.Logging;
+using MySql.Data.MySqlClient;
 
 namespace DudelkaBot.dataBase.model
 {
@@ -18,6 +20,7 @@ namespace DudelkaBot.dataBase.model
         public DbSet<SubDayGames> SubDayGames { get; set; }
         public DbSet<SubDayVotes> SubDayVotes { get; set; }
         public DbSet<Gamers> Gamers { get; set; }
+        public MySqlConnection con;
 
         public ChatContext() : base() { }
 
@@ -25,7 +28,8 @@ namespace DudelkaBot.dataBase.model
         {
             try
             {
-                optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DudelkaBotBase;Trusted_Connection=True;");
+                //optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DudelkaBotBase;Trusted_Connection=True;");
+                optionsBuilder.UseMySql(@"Server=localhost;Database=DudelkaBotBase;Uid=root;Pwd=Passw0rd;");
             }
             catch(Exception ex)
             {

@@ -1,0 +1,201 @@
+-----------------------------------------------------------------------------------
+MySQL Workbench Migration Wizard Report
+
+Date: Wed Oct 18 22:22:15 2017
+Source: Microsoft SQL Server 13.0.4001
+Target: MySQL 5.7.19
+------------------------------------------------------------------------------------
+
+I. Migration
+
+1. Summary
+
+Number of migrated schemas: 1
+
+1. DudelkaBotBase
+Source Schema:   DudelkaBotBase
+
+- Tables:             8
+- Triggers:           0
+- Views:              0
+- Stored Procedures:  0
+- Functions:          0
+
+
+2. Migration Issues
+  - DudelkaBotBase
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Channels
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Channel_name
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - ChannelsUsers
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Active
+    note  Source column type BIT was migrated to TINYINT(1)
+  - Moderator
+    note  Source column type BIT was migrated to TINYINT(1)
+  - Users
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Username
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - SubDayVotes
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - UserName
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Gamers
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Played
+    note  Source column type BIT was migrated to TINYINT(1)
+  - Quotes
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Quote
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Counters
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Counter_name
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Description
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - SubDayGames
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+  - Name
+    note  Collation SQL_Latin1_General_CP1_CI_AS migrated to utf8_general_ci
+
+
+3. Object Creation Issues
+
+
+4. Migration Details
+
+4.1. Table DudelkaBotBase.Channels (Channels)
+
+Columns:
+  - Channel_id INT    
+  - Channel_name LONGTEXT    
+  - VkId INT  0  
+  - DjId INT  0  
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Channel_id)
+
+
+4.2. Table DudelkaBotBase.ChannelsUsers (ChannelsUsers)
+
+Columns:
+  - User_id INT    
+  - Channel_id INT    
+  - Active TINYINT(1)    
+  - CountMessage INT    
+  - CountSubscriptions INT    
+  - Moderator TINYINT(1)    
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (User_id, Channel_id)
+
+
+4.3. Table DudelkaBotBase.Users (Users)
+
+Columns:
+  - Id INT    
+  - Username LONGTEXT    
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Id)
+
+
+4.4. Table DudelkaBotBase.SubDayVotes (SubDayVotes)
+
+Columns:
+  - Number INT    
+  - Game_id INT    
+  - UserName LONGTEXT    
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Number)
+
+
+4.5. Table DudelkaBotBase.Gamers (Gamers)
+
+Columns:
+  - Channel_ID INT    
+  - User_ID INT    
+  - Played TINYINT(1)  0  
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Channel_ID, User_ID)
+
+
+4.6. Table DudelkaBotBase.Quotes (Quotes)
+
+Columns:
+  - Channel_id INT    
+  - Number INT    
+  - Date DATE    
+  - Quote LONGTEXT    
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Channel_id, Number)
+
+
+4.7. Table DudelkaBotBase.Counters (Counters)
+
+Columns:
+  - Channel_id INT    
+  - Counter_name LONGTEXT    
+  - Count INT  0  
+  - Number INT    
+  - Description LONGTEXT    
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Number, Channel_id)
+
+
+4.8. Table DudelkaBotBase.SubDayGames (SubDayGames)
+
+Columns:
+  - Channel_id INT    
+  - Game_id INT    
+  - Name LONGTEXT    
+  - Value INT  1  
+
+Foreign Keys:
+
+Indices:
+  - PRIMARY (Game_id, Channel_id)
+
+
+II. Data Copy
+
+  - `DudelkaBotBase`.`Quotes`
+            Succeeded : copied 77 of 77 rows from [DudelkaBotBase].[dbo].[Quotes]    
+  - `DudelkaBotBase`.`Users`
+            Succeeded : copied 141377 of 141377 rows from [DudelkaBotBase].[dbo].[Users]    
+  - `DudelkaBotBase`.`Counters`
+            Succeeded : copied 32 of 32 rows from [DudelkaBotBase].[dbo].[Counters]    
+  - `DudelkaBotBase`.`ChannelsUsers`
+            Succeeded : copied 190609 of 190609 rows from [DudelkaBotBase].[dbo].[ChannelsUsers]    
+  - `DudelkaBotBase`.`Gamers`
+            Succeeded : copied 2 of 2 rows from [DudelkaBotBase].[dbo].[Gamers]    
+  - `DudelkaBotBase`.`SubDayVotes`
+            Succeeded : copied 227 of 227 rows from [DudelkaBotBase].[dbo].[SubDayVotes]    
+  - `DudelkaBotBase`.`SubDayGames`
+            Succeeded : copied 92 of 92 rows from [DudelkaBotBase].[dbo].[SubDayGames]    
+  - `DudelkaBotBase`.`Channels`
+            Succeeded : copied 6 of 6 rows from [DudelkaBotBase].[dbo].[Channels]    
+
+

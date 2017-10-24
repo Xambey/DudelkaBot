@@ -57,13 +57,11 @@ namespace DudelkaBot.system
 
         #region Timers
         private Timer VoteTimer;
-        private Timer StreamChatTimer;
         private Timer QuoteTimer;
         private Timer StreamTimer;
         private Timer CheckSubscriptions;
         private Timer ShowChangedMusicTimer;
         private static Timer connectTimer = new Timer(CheckConnect, null, 1 * 60000, 1 * 60000);
-        static private int StreamStateChatUpdateTime = 3;
         static private int StreamStateUpdateTime = 1;
         static private int CheckStateSubscriptionsTime = 10000;
         static private int CheckMusicChangedTime = 20000;
@@ -3051,7 +3049,9 @@ namespace DudelkaBot.system
                             }
                             break;
                         case TypeMessage.PRIVMSG:
-                            HandlerCountMessages(msg, db);
+                            //учет кол-ва сообщений
+                            //TODO: сделать с этим что-нибудь
+                            //HandlerCountMessages(msg, db);
 
                             if (VoteActive)
                             {
@@ -3589,7 +3589,7 @@ namespace DudelkaBot.system
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //Console.ForegroundColor = ConsoleColor.Red;
                 //Logger.ShowLineCommonMessage("3473 " + ex.Source + ex.Data + ex.Message);
@@ -3628,8 +3628,8 @@ namespace DudelkaBot.system
                         StatusStream = Status.Offline;
                         break;
                     case Status.Unknown:
-                        StatusStream = Status.Unknown;
-                        Logger.ShowLineCommonMessage("Ошибка загрузки статуса канала!");
+                        StatusStream = oldstatus;
+                        //Logger.ShowLineCommonMessage("Ошибка загрузки статуса канала!");
                         break;
                     default:
                         break;
@@ -3676,7 +3676,7 @@ namespace DudelkaBot.system
                     countMessageForUpdateStreamState = 0;
                 }
 
-                if (oldstatus != StatusChat)
+                if (oldstatus != StatusChat && StatusChat != Status.Unknown)
                 {
                     //if(StatusChat == Status.Offline)
                     //    Logger.UpdateChannelPaths(Name);

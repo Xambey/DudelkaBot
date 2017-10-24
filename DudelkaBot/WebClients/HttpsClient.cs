@@ -24,7 +24,7 @@ namespace DudelkaBot.WebClients
         private string token;
         private string url;
         private HttpClient client;
-        private WinHttpHandler handler;
+        //private WinHttpHandler handler;
         private static Random random = new Random();
         private static string patternrandom = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private static string DjURL = "https://twitch-dj.ru/api/get_track/channel_id";
@@ -42,10 +42,10 @@ namespace DudelkaBot.WebClients
             this.token = token;
             this.url = url;
 
-            handler = new WinHttpHandler();
-            handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
-            handler.ClientCertificateOption = ClientCertificateOption.Automatic;
-            client = new HttpClient(handler);
+            //handler = new HttpMessageHandler();
+            //handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+            //handler.ClientCertificateOption = ClientCertificateOption.Automatic;
+            client = new System.Net.Http.HttpClient();
         }
 
         public Tuple<string, string> GetCountChattersAndModerators(string channel_name)
@@ -320,7 +320,15 @@ namespace DudelkaBot.WebClients
                 string te = Encoding.UTF8.GetString(task.Result);
                 if (te == "null" || te == null)
                     return new Tuple<string, string>(string.Empty,string.Empty);
-                JObject text = JObject.Parse(te);
+                JObject text = null;
+                try
+                {
+                    text = JObject.Parse(te);
+                }
+                catch
+                {
+                    return new Tuple<string, string>(string.Empty, string.Empty);
+                }
                 var yid = text["yid"].ToObject<string>();
                 var title = text["title"].ToObject<string>();
                 var author = text["author"].ToObject<string>();

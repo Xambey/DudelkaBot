@@ -19,7 +19,7 @@ namespace DudelkaBot.vk
         {
             while (!vk.IsAuthorized)
             {
-                vk.Authorize(OAuth);
+                vk.Authorize(new ApiAuthParams() {AccessToken = OAuth } );
             }
         }
 

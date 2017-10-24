@@ -17,7 +17,7 @@ namespace DudelkaBot.Logging
         #endregion
 
         #region Fields
-        static string commonPath = $"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt";
+        static string commonPath = $"./logs/log{DateTime.Now.ToString().Replace(':', '.').Replace(' ', '_') }.log";
         static string channelPath = "./logs/channels";
         static string CommonPath { get => commonPath; set => commonPath = value; }
         static bool ActiveLog = true; 
@@ -35,9 +35,9 @@ namespace DudelkaBot.Logging
             if (channelPaths == null)
                 channelPaths = new Dictionary<string, string>();
             if (!channelPaths.ContainsKey(channelname))
-                channelPaths.Add(channelname, channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.') }.txt");
+                channelPaths.Add(channelname, channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.').Replace(' ', '_') }.log");
             else
-                channelPaths[channelname] = channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.') }.txt";
+                channelPaths[channelname] = channelPath + $"/{channelname}/log{ DateTime.Now.ToString().Replace(':', '.').Replace(' ', '_') }.log";
             Thread.Sleep(2000);
         }
 
@@ -395,7 +395,7 @@ namespace DudelkaBot.Logging
         static void UpdateLogFileName(object obj)
         {
             lock(CommonPath)
-                CommonPath = $"./logs/log{DateTime.Now.ToString().Replace(':', '.')}.txt";
+                CommonPath = $"./logs/log{DateTime.Now.ToString().Replace(':', '.').Replace(' ', '_') }.log";
         }
 
         public static void StopWrite()

@@ -31,6 +31,7 @@ namespace DudelkaBot.system
             "dariya_willis",
             "customstories",
             "artgameslp"
+			//"elajjaz"
             //"c9sneaky",
             //"nl_kripp",
             //"fairlight_excalibur",

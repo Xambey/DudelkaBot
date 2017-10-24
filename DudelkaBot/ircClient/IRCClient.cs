@@ -161,7 +161,7 @@ namespace DudelkaBot.ircClient
                         outputStream = new StreamWriter(tcpClient.GetStream());
                         Logger.ShowLineCommonMessage($"Соединение с сервером установлено...");
                     }
-                    catch(ObjectDisposedException ex)
+                    catch(ObjectDisposedException)
                     {
                         tcpClient = new TcpClient();
                         tcpClient.LingerState = new LingerOption(false, 0);
