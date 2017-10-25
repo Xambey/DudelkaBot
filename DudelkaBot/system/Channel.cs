@@ -3379,7 +3379,7 @@ namespace DudelkaBot.system
 
         private void ShowRandowQuote(object obj)
         {
-            if (StatusStream == Status.Online && countMessageQuote > countLimitMessagesForShowQuote)
+            if (StatusStream == Status.Online/** && countMessageQuote > countLimitMessagesForShowQuote**/)
             {
                 using (var db = new ChatContext()) {
 
