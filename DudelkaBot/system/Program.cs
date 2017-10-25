@@ -34,7 +34,7 @@ namespace DudelkaBot.system
         {
             Console.OutputEncoding = Encoding.Unicode;
             Console.InputEncoding = Encoding.Unicode;
-            //!!!!!!!!!! 
+
             Channel.Port = port;
             Channel.Password = password;
             Channel.Iphost = host;
@@ -49,13 +49,13 @@ namespace DudelkaBot.system
             while (true)
             {
                 Channel.IrcClient.isConnect();
-                string cmd = Console.ReadLine();
+                string cmd = Console.In.ReadLine();
 
                 switch (cmd)
                 {
                     case "!load sub games":
-                        string filename = Console.ReadLine();
-                        string ch = Console.ReadLine();
+                        string filename = Console.In.ReadLine();
+                        string ch = Console.In.ReadLine();
                         if (!string.IsNullOrEmpty(filename) && !string.IsNullOrEmpty(ch))
                         {
                             var ds = Channel.Channels.FirstOrDefault(a => a.Key == ch).Value;
@@ -78,22 +78,22 @@ namespace DudelkaBot.system
                         Channel.Reconnect();
                         break;
                     case "!send":
-                        string mes = Console.ReadLine();
-                        string o = Console.ReadLine();
+                        string mes = Console.In.ReadLine();
+                        string o = Console.In.ReadLine();
                         if (string.IsNullOrEmpty(o) && Channel.ViewChannel != null)
                             o = Channel.ViewChannel.Name;
                         if(Channel.Channels.Any(a => a.Key == o))
                             Channel.IrcClient.SendChatBroadcastMessage(mes, o);
                         break;
                     case "!broadcast":
-                        string m = Console.ReadLine();
+                        string m = Console.In.ReadLine();
                         foreach ( var item in Channel.Channels)
                         {
                             Channel.IrcClient.SendChatBroadcastMessage(m, item.Value.Name);
                         }
                         break;
                     case "!news":
-                        string me = Console.ReadLine();
+                        string me = Console.In.ReadLine();
                         foreach (var item in Channel.Channels)
                         {
                             Channel.IrcClient.SendChatBroadcastMessage(@"/me" + me, item.Value.Name);
@@ -108,8 +108,8 @@ namespace DudelkaBot.system
                         Channel.ActiveLog = false;
                         break;
                     case "!whisper":
-                        string mesa = Console.ReadLine();
-                        string usernam = Console.ReadLine();
+                        string mesa = Console.In.ReadLine();
+                        string usernam = Console.In.ReadLine();
                         Channel.IrcClient.SendChatWhisperMessage(mesa,usernam,324, "dfdf");
                         break;
                     case "!status":
@@ -139,7 +139,7 @@ namespace DudelkaBot.system
                         Environment.Exit(0);
                         break;
                     case "!add":
-                        string chname = Console.ReadLine();
+                        string chname = Console.In.ReadLine();
                         var chan = Channel.Channels.SingleOrDefault(a => a.Key == chname).Value;
                         if (chan == null) {
                             chan = new Channel(chname);
@@ -150,7 +150,7 @@ namespace DudelkaBot.system
                         
                         break;
                     case "!remove":
-                        string name = Console.ReadLine();
+                        string name = Console.In.ReadLine();
                         if (Channel.Channels.Any(a => a.Key == name))
                         {
                             Channel.Channels.Remove(name);

@@ -17,7 +17,7 @@ namespace DudelkaBot.Logging
         #endregion
 
         #region Fields
-        static string commonPath = $"./logs/log{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.log";
+        static string commonPath = $"./logs/log{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.txt";
         static string channelPath = "./logs/channels";
         static string CommonPath { get => commonPath; set => commonPath = value; }
         static bool ActiveLog = true; 
@@ -35,9 +35,9 @@ namespace DudelkaBot.Logging
             if (channelPaths == null)
                 channelPaths = new Dictionary<string, string>();
             if (!channelPaths.ContainsKey(channelname))
-                channelPaths.Add(channelname, channelPath + $"/{channelname}/log{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.log");
+                channelPaths.Add(channelname, channelPath + $"/{channelname}/log{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.txt");
             else
-                channelPaths[channelname] = channelPath + $"/{channelname}/log{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.log";
+                channelPaths[channelname] = channelPath + $"/{channelname}/log{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.txt";
             Thread.Sleep(2000);
         }
 
@@ -395,7 +395,7 @@ namespace DudelkaBot.Logging
         static void UpdateLogFileName(object obj)
         {
             lock(CommonPath)
-                CommonPath = $"./logs/{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.log";
+                CommonPath = $"./logs/{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.txt";
         }
 
         public static void StopWrite()
