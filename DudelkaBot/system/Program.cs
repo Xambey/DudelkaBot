@@ -32,8 +32,8 @@ namespace DudelkaBot.system
 
         static void Main(string[] args)
         {
-            Console.OutputEncoding = Encoding.Unicode;
-            Console.InputEncoding = Encoding.Unicode;
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.UTF8;
 
             Channel.Port = port;
             Channel.Password = password;
