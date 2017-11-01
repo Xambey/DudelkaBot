@@ -1232,10 +1232,12 @@ namespace DudelkaBot.system
                             var y = counters.FirstOrDefault(a => a.Counter_name == msg.NewName);
                             if (y == null)
                             {
-                                if (!string.IsNullOrEmpty(msg.Description))
-                                    db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
-                                else
-                                    db.Counters.Add(new Counters(Id, msg.NewName));
+                                db.Database.ExecuteSqlCommand(
+                                    $"insert into Counters values({Id},'{msg.NewName}',0,{rand.Next()},{msg.Description ?? string.Empty});");
+                                //if (!string.IsNullOrEmpty(msg.Description))
+                                //    db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
+                                //else
+                                //    db.Counters.Add(new Counters(Id, msg.NewName));
                             }
                             else
                             {
@@ -1250,6 +1252,7 @@ namespace DudelkaBot.system
                             else
                                 db.Counters.Add(new Counters(Id, msg.NewName));
                         }
+                        db.SaveChanges();
                         IrcClient.SendChatBroadcastMessage($"/me Добавлен новый счетчик {msg.NewName}", msg);
                         break;
                     case "-":
