@@ -1236,7 +1236,6 @@ namespace DudelkaBot.system
                                     db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
                                 else
                                     db.Counters.Add(new Counters(Id, msg.NewName));
-                                db.SaveChanges();
                             }
                             else
                             {
@@ -1250,7 +1249,6 @@ namespace DudelkaBot.system
                                 db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
                             else
                                 db.Counters.Add(new Counters(Id, msg.NewName));
-                            db.SaveChanges();
                         }
                         IrcClient.SendChatBroadcastMessage($"/me Добавлен новый счетчик {msg.NewName}", msg);
                         break;
@@ -2749,7 +2747,7 @@ namespace DudelkaBot.system
         private void HandlerCountMessages(Message msg, ChatContext db)
         {
             //Interlocked.Increment(ref countMessageForUpdateStreamState);
-            Interlocked.Increment(ref countMessageQuote);
+            //Interlocked.Increment(ref countMessageQuote);
             var userPRIVMSG = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
 
             if (userPRIVMSG != null)
@@ -2780,7 +2778,7 @@ namespace DudelkaBot.system
                 }
                 chus.CountMessage++;
             }
-            db.SaveChanges();
+            //db.SaveChanges();
         }
 
         private void HandlerNamesMessage(Message msg, ChatContext db)
