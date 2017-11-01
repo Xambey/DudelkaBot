@@ -67,7 +67,7 @@ namespace DudelkaBot.system
         static private int CheckMusicChangedTime = 20000;
         static private int QuoteShowTime = 10;
         static private readonly int CountLimitMessagesForUpdateStreamState = 15;
-        static private readonly int countLimitMessagesForShowQuote = 40;
+        //static private readonly int countLimitMessagesForShowQuote = 40;
         #endregion
 
         #region Patterns
@@ -1233,7 +1233,7 @@ namespace DudelkaBot.system
                             if (y == null)
                             {
                                 db.Database.ExecuteSqlCommand(
-                                    $"insert into Counters values({Id},'{msg.NewName}',0,{rand.Next()},{msg.Description ?? string.Empty});");
+                                    $"insert into Counters values({Id},'{msg.NewName}',0,{rand.Next()},'{msg.Description ?? string.Empty}');");
                                 //if (!string.IsNullOrEmpty(msg.Description))
                                 //    db.Counters.Add(new Counters(Id, msg.NewName, msg.Description));
                                 //else
