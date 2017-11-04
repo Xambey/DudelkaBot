@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -15,6 +16,7 @@ using DudelkaBot.system;
 using DudelkaBot.enums;
 using DudelkaBot.Logging;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.Host;
 
 namespace DudelkaBot.WebClients
 {
@@ -290,6 +292,30 @@ namespace DudelkaBot.WebClients
                 return null;
         }
 
+        static byte[] Decompress(byte[] gzip)
+        {
+            using (GZipStream stream = new GZipStream(new MemoryStream(gzip),
+                CompressionMode.Decompress))
+            {
+                const int size = 4096;
+                byte[] buffer = new byte[size];
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    int count = 0;
+                    do
+                    {
+                        count = stream.Read(buffer, 0, size);
+                        if (count > 0)
+                        {
+                            memory.Write(buffer, 0, count);
+                        }
+                    }
+                    while (count > 0);
+                    return memory.ToArray();
+                }
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -303,11 +329,20 @@ namespace DudelkaBot.WebClients
             {
                 HttpRequestMessage m = new HttpRequestMessage(HttpMethod.Get, DjURL.Replace("channel_id", channel_id));
                 m.Method = new HttpMethod("GET");
-                m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
-                m.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("gzip"));
-                m.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("deflate"));
+                //m.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+                //m.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+                //m.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("gzip"));
+                //m.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("deflate"));
                 m.Headers.UserAgent.ParseAdd("runscope/0.1");
-
+                m.Headers.AcceptEncoding.ParseAdd("gzip");
+                m.Headers.AcceptEncoding.ParseAdd("deflate");
+               // m.Headers.Add("cookie", "__cfduid=d2ab40d36d839123f346a9f732e295c0e1509646652; PHPSESSID=fhilsvgpu4p7n8amd5r9ooss15; _ym_uid=1509646655387357634; gsScrollPos-863=0; gsScrollPos-847=0; _ym_isad=1; last_track=undefined; gsScrollPos-1087=");
+                
+                //m.Headers.Pragma.ParseAdd("no-cache");
+                //m.Headers.AcceptLanguage.ParseAdd("ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4");
+                //m.Headers.CacheControl.NoCache = true;
+                //m.Headers.Add("scheme", new List<string>(){"https"});
+                //m.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html; charset=UTF-8");
                 //m.Headers.CacheControl = new CacheControlHeaderValue() { NoCache = true };
                 //handler = new WinHttpHandler();
                 //handler.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
@@ -315,9 +350,10 @@ namespace DudelkaBot.WebClients
 
                 message = await client.SendAsync(m);
 
-                var task = message.Content.ReadAsByteArrayAsync();
-                task.Wait();
-                string te = Encoding.UTF8.GetString(task.Result);
+                var task = await message.Content.ReadAsByteArrayAsync();
+                task = Decompress(task);
+                string te = Encoding.UTF8.GetString(task);
+ 
                 if (te == "null" || te == null)
                     return new Tuple<string, string>(string.Empty,string.Empty);
                 JObject text = null;
@@ -335,6 +371,7 @@ namespace DudelkaBot.WebClients
                 var time = text["start_time"].ToObject<string>();
                 var math = Regex.Split(time, @"[.:\-]").Select(a => int.Parse(a)).ToArray();
                 var startTime = new DateTime(math[2],math[1],math[0],math[3],math[4], 0);
+              
                 //var results = text["1"].Children().ToList();
                 //string status = results[5].ToObject<string>();
 
@@ -345,8 +382,8 @@ namespace DudelkaBot.WebClients
                 //string title = results[2].ToObject<string>();
                 //string author = results[6].ToObject<string>();
                 //DateTime startTime = results[4].ToObject<DateTime>();
-
-                if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(author) && DateTime.Now.Subtract(startTime) < TimeSpan.FromMinutes(20))  
+                Console.WriteLine();
+                if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(author) && DateTime.UtcNow.Subtract(startTime.ToUniversalTime()).TotalSeconds < TimeSpan.FromMinutes(20).TotalSeconds)  
                     return new Tuple<string, string>($"Сейчас играет: {title} Kreygasm Заказал: {author} Kappa ", yidUrl + yid);
                 return new Tuple<string, string>(string.Empty, string.Empty);
             }
