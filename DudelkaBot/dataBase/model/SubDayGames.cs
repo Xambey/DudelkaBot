@@ -28,6 +28,7 @@ namespace DudelkaBot.dataBase.model
             this.Channel_id = Channel_ID;
             this.Name = Name;
             Value = value;
+            Game_id = 0;
         }
 
     }

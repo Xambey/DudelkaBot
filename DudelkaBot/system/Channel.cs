@@ -442,11 +442,11 @@ namespace DudelkaBot.system
                 }
             }
 
-            if (chus.CountSubscriptions == 0 && !chus.Moderator)
-            {
-                //SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Голосовать могут только платные подписчики, не пытайся! LUL NotLikeThis ");
-                return;
-            }  
+            //if (chus.CountSubscriptions == 0 && !chus.Moderator)
+            //{
+            //    //SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Голосовать могут только платные подписчики, не пытайся! LUL NotLikeThis ");
+            //    return;
+            //}  
 
             string buf = "";
             int i = 0;
@@ -487,12 +487,12 @@ namespace DudelkaBot.system
                 var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
                 if (vt == null)
                 {
-                    //var d = new SubDayGames(msg.Game_name, id);
-                    //db.SubDayGames.Add(d);
-                    db.Database.ExecuteSqlCommand(
-                        $"INSERT INTO SubDayGames (Channel_id,Name,Game_id,Value) VALUES({id},{msg.Game_name},0,1);");
+                    var d = new SubDayGames(msg.Game_name, id);
+                    db.SubDayGames.Add(d);
+                    //db.Database.ExecuteSqlCommand(
+                    //    $"INSERT INTO SubDayGames (Channel_id,Name,Game_id,Value) VALUES({id},{msg.Game_name},0,1);");
                     db.SaveChanges();
-                    var d = db.SubDayGames.First(x => x.Name == msg.Game_name);
+                    //var d = db.SubDayGames.First(x => x.Name == msg.Game_name);
                     db.SubDayVotes.Add(new SubDayVotes(msg.UserName, d.Game_id));
 
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игра добавлена! TakeNRG  Ваш голос за игру {d.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay  Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper  . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс боту) одну из двух комманд: !subgames или !subsortgames");
