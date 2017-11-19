@@ -48,8 +48,33 @@ namespace DudelkaBot.dataBase.model
             modelbuilder.Entity<Counters>().HasKey(p => new { p.Channel_id, p.Number });
             modelbuilder.Entity<SubDayGames>().HasKey(p => new { p.Channel_id, p.Game_id});
             modelbuilder.Entity<Gamers>().HasKey(p => new { p.Channel_ID, p.User_ID });
-            modelbuilder.Entity<SubDayVotes>().HasKey(p => new { p.Game_id, p.Number});
+            //modelbuilder.Entity<SubDayVotes>().HasKey(p => new { p.Game_id, p.Number});
 
+        }
+
+        public int SaveChanges<TEntity>() where TEntity : class
+        {
+            var original = this.ChangeTracker.Entries()
+                .Where(x => !typeof(TEntity).IsAssignableFrom(x.Entity.GetType()) && x.State != EntityState.Unchanged)
+                .GroupBy(x => x.State)
+                .ToList();
+
+            foreach (var entry in this.ChangeTracker.Entries().Where(x => !typeof(TEntity).IsAssignableFrom(x.Entity.GetType())))
+            {
+                entry.State = EntityState.Unchanged;
+            }
+
+            var rows = base.SaveChanges();
+
+            foreach (var state in original)
+            {
+                foreach (var entry in state)
+                {
+                    entry.State = state.Key;
+                }
+            }
+
+            return rows;
         }
 
     }

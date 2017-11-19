@@ -414,7 +414,7 @@ namespace DudelkaBot.system
                 SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Использовать данную комманду могут только модераторы, не пытайся! LUL NotLikeThis ");
         }
 
-        private void CommandSubGame(ChatContext db, Message msg)
+        private async void CommandSubGame(ChatContext db, Message msg)
         {
             var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
             if (ch == null)
@@ -489,14 +489,17 @@ namespace DudelkaBot.system
                 {
                     var d = new SubDayGames(msg.Game_name, id);
                     db.SubDayGames.Add(d);
-                    db.SaveChanges();
+                    //db.Database.ExecuteSqlCommand(
+                    //    $"insert into SubDayGames (Channel_id, Name) values ({id}, {msg.Game_name});");
+                    db.SaveChanges<SubDayGames>();
                     db.SubDayVotes.Add(new SubDayVotes(msg.UserName, d.Game_id));
+
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игра добавлена! TakeNRG  Ваш голос за игру {d.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay  Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper  . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс боту) одну из двух комманд: !subgames или !subsortgames");
                 }
                 else
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ты уже голосовал за {gm.FirstOrDefault(a => a.Game_id == vt.Game_id)?.Name}, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
             }
-            db.SaveChanges();
+            await db.SaveChangesAsync();
         }
         
         private void CommandClearSubGames(ChatContext db, Message msg)
