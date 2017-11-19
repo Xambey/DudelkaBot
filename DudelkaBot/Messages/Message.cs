@@ -517,14 +517,14 @@ namespace DudelkaBot.Messages
                     Command = Command.joinsubgames;
                 }
             }
-            else if(Msg.Contains("!subgame") && !Msg.Contains("!subgames"))
+            else if(Msg.Contains("!voice") && !Msg.Contains("!subgames"))
             {
                 math = subWhisperGameReg.Match(Msg);
                 if (math.Success)
                 {
                     Channel = math.Groups["channel"].Value;
                     Game_name = math.Groups["game"].Value;
-                    Command = Command.subgame;
+                    Command = Command.voice;
                 }
             }
             else if (Msg.Contains("!emailsubgames"))
@@ -784,13 +784,13 @@ namespace DudelkaBot.Messages
                     Command = Command.joinsubgames;
                 }
             }
-            else if(Msg.StartsWith("!subgame") && !Msg.StartsWith("!subgames"))
+            else if(Msg.StartsWith("!voice") && !Msg.StartsWith("!subgames"))
             {
                 math = subGameReg.Match(Msg);
                 if (math.Success)
                 {
                     Game_name = math.Groups["game"].Value;
-                    Command = Command.subgame;
+                    Command = Command.voice;
                 }
             }
             else if (Msg.StartsWith("!removesubgames"))

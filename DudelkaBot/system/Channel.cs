@@ -3025,7 +3025,7 @@ namespace DudelkaBot.system
                                     CommandWhisperSexyLevel(db, msg);
                                     break;
                                 case Command.unknown:
-                                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>() { "Команда должна иметь вид [название канала] !команда (например 'blackufa_twitch !subgame Название игры'). Чтобы посмотреть список команд введите: название канала !help" });
+                                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>() { "Команда должна иметь вид [название канала] !команда (например 'blackufa_twitch !voice Название игры'). Чтобы посмотреть список команд введите: название канала !help" });
                                     break;
                                 case Command.djid:
                                     CommandWhisperDjId(db, msg);
@@ -3111,7 +3111,7 @@ namespace DudelkaBot.system
                                 case Command.startsubday:
                                     CommandStartSubDay(db, msg);
                                     break;
-                                case Command.subgame:
+                                case Command.voice:
                                     CommandSubGame(db, msg);
                                     break;
                                 case Command.clearsubgames:
