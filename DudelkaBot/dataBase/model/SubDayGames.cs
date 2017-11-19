@@ -12,7 +12,7 @@ namespace DudelkaBot.dataBase.model
     {
         [Required]
         public int Channel_id { get; set; }
-        [DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
         public int Game_id { get; set; }
         [Required]
         public string Name { get; set; }
