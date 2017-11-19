@@ -354,11 +354,11 @@ namespace DudelkaBot.system
                 }
             }
 
-            if (chus.CountSubscriptions == 0 && !chus.Moderator)
-            {
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Голосовать могут только платные подписчики, не пытайся! LUL NotLikeThis ");
-                return;
-            }
+            //if (chus.CountSubscriptions == 0 && !chus.Moderator)
+            //{
+            //    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Голосовать могут только платные подписчики, не пытайся! LUL NotLikeThis ");
+            //    return;
+            //}
 
             var vote = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
             if (vote == null)
@@ -2787,7 +2787,7 @@ namespace DudelkaBot.system
                 }
                 chus.CountMessage++;
             }
-            //db.SaveChanges();
+            db.SaveChangesAsync();
         }
 
         private void HandlerNamesMessage(Message msg, ChatContext db)
