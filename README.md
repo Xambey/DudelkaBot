@@ -1,15 +1,10 @@
 # DudelkaBot
 
+Если с вами все впорядке, то не смотрите на этот говнокод:)
 c# chatbot for twitch.tv, IRC client + TWITCH API(for whisper) 
 
 ### Список команд бота: https://github.com/Xambey/DudelkaBot/wiki/Commands
 
-На данный момент его можно найти на следующих каналах twitch.tv:
-  
-  https://www.twitch.tv/blackufa_twitch
-  
-  https://www.twitch.tv/dariya_willis
-  
-  P.S ТРЕБУЕТ наличия MS SQL Server
+
 
 
