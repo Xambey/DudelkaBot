@@ -490,7 +490,7 @@ namespace DudelkaBot.system
                     //var d = new SubDayGames(msg.Game_name, id);
                     //db.SubDayGames.Add(d);
                     db.Database.ExecuteSqlCommand(
-                        $"insert into SubDayGames (Channel_id, Name) values ({id}, {msg.Game_name});");
+                        $"INSERT INTO SubDayGames (Channel_id, Name) VALUES({id},'{msg.Game_name}');");
                     db.SaveChanges();
                     var d = db.SubDayGames.Last(x => x.Name == msg.Game_name);
                     db.SubDayVotes.Add(new SubDayVotes(msg.UserName, d.Game_id));
