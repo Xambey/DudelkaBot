@@ -23,6 +23,7 @@ namespace DudelkaBot.dataBase.model
         {
             this.UserName = UserName;
             Game_id = GameId;
+            Number = 0;
         }
     }
 }
