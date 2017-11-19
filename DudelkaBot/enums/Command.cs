@@ -45,7 +45,8 @@ namespace DudelkaBot.enums
         gamer,
         cleargamers,
         randgamer,
-        gamers
+        gamers,
+        voice
     };
 
 }
