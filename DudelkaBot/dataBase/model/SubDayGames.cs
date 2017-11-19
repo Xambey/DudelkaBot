@@ -10,9 +10,9 @@ namespace DudelkaBot.dataBase.model
 {
     public class SubDayGames
     {
-        [Required, Column(Order = 0)]
+        [Required]
         public int Channel_id { get; set; }
-        [DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity), Column(Order = 1), Required]
+        [DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity), Required]
         public int Game_id { get; set; }
         [Required]
         public string Name { get; set; }
