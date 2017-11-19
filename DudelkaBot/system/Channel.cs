@@ -363,7 +363,7 @@ namespace DudelkaBot.system
             var vote = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
             if (vote == null)
             {
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Ты еще не голосовал, чтобы исправить это недоразумение можешь написать тут или в общем чате команду !subgame Название игры");
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Ты еще не голосовал, чтобы исправить это недоразумение можешь написать тут или в общем чате команду !voice Название игры");
                 return;
             }
             
@@ -371,7 +371,7 @@ namespace DudelkaBot.system
             var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(b => b.Game_id == vote.Game_id);
             if(gm != null)
             {
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,  $"Ваш голос за игру {gm.Name} отменен! Чтобы переголосовать используйте команду !subgame Название игры ЗДЕСЬ(в лс) или в общем чате");
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,  $"Ваш голос за игру {gm.Name} отменен! Чтобы переголосовать используйте команду !voice Название игры ЗДЕСЬ(в лс) или в общем чате");
                 db.SubDayVotes.Remove(vote);
                 if (gm.Value == 1)
                     db.SubDayGames.Remove(gm);
@@ -2991,7 +2991,7 @@ namespace DudelkaBot.system
                                 case Command.emailsubgames:
                                     CommandWhisperEmailSubGames(db, msg);
                                     break;
-                                case Command.subgame:
+                                case Command.voice:
                                     CommandSubGame(db, msg);
                                     break;
                                 case Command.clearsubgames:
