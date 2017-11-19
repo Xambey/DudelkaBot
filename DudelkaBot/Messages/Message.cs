@@ -51,7 +51,7 @@ namespace DudelkaBot.Messages
         private static string joinSubGamesPattern = @"!joinsubgames\s+(?<numbers>[\d ]+)\s+(?<game>[a-zA-ZА-Яа-я].*)";
         private static string joinWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!joinsubgames\s+(?<numbers>[\d ]+)\s+(?<game>[a-zA-ZА-Яа-я].*)";
         private static string subGamePattern = @"!voice\s+(?<game>[\w ]+)";
-        private static string subWhisperGamePattern = @"\s*(?<channel>\w+)\s+!subgame\s+(?<game>.+)";
+        private static string subWhisperGamePattern = @"\s*(?<channel>\w+)\s+!voice\s+(?<game>[\w ]+)";
         private static string emailSubGamesPattern = @"\s*(?<channel>\w+)\s+!emailsubgames\s+(?<email>.+)";
         private static string removeSubGamesPattern = @"!removesubgames\s+(?<numbers>[\d ]+)$";
         private static string removeWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!removesubgames\s+(?<numbers>[\d ]+)$";
