@@ -2787,8 +2787,6 @@ namespace DudelkaBot.system
                 }
                 chus.CountMessage++;
             }
-            if(db.ChangeTracker.Entries().Count() > 50)
-                db.SaveChanges();
         }
 
         private void HandlerNamesMessage(Message msg, ChatContext db)
