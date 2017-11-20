@@ -822,7 +822,7 @@ namespace DudelkaBot.system
             var games = db.SubDayGames.Where(x => x.Channel_id == id);
             if (games.Count() <= msg.CountRandGames)
             {
-                IrcClient.SendChatMessage($"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!", msg.UserName, msg);
+                IrcClient.SendChatMessage($"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!", msg);
                 return;
             }
             var numbers = new int[msg.CountRandGames];
@@ -836,6 +836,7 @@ namespace DudelkaBot.system
 
                 numbers[i] = newElement;
             }
+            Console.WriteLine("Номера получены!");
                  
             var result = new List<string>();
             for (int i = 0; i < numbers.Length; i++)
