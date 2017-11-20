@@ -844,7 +844,7 @@ namespace DudelkaBot.system
             for (int i = 0; i < numbers.Length; i++)
             {
                 var game = db.SubDayGames.ElementAtOrDefault(numbers[i], true);
-                result.Add(game != null ? $"{i}) {game.Name} " : $"{i}) Error getting the game ");
+                result.Add(game != null ? $"{i + 1}) {game.Name} " : $"{i + 1}) Error getting the game ");
             }
 
             IrcClient.SendChatMessage($"Список случайно выбранных игр: Kappa " + string.Join("; ", result), msg);
