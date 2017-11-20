@@ -847,7 +847,7 @@ namespace DudelkaBot.system
                 result.Add(game != null ? $"{i}) {game.Name} " : $"{i}) Error getting the game ");
             }
 
-            IrcClient.SendChatMessage($"Список случайно выбранных игр: Kappa " + string.Join(Environment.NewLine, result), msg);
+            IrcClient.SendChatMessage($"Список случайно выбранных игр: Kappa " + string.Join("; ", result), msg);
         }
 
         private void StopVote(object s)
