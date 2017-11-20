@@ -782,6 +782,69 @@ namespace DudelkaBot.system
             }
         }
 
+        private void CommandRandSubGame(ChatContext db, Message msg)
+        {
+            var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
+            if (ch == null)
+                return;
+
+            var us = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (us == null)
+                return;
+
+            var chus = db.ChannelsUsers.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(a => a.User_id == us.Id);
+            if (chus == null)
+                return;
+
+            if (chus.CountSubscriptions == 0)
+            {
+                var math = SubReg.Match(msg.Data);
+                if (math.Success)
+                {
+                    var v = int.Parse(math.Groups["sub"].Value);
+                    if (v > 0)
+                    {
+                        chus.CountSubscriptions = v;
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+            if (!chus.Moderator && msg.UserName != "dudelka_krasnaya")
+            {
+                //SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Голосовать могут только платные подписчики, не пытайся! LUL NotLikeThis ");
+                return;
+            }
+
+            
+            var games = db.SubDayGames.Where(x => x.Channel_id == id);
+            if (games.Count() <= msg.CountRandGames)
+            {
+                IrcClient.SendChatMessage($"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!", msg.UserName, msg);
+                return;
+            }
+            var numbers = new int[msg.CountRandGames];
+            int newElement;
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                do
+                {
+                    newElement = rand.Next(msg.CountRandGames - 1);
+                } while (numbers.Contains(newElement));
+
+                numbers[i] = newElement;
+            }
+                 
+            var result = new List<string>();
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                var game = db.SubDayGames.ElementAtOrDefault(numbers[i], true);
+                result.Add(game != null ? $"{i}) {game.Name} " : $"{i}) Error getting the game ");
+            }
+
+            IrcClient.SendChatMessage($"Список случайно выбранных игр: Kappa " + string.Join(Environment.NewLine, result),msg.UserName, msg);
+        }
+
         private void StopVote(object s)
         {
             VoteActive = false;
@@ -3092,6 +3155,9 @@ namespace DudelkaBot.system
 
                             switch (msg.Command)
                             {
+                                case Command.randsubgame:
+                                    CommandRandSubGame(db, msg);
+                                    break;
                                 case Command.gamers:
                                     CommandGamers(db, msg);
                                     break;

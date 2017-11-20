@@ -55,6 +55,7 @@ namespace DudelkaBot.Messages
         private static string emailSubGamesPattern = @"\s*(?<channel>\w+)\s+!emailsubgames\s+(?<email>.+)";
         private static string removeSubGamesPattern = @"!removesubgames\s+(?<numbers>[\d ]+)$";
         private static string removeWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!removesubgames\s+(?<numbers>[\d ]+)$";
+        private static string randsubgamePattern = @"\s*!randsubgame\s+(?<rand>\d+)$";
         #endregion
 
         #region Regexes
@@ -103,6 +104,7 @@ namespace DudelkaBot.Messages
         private static Regex emailSubGamesReg = new Regex(emailSubGamesPattern);
         private static Regex removeSubGamesReg = new Regex(removeSubGamesPattern);
         private static Regex removeWhisperSubGamesReg = new Regex(removeWhisperSubGamesPattern);
+        private static Regex randSubGame = new Regex(randsubgamePattern);
 
         #endregion
 
@@ -142,6 +144,7 @@ namespace DudelkaBot.Messages
         private List<int> game_numbers;
         private string game_name;
         private string email;
+        private int countRandGames;
         #endregion
 
         #region Properties
@@ -177,6 +180,11 @@ namespace DudelkaBot.Messages
         public List<int> Game_numbers { get => game_numbers; set => game_numbers = value; }
         public string Game_name { get => game_name; set => game_name = value; }
         public string Email { get => email; set => email = value; }
+        public int CountRandGames
+        {
+            get => countRandGames;
+            set => countRandGames = value;
+        }
 
         #endregion
 
@@ -712,6 +720,19 @@ namespace DudelkaBot.Messages
                         else
                             Success = false;
                     }
+                }
+            }
+            else if (Msg.StartsWith("!randsubgame"))
+            {
+                math = randSubGame.Match(Msg);
+                if (math.Success)
+                {
+                    CountRandGames = int.Parse(math.Groups["rand"].Value);
+                    Command = Command.randsubgame;
+                }
+                else
+                {
+                    Success = false;
                 }
             }
             else if (Msg.StartsWith("!qupdate"))
