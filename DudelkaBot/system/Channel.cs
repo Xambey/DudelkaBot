@@ -218,6 +218,7 @@ namespace DudelkaBot.system
                 {
                     foreach (var item in db.SubDayVotes.Where(a => a.Game_id == game.Game_id))
                     {
+                        SendWhisperMessage(httpClient.GetChannelId(item.UserName, client_id).Item1, item.UserName, $"Ваш голос за игру {game.Name} - снят. Т.к игра была удалена модераторами. Проголосуйте за что-нибудь другое в общем чате!");
                         db.SubDayVotes.Remove(item);
                     }
                     db.SubDayGames.Remove(game);
@@ -1711,6 +1712,7 @@ namespace DudelkaBot.system
                 {
                     foreach (var item in db.SubDayVotes.Where(a => a.Game_id == game.Game_id))
                     {
+                        SendWhisperMessage(httpClient.GetChannelId(item.UserName, client_id).Item1, item.UserName, $"Ваш голос за игру {game.Name} - снят. Т.к игра была удалена модераторами. Проголосуйте за что-нибудь другое в общем чате!");
                         db.SubDayVotes.Remove(item);
                     }
                     db.SubDayGames.Remove(game);
