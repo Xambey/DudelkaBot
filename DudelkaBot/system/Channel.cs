@@ -819,7 +819,7 @@ namespace DudelkaBot.system
             }
             there:
             
-            var games = db.SubDayGames.Where(x => x.Channel_id == id);
+            var games = db.SubDayGames.Where(x => x.Channel_id == ch.Channel_id);
             if (games.Count() <= msg.CountRandGames)
             {
                 IrcClient.SendChatMessage($"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!", msg);
@@ -827,11 +827,13 @@ namespace DudelkaBot.system
             }
             var numbers = new int[msg.CountRandGames];
             int newElement;
+            Console.WriteLine("Запуск генерации случайных номеров");
+
             for (int i = 0; i < numbers.Length; i++)
             {
                 do
                 {
-                    newElement = rand.Next(msg.CountRandGames - 1);
+                    newElement = rand.Next(games.Count() - 1);
                 } while (numbers.Contains(newElement));
 
                 numbers[i] = newElement;
