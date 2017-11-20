@@ -810,12 +810,14 @@ namespace DudelkaBot.system
                 }
             }
 
-            if (!chus.Moderator && msg.UserName != "dudelka_krasnaya")
+            if (!chus.Moderator)
             {
-                //SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Голосовать могут только платные подписчики, не пытайся! LUL NotLikeThis ");
+                if (msg.UserName == "dudelka_krasnaya")
+                    goto there;
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Эту команду могут использовать только модераторы!, не пытайся! LUL NotLikeThis ");
                 return;
             }
-
+            there:
             
             var games = db.SubDayGames.Where(x => x.Channel_id == id);
             if (games.Count() <= msg.CountRandGames)
