@@ -498,7 +498,7 @@ namespace DudelkaBot.system
                         $"INSERT INTO SubDayVotes (Number,Game_id,UserName) VALUES(0,{d.Game_id},{msg.UserName});");
                     //db.SubDayVotes.Add(new SubDayVotes(msg.UserName, d.Game_id));
 
-                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игра добавлена! TakeNRG  Ваш голос за игру {d.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay  Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper  . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс боту) одну из двух комманд: !subgames или !subsortgames");
+                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игра добавлена! TakeNRG  Ваш голос за игру {d.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay  Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper  . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс боту) одну из двух комманд: название канала !subgames или название канала !subsortgames");
                 }
                 else
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ты уже голосовал за {gm.FirstOrDefault(a => a.Game_id == vt.Game_id)?.Name}, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
@@ -823,12 +823,11 @@ namespace DudelkaBot.system
             var games = db.SubDayGames.Where(x => x.Channel_id == ch.Channel_id);
             if (games.Count() <= msg.CountRandGames)
             {
-                IrcClient.SendChatMessage($"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!", msg);
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>(){ $"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!"});
                 return;
             }
             var numbers = new int[msg.CountRandGames];
             int newElement;
-            Console.WriteLine("Запуск генерации случайных номеров");
 
             for (int i = 0; i < numbers.Length; i++)
             {
@@ -839,7 +838,6 @@ namespace DudelkaBot.system
 
                 numbers[i] = newElement;
             }
-            Console.WriteLine("Номера получены!");
                  
             var result = new List<string>();
             for (int i = 0; i < numbers.Length; i++)
@@ -848,7 +846,7 @@ namespace DudelkaBot.system
                 result.Add(game != null ? $"{i + 1}) {game.Name} " : $"{i + 1}) Error getting the game ");
             }
 
-            IrcClient.SendChatMessage($"Список случайно выбранных игр: Kappa " + string.Join("; ", result), msg);
+            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>(){$"Список случайно выбранных игр: Kappa " + string.Join("; ", result)});
         }
 
         private void StopVote(object s)
