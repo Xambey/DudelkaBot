@@ -415,7 +415,7 @@ namespace DudelkaBot.system
                 SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Использовать данную комманду могут только модераторы, не пытайся! LUL NotLikeThis ");
         }
 
-        private async void CommandSubGame(ChatContext db, Message msg)
+        private void CommandSubGame(ChatContext db, Message msg)
         {
             var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
             if (ch == null)
@@ -476,7 +476,9 @@ namespace DudelkaBot.system
                 var vt = db.SubDayVotes.FirstOrDefault(a => a.UserName == msg.UserName);
                 if (vt == null)
                 {
-                    db.SubDayVotes.Add(new SubDayVotes(msg.UserName, game.Game_id));
+                    //db.SubDayVotes.Add(new SubDayVotes(msg.UserName, game.Game_id));
+                    db.Database.ExecuteSqlCommand(
+                        $"INSERT INTO SubDayVotes (Number,Game_id,UserName) VALUES(0,{game.Game_id},{msg.UserName});");
                     game.Value++;
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ваш голос за игру {game.Name} - учтен VoteYea (все названия игр автоматически переводятся в нижний регистр в целях понижения кол-ва 'клонов'). VoteNay Для отмены используйте команду !nosubgame (без названия игры), написать можно и здесь и в чате ResidentSleeper . VoHiYo Чтобы посмотреть текущий список игр, нужно написать ЗДЕСЬ(в лс) одну из двух команд: !subgames или !subsortgames");
                 }
@@ -503,7 +505,7 @@ namespace DudelkaBot.system
                 else
                     SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ты уже голосовал за {gm.FirstOrDefault(a => a.Game_id == vt.Game_id)?.Name}, ненадо вот это вот! Для отмены голоса используй команду !nosubgame ЗДЕСЬ(в лс) или в общем чате LUL NotLikeThis ");
             }
-            await db.SaveChangesAsync();
+            db.SaveChanges();
         }
         
         private void CommandClearSubGames(ChatContext db, Message msg)
@@ -647,7 +649,9 @@ namespace DudelkaBot.system
                     db.SubDayGames.Remove(g);
                 }
             }
-            db.SubDayGames.Add(new SubDayGames(NewGameName, Id, gmlist.Select(a => a.Value).Sum()));
+            db.Database.ExecuteSqlCommand(
+                $"INSERT INTO SubDayGames (Channel_id,Name,Game_id,Value) VALUES({Id},{NewGameName},0,{gmlist.Select(x => x.Value).Sum()});");
+            //db.SubDayGames.Add(new SubDayGames(NewGameName, Id, gmlist.Select(a => a.Value).Sum()));
             db.SaveChanges();
 
             var id_game = db.SubDayGames.First(a => a.Name == NewGameName).Game_id;
