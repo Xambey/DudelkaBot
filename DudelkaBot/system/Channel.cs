@@ -3131,7 +3131,8 @@ namespace DudelkaBot.system
                             switch (msg.Command)
                             {
                                 case Command.randsubgame:
-
+                                    CommandWhisperRandSubGame(db, msg);
+                                    break;
                                 case Command.removesubgames:
                                     CommandWhisperRemoveSubGames(db, msg);
                                     break;
