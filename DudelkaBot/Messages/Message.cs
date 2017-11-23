@@ -505,7 +505,7 @@ namespace DudelkaBot.Messages
                     math = hasEmail.Match(Msg);
                     if (math.Success)
                     {
-                        Email = $"{math.Groups["login"].Value}@{math.Groups["domail"]}";
+                        Email = $"{math.Groups["login"].Value}@{math.Groups["domain"]}";
                     }
                 }
                 else
