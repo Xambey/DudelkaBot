@@ -850,7 +850,9 @@ namespace DudelkaBot.system
                 result.Add(game != null ? $"{i + 1}) {game.Name} " : $"{i + 1}) Error getting the game ");
             }
 
-            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>(){$"Список случайно выбранных игр: Kappa " + string.Join("; ", result)});
+            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>() { $"Список случайно выбранных игр: Kappa " + string.Join("; ", result) });
+            if(!string.IsNullOrEmpty(msg.Email))
+                SmtpClient.SendEmailAsync(msg.Email, "Список случайных игр", string.Join(Environment.NewLine,result));
         }
 
         private void StopVote(object s)
@@ -1651,6 +1653,78 @@ namespace DudelkaBot.system
 
         #region WhisperChatCommands
 
+        private void CommandWhisperRandSubGame(ChatContext db, Message msg)
+        {
+            var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
+            if (ch == null)
+            {
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Канал с таким названием неизвестен! (канал должен быть написал в нижнем регистре, например blackufa_twitch");
+                return;
+            }
+
+            var us = db.Users.FirstOrDefault(a => a.Username == msg.UserName);
+            if (us == null)
+                return;
+
+            var chus = db.ChannelsUsers.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(a => a.User_id == us.Id);
+            if (chus == null)
+                return;
+
+            if (chus.CountSubscriptions == 0)
+            {
+                var math = SubReg.Match(msg.Data);
+                if (math.Success)
+                {
+                    var v = int.Parse(math.Groups["sub"].Value);
+                    if (v > 0)
+                    {
+                        chus.CountSubscriptions = v;
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+            if (!chus.Moderator && us.Username != "dudelka_krasnaya")
+            {
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Эта команда доступна только модераторам, не пытайся! LUL NotLikeThis ");
+                return;
+            }
+
+            var games = db.SubDayGames.Where(x => x.Channel_id == ch.Channel_id);
+            if (games.Count() <= msg.CountRandGames)
+            {
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>() { $"Вывод не удался, указанное кол-во игр больше либо общего кол-ва игр!" });
+                return;
+            }
+            var numbers = new int[msg.CountRandGames];
+            int newElement;
+
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                do
+                {
+                    newElement = rand.Next(games.Count() - 1);
+                } while (numbers.Contains(newElement));
+
+                numbers[i] = newElement;
+            }
+
+            var result = new List<string>();
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                var game = db.SubDayGames.ElementAtOrDefault(numbers[i], true);
+                result.Add(game != null ? $"{i + 1}) {game.Name} " : $"{i + 1}) Error getting the game ");
+            }
+
+            SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>() { $"Список случайно выбранных игр: Kappa " + string.Join("; ", result) });
+            if (!string.IsNullOrEmpty(msg.Email))
+            {
+                SmtpClient.SendEmailAsync(msg.Email, "Список случайных игр", string.Join(Environment.NewLine, result));
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
+                    new List<string>() {"Список игр был отправлен на вашу почту!"});
+            }
+        }
+
         private void CommandWhisperRemoveSubGames(ChatContext db, Message msg)
         {
             var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
@@ -1684,7 +1758,7 @@ namespace DudelkaBot.system
 
             if (!chus.Moderator && us.Username != "dudelka_krasnaya")
             {
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Это команда доступна только модераторам, не пытайся! LUL NotLikeThis ");
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Эта команда доступна только модераторам, не пытайся! LUL NotLikeThis ");
                 return;
             }
 
@@ -1800,7 +1874,7 @@ namespace DudelkaBot.system
                     int i = 0;
                     foreach (var item in gm)
                     {
-                        stream.WriteLine($"{++i}) {item.Name}"/* - [ {item.Value} ] "*/);
+                        stream.WriteLine($"{++i}) {item.Name} {Environment.NewLine}"/* - [ {item.Value} ] "*/);
                     }
                     stream.Flush();
                 }
@@ -3056,6 +3130,8 @@ namespace DudelkaBot.system
                         case TypeMessage.WHISPER:
                             switch (msg.Command)
                             {
+                                case Command.randsubgame:
+
                                 case Command.removesubgames:
                                     CommandWhisperRemoveSubGames(db, msg);
                                     break;

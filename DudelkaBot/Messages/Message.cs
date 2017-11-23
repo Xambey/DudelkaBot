@@ -56,6 +56,8 @@ namespace DudelkaBot.Messages
         private static string removeSubGamesPattern = @"!removesubgames\s+(?<numbers>[\d ]+)$";
         private static string removeWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!removesubgames\s+(?<numbers>[\d ]+)$";
         private static string randsubgamePattern = @"\s*!randsubgame\s+(?<rand>\d+)$";
+        private static string randsubgameWhisperPattern = @"\s*(?<channel>\w+)\s+!randsubgame\s+(?<rand>\d+)\s+$";
+        private static string hasEmailPattern = @".*\s+(?<login>\w+)@(?<domain>[A-Za-z.]+)";
         #endregion
 
         #region Regexes
@@ -105,6 +107,8 @@ namespace DudelkaBot.Messages
         private static Regex removeSubGamesReg = new Regex(removeSubGamesPattern);
         private static Regex removeWhisperSubGamesReg = new Regex(removeWhisperSubGamesPattern);
         private static Regex randSubGame = new Regex(randsubgamePattern);
+        private static Regex randSubGameWhisper = new Regex(randSubGameWhisper);
+        private static Regex hasEmail = new Regex(hasEmailPattern);
 
         #endregion
 
@@ -490,6 +494,25 @@ namespace DudelkaBot.Messages
                 }
 
             }
+            else if (Msg.StartsWith("!randsubgame"))
+            {
+                math = randSubGameWhisper.Match(Msg);
+                if (math.Success)
+                {
+                    Channel = math.Groups["channel"].Value;
+                    CountRandGames = int.Parse(math.Groups["rand"].Value);
+                    Command = Command.randsubgame;
+                    math = hasEmail.Match(Msg);
+                    if (math.Success)
+                    {
+                        Email = $"{math.Groups["login"].Value}@{math.Groups["domail"]}";
+                    }
+                }
+                else
+                {
+                    Success = false;
+                }
+            }
             else if (Msg.Contains("!djid"))
             {
                 math = djidWhisperReg.Match(Msg);
@@ -729,6 +752,11 @@ namespace DudelkaBot.Messages
                 {
                     CountRandGames = int.Parse(math.Groups["rand"].Value);
                     Command = Command.randsubgame;
+                    math = hasEmail.Match(Msg);
+                    if (math.Success)
+                    {
+                        Email = $"{math.Groups["login"].Value}@{math.Groups["domail"]}";
+                    }
                 }
                 else
                 {
