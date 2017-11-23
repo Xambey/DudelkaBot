@@ -494,7 +494,7 @@ namespace DudelkaBot.Messages
                 }
 
             }
-            else if (Msg.StartsWith("!randsubgame"))
+            else if (Msg.Contains("!randsubgame"))
             {
                 math = randSubGameWhisper.Match(Msg);
                 if (math.Success)
