@@ -107,7 +107,7 @@ namespace DudelkaBot.Messages
         private static Regex removeSubGamesReg = new Regex(removeSubGamesPattern);
         private static Regex removeWhisperSubGamesReg = new Regex(removeWhisperSubGamesPattern);
         private static Regex randSubGame = new Regex(randsubgamePattern);
-        private static Regex randSubGameWhisper = new Regex(randSubGameWhisper);
+        private static Regex randSubGameWhisper = new Regex(randsubgameWhisperPattern);
         private static Regex hasEmail = new Regex(hasEmailPattern);
 
         #endregion
