@@ -1653,7 +1653,7 @@ namespace DudelkaBot.system
 
         #region WhisperChatCommands
 
-        private void CommandWhisperRandSubGame(ChatContext db, Message msg)
+        private async void CommandWhisperRandSubGame(ChatContext db, Message msg)
         {
             var ch = db.Channels.FirstOrDefault(a => a.Channel_name == msg.Channel);
             if (ch == null)
@@ -1719,7 +1719,7 @@ namespace DudelkaBot.system
             SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, new List<string>() { $"Список случайно выбранных игр: Kappa " + string.Join("; ", result) });
             if (!string.IsNullOrEmpty(msg.Email))
             {
-                SmtpClient.SendEmailAsync(msg.Email, "Список случайных игр", string.Join(Environment.NewLine, result));
+                await SmtpClient.SendEmailAsync(msg.Email, "Список случайных игр", Regex.Replace(string.Join(Environment.NewLine, result),@"\d+\) ",""));
                 SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
                     new List<string>() {"Список игр был отправлен на вашу почту!"});
             }

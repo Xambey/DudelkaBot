@@ -14,7 +14,7 @@ namespace DudelkaBot.WebClients
     {
         static SmtpClient() { }
 
-        public static async void SendEmailAsync(string email, string subject, string message, string attached_file = null)
+        public static async Task SendEmailAsync(string email, string subject, string message, string attached_file = null)
         {
             try
             {
