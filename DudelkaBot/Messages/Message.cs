@@ -57,7 +57,7 @@ namespace DudelkaBot.Messages
         private static string removeWhisperSubGamesPattern = @"\s*(?<channel>\w+)\s+!removesubgames\s+(?<numbers>[\d ]+)$";
         private static string randsubgamePattern = @"\s*!randsubgame\s+(?<rand>\d+)$";
         private static string randsubgameWhisperPattern = @"\s*(?<channel>\w+)\s+!randsubgame\s+(?<rand>\d+).*$";
-        private static string hasEmailPattern = @".*\s+(?<login>\w+)@(?<domain>[A-Za-z.]+)";
+        private static string hasEmailPattern = @".*\s+(?<login>[\w.]+)@(?<domain>[A-Za-z.]+)";
         #endregion
 
         #region Regexes
