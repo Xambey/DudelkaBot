@@ -529,8 +529,8 @@ namespace DudelkaBot.system
                 {
                     db.SubDayGames.Remove(games.ElementAtOrDefault(i, true));
                 }
-                db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayGames', RESEED, 0)"); // Don't TOUCH!!!!
-                db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayVotes', RESEED, 0)"); // Don't TOUCH!!!!
+                //db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayGames', RESEED, 0)"); // Don't TOUCH!!!!
+                //db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayVotes', RESEED, 0)"); // Don't TOUCH!!!!
                 db.SaveChanges();
                 IrcClient.SendChatMessage("Все данные о голосованиях удалены!", msg);
             }
@@ -1909,8 +1909,8 @@ namespace DudelkaBot.system
                 {
                     db.SubDayGames.Remove(games.ElementAtOrDefault(i, true));
                 }
-                db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayGames', RESEED, 0)"); // Don't TOUCH!!!!
-                db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayVotes', RESEED, 0)"); // Don't TOUCH!!!!
+                //db.Database.ExecuteSqlCommand("alter table SubDayGames auto_increment = 0)"); // Don't TOUCH!!!!
+                //db.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SubDayVotes', RESEED, 0)"); // Don't TOUCH!!!!
                 db.SaveChanges();
                 SendWhisperMessage(httpClient.GetChannelId(msg.Channel,client_id).Item1,msg.UserName,"Все данные о голосовании удалены!");
             }
