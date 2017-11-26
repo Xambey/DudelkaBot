@@ -370,19 +370,23 @@ namespace DudelkaBot.system
             
 
             var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id).FirstOrDefault(b => b.Game_id == vote.Game_id);
-            if(gm != null)
+            if (gm != null)
             {
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,  $"Ваш голос за игру {gm.Name} отменен! Чтобы переголосовать используйте команду !voice Название игры ЗДЕСЬ(в лс) или в общем чате");
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
+                    $"Ваш голос за игру {gm.Name} отменен! Чтобы переголосовать используйте команду !voice Название игры ЗДЕСЬ(в лс) или в общем чате");
                 db.SubDayVotes.Remove(vote);
                 if (gm.Value == 1)
                     db.SubDayGames.Remove(gm);
                 else
                     gm.Value--;
-                db.SaveChanges();
             }
             else
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Ошибка! Игра по вашему голосу не найдена! Прошу сообщить за что вы голосовали раньше разработчику: ака Dudelka_Krasnaya Это очень важно! CrreamAwk ");
-
+            {
+                db.SubDayVotes.Remove(vote);
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
+                    $"Ошибка! Игра по вашему голосу не найдена! Но мы удалили голос! Прошу сообщить за что вы голосовали раньше разработчику: ака Dudelka_Krasnaya Это очень важно! CrreamAwk ");
+            }
+            db.SaveChanges();
         }
 
         private void CommandStartSubDay(ChatContext db, Message msg)
