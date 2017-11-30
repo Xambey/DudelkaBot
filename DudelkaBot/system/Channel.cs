@@ -196,11 +196,11 @@ namespace DudelkaBot.system
 
             msg.Game_numbers.ForEach(x => --x);
 
-            var game_list = new List<SubDayGames>(msg.Game_numbers.Count);
+            var game_list = new List<SubDayGames>();
 
             foreach (var item in msg.Game_numbers)
             {
-                var t = db.SubDayGames.ElementAtOrDefault(item, true);
+                var t = gm.ElementAtOrDefault(item, true);
                 if (t != null)
                     game_list.Add(t);
                 else
@@ -210,18 +210,14 @@ namespace DudelkaBot.system
                 }
             }
 
-            for(int i = 0; i < game_list.Count; i++)
+            foreach (var game in game_list)
             {
-                var game = game_list.ElementAtOrDefault(i, true);
-                if (game != null)
+                foreach (var item in db.SubDayVotes.Where(a => a.Game_id == game.Game_id))
                 {
-                    foreach (var item in db.SubDayVotes.Where(a => a.Game_id == game.Game_id))
-                    {
-                        SendWhisperMessage(httpClient.GetChannelId(item.UserName, client_id).Item1, item.UserName, $"Ваш голос за игру {game.Name} - снят. Т.к игра была удалена модераторами. Проголосуйте за что-нибудь другое в общем чате!");
-                        db.SubDayVotes.Remove(item);
-                    }
-                    db.SubDayGames.Remove(game);
+                    SendWhisperMessage(httpClient.GetChannelId(item.UserName, client_id).Item1, item.UserName, $"Ваш голос за игру {game.Name} - снят. Т.к игра была удалена модераторами. Проголосуйте за что-нибудь другое в общем чате!");
+                    db.SubDayVotes.Remove(item);
                 }
+                db.SubDayGames.Remove(game);
             }
             db.SaveChanges();
             IrcClient.SendChatMessage($"Игры удалены!", msg);
@@ -1773,7 +1769,7 @@ namespace DudelkaBot.system
 
             foreach (var item in msg.Game_numbers)
             {
-                var t = db.SubDayGames.ElementAtOrDefault(item, true);
+                var t = gm.ElementAtOrDefault(item, true);
                 if (t != null)
                     game_list.Add(t);
                 else
@@ -1783,18 +1779,14 @@ namespace DudelkaBot.system
                 }
             }
 
-            for (int i = 0; i < game_list.Count; i++)
+            foreach(var game in game_list)
             {
-                var game = game_list.ElementAtOrDefault(i, true);
-                if (game != null)
+                foreach (var item in db.SubDayVotes.Where(a => a.Game_id == game.Game_id))
                 {
-                    foreach (var item in db.SubDayVotes.Where(a => a.Game_id == game.Game_id))
-                    {
-                        SendWhisperMessage(httpClient.GetChannelId(item.UserName, client_id).Item1, item.UserName, $"Ваш голос за игру {game.Name} - снят. Т.к игра была удалена модераторами. Проголосуйте за что-нибудь другое в общем чате!");
-                        db.SubDayVotes.Remove(item);
-                    }
-                    db.SubDayGames.Remove(game);
+                    SendWhisperMessage(httpClient.GetChannelId(item.UserName, client_id).Item1, item.UserName, $"Ваш голос за игру {game.Name} - снят. Т.к игра была удалена модераторами. Проголосуйте за что-нибудь другое в общем чате!");
+                    db.SubDayVotes.Remove(item);
                 }
+                db.SubDayGames.Remove(game);
             }
             db.SaveChanges();
             SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игры удалены!");

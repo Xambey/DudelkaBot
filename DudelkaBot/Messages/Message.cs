@@ -573,7 +573,8 @@ namespace DudelkaBot.Messages
                 math = removeWhisperSubGamesReg.Match(Msg);
                 if (math.Success)
                 {
-                    Game_numbers = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
+                    Game_numbers = Regex.Matches(math.Groups["numbers"].Value, @"\d+").Select(x => int.Parse(x.Value))
+                        .ToList();
                     Command = Command.removesubgames;
                     Channel = math.Groups["channel"].Value;
                 }
@@ -847,7 +848,8 @@ namespace DudelkaBot.Messages
                 math = removeSubGamesReg.Match(Msg);
                 if (math.Success)
                 {
-                    Game_numbers = math.Groups["numbers"].Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
+                    Game_numbers = Regex.Matches(math.Groups["numbers"].Value, @"\d+").Select(x => int.Parse(x.Value))
+                        .ToList();
                     Command = Command.removesubgames;
                 }
             }
