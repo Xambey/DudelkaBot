@@ -1138,8 +1138,8 @@ namespace DudelkaBot.system
             if (prum != null && prum.Members == 0)
                 return;
             var inf = httpClient.GetCountChattersAndModerators(Name);
-            int subs = db.ChannelsUsers.Where(a => a.Active && a.Channel_id == Id && a.CountSubscriptions > 0).Count();
-            IrcClient.SendChatMessage(string.Format("Сейчас в чате {0} чатеров, {1} сабов, {2} лучших модеров и не только Kappa ", int.Parse(inf.Item1)- subs - int.Parse(inf.Item2) - subs, subs, inf.Item2), msg, ChatModeInterval);
+            int subs = db.ChannelsUsers.Where(x => x.Channel_id == Id).Where(a => a.Active && a.CountSubscriptions > 0).Count();
+            IrcClient.SendChatMessage(string.Format("Сейчас в чате {0} фолловеров, {1} сабов, {2} лучших модеров и не только Kappa ", int.Parse(inf.Item1), subs, inf.Item2), msg, ChatModeInterval);
         }
 
         private void CommandViewers(ChatContext db, Message msg)
