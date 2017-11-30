@@ -194,8 +194,7 @@ namespace DudelkaBot.system
 
             var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id);
 
-            for (int i = 0; i < msg.Game_numbers.Count; i++)
-                msg.Game_numbers[i]--;
+            msg.Game_numbers.ForEach(x => --x);
 
             var game_list = new List<SubDayGames>(msg.Game_numbers.Count);
 
@@ -1768,8 +1767,7 @@ namespace DudelkaBot.system
 
             var gm = db.SubDayGames.Where(a => a.Channel_id == ch.Channel_id);
 
-            for (int i = 0; i < msg.Game_numbers.Count; i++)
-                msg.Game_numbers[i]--;
+            msg.Game_numbers.ForEach(x => --x);
 
             var game_list = new List<SubDayGames>(msg.Game_numbers.Count);
 
