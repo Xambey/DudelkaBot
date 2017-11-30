@@ -39,9 +39,14 @@ namespace DudelkaBot.resources
         }
         public static TSource ElementAtOrDefault<TSource>(this IQueryable<TSource> source, int index, bool unused)
         {
-            if (index < 0 || index >= source.Count())
-                return default(TSource);
-            return source.ElementAt(index);
+            int i = 0;
+            foreach(var item in source)
+            {
+                if (i == index)
+                    return item;
+                i++;
+            }
+            return default(TSource);
         }
 
         public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index, bool unused)
