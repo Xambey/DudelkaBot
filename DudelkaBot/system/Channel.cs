@@ -2041,7 +2041,8 @@ namespace DudelkaBot.system
                     msg.Game_numbers[i]--;
                 if (games.Count() == 0)
                 {
-                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Список игр пуст!");
+                    SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
+                        $"Список игр пуст!");
                     return;
                 }
                 foreach (var item in msg.Game_numbers)
@@ -2053,7 +2054,8 @@ namespace DudelkaBot.system
                     }
                     else
                     {
-                        SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, $"Игры под номером {item + 1} не существует в списке игр!");
+                        SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
+                            $"Игры под номером {item + 1} не существует в списке игр!");
                         return;
                     }
                 }
@@ -2073,35 +2075,15 @@ namespace DudelkaBot.system
                         buf += item;
                     }
                 }
-                msg.Game_name = buf;
 
-                for (int i = 0; i < games.Count(); i++)
-                {
-                    var g = games.ElementAtOrDefault(i, true);
-                    if (g != null && gmlist.ContainsKey(g.Game_id))
-                    {
-                        db.SubDayGames.Remove(g);
-                    }
-                }
-                db.SubDayGames.Add(new SubDayGames(msg.Game_name, Id, gmlist.Select(a => a.Value).Sum()));
-                db.SaveChanges();
+                JoinGames(db, buf, ref games, gmlist);
 
-                var id_game = db.SubDayGames.First(a => a.Name == msg.Game_name).Game_id;
-                foreach (var item in gmlist)
-                {
-                    var f = db.SubDayVotes.Where(a => a.Game_id == item.Key);
-                    if (f != null)
-                    {
-                        for (int i = 0; i < f.Count(); i++) {
-                            var v = f.ElementAtOrDefault(i, true);
-                            if (v != null)
-                                v.Game_id = id_game;
-                        }
-                    }
-                }
-
-                db.SaveChanges();
-                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Игры успешно объеденены под одним названием!");
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName,
+                    "Игры успешно объеденены под одним названием!");
+            }
+            else
+            {
+                SendWhisperMessage(httpClient.GetChannelId(msg.UserName, client_id).Item1, msg.UserName, "Использовать данную команду могут только модераторы, не пытайся! LUL NotLikeThis ");
             }
         }
 
