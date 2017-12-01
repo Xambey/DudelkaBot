@@ -1989,10 +1989,10 @@ namespace DudelkaBot.system
                 }
             }
 
-            if (chus.CountSubscriptions == 0 && !chus.Moderator)
-            {
-                return;
-            }
+            //if (chus.CountSubscriptions == 0 && !chus.Moderator)
+            //{
+            //    return;
+            //}
 
             var gm = db.SubDayGames.Where(a => a.Channel_id == ch_id);
 
