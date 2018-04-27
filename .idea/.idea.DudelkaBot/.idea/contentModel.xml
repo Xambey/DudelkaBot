@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\GitHub\DudelkaBot" t="IncludeFlat">
+      <e p="_ReSharper.Caches\ReSharperHost11.DudelkaBot.00" t="ExcludeRecursive" />
+      <e p="DudelkaBot" t="IncludeRecursive">
+        <e p="appsettings.json" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="bin.rar" t="Include" />
+        <e p="dataBase" t="Include">
+          <e p="model" t="Include">
+            <e p="Channels.cs" t="Include" />
+            <e p="ChannelsUsers.cs" t="Include" />
+            <e p="ChatContext.cs" t="Include" />
+            <e p="Counters.cs" t="Include" />
+            <e p="Gamers.cs" t="Include" />
+            <e p="Quotes.cs" t="Include" />
+            <e p="SubDayGames.cs" t="Include" />
+            <e p="SubDayVotes.cs" t="Include" />
+            <e p="Users.cs" t="Include" />
+          </e>
+        </e>
+        <e p="DudelkaBot.csproj" t="IncludeRecursive" />
+        <e p="enums" t="Include">
+          <e p="ChatMode.cs" t="Include" />
+          <e p="Command.cs" t="Include" />
+          <e p="Status.cs" t="Include" />
+          <e p="StatusBot.cs" t="Include" />
+          <e p="TypeMessage.cs" t="Include" />
+        </e>
+        <e p="ircClient" t="Include">
+          <e p="IRCClient.cs" t="Include" />
+        </e>
+        <e p="Logging" t="Include">
+          <e p="Logger.cs" t="Include" />
+        </e>
+        <e p="logs" t="Include">
+          <e p="14_3_2018_20_43_2.txt" t="Include" />
+          <e p="18_3_2018_20_12_23.txt" t="Include" />
+          <e p="1_4_2018_0_27_6.txt" t="Include" />
+          <e p="20_3_2018_22_20_21.txt" t="Include" />
+          <e p="24_3_2018_22_20_21.txt" t="Include" />
+          <e p="28_2_2018_14_3_47.txt" t="Include" />
+          <e p="5_3_2018_14_59_0.txt" t="Include" />
+          <e p="5_4_2018_0_27_6.txt" t="Include" />
+          <e p="6_3_2018_14_59_0.txt" t="Include" />
+          <e p="channels" t="Include">
+            <e p="artgameslp" t="Include">
+              <e p="log10_3_2018_17_29_0.txt" t="Include" />
+              <e p="log10_3_2018_18_29_5.txt" t="Include" />
+              <e p="log10_3_2018_18_30_0.txt" t="Include" />
+              <e p="log10_3_2018_19_41_1.txt" t="Include" />
+              <e p="log10_3_2018_19_42_0.txt" t="Include" />
+              <e p="log10_3_2018_1_56_1.txt" t="Include" />
+              <e p="log10_3_2018_21_27_0.txt" t="Include" />
+              <e p="log10_3_2018_21_28_0.txt" t="Include" />
+              <e p="log10_3_2018_21_33_0.txt" t="Include" />
+              <e p="log10_3_2018_21_35_0.txt" t="Include" />
+              <e p="log11_3_2018_0_26_4.txt" t="Include" />
+              <e p="log11_3_2018_0_27_0.txt" t="Include" />
+              <e p="log11_3_2018_13_1_0.txt" t="Include" />
+              <e p="log11_3_2018_17_18_3.txt" t="Include" />
+              <e p="log11_3_2018_17_24_0.txt" t="Include" />
+              <e p="log11_3_2018_18_14_0.txt" t="Include" />
+              <e p="log11_3_2018_20_44_40.txt" t="Include" />
+              <e p="log11_3_2018_2_2_0.txt" t="Include" />
+              <e p="log12_3_2018_20_59_48.txt" t="Include" />
+              <e p="log13_3_2018_14_21_41.txt" t="Include" />
+              <e p="log13_3_2018_17_19_41.txt" t="Include" />
+              <e p="log13_3_2018_18_24_40.txt" t="Include" />
+              <e p="log13_3_2018_2_49_44.txt" t="Include" />
+              <e p="log14_3_2018_0_45_41.txt" t="Include" />
+              <e p="log14_3_2018_18_36_41.txt" t="Include" />
+              <e p="log14_3_2018_21_43_41.txt" t="Include" />
+              <e p="log14_3_2018_21_9_41.txt" t="Include" />
+              <e p="log15_3_2018_18_0_41.txt" t="Include" />
+              <e p="log15_3_2018_19_38_32.txt" t="Include" />
+              <e p="log15_3_2018_19_39_58.txt" t="Include" />
+              <e p="log15_3_2018_19_3_10.txt" t="Include" />
+              <e p="log15_3_2018_19_9_35.txt" t="Include" />
+              <e p="log15_3_2018_20_12_58.txt" t="Include" />
+              <e p="log15_3_2018_20_14_1.txt" t="Include" />
+              <e p="log15_3_2018_21_43_1.txt" t="Include" />
+              <e p="log15_3_2018_21_9_1.txt" t="Include" />
+              <e p="log15_3_2018_2_4_41.txt" t="Include" />
+              <e p="log16_3_2018_10_56_1.txt" t="Include" />
+              <e p="log16_3_2018_14_52_2.txt" t="Include" />
+              <e p="log16_3_2018_14_56_1.txt" t="Include" />
+              <e p="log16_3_2018_16_4_1.txt" t="Include" />
+              <e p="log16_3_2018_1_7_2.txt" t="Include" />
+              <e p="log17_3_2018_23_33_1.txt" t="Include" />
+              <e p="log18_3_2018_14_35_1.txt" t="Include" />
+              <e p="log18_3_2018_18_49_3.txt" t="Include" />
+              <e p="log18_3_2018_19_56_2.txt" t="Include" />
+              <e p="log18_3_2018_2_54_1.txt" t="Include" />
+              <e p="log19_3_2018_17_59_1.txt" t="Include" />
+              <e p="log19_3_2018_22_20_57.txt" t="Include" />
+              <e p="log19_3_2018_22_22_11.txt" t="Include" />
+              <e p="log19_3_2018_22_48_2.txt" t="Include" />
+              <e p="log19_3_2018_23_23_5.txt" t="Include" />
+              <e p="log19_3_2018_2_37_3.txt" t="Include" />
+              <e p="log1_3_2018_15_1_0.txt" t="Include" />
+              <e p="log1_3_2018_18_5_0.txt" t="Include" />
+              <e p="log1_3_2018_19_39_6.txt" t="Include" />
+              <e p="log1_3_2018_19_40_0.txt" t="Include" />
+              <e p="log1_3_2018_22_59_0.txt" t="Include" />
+              <e p="log1_3_2018_23_35_0.txt" t="Include" />
+              <e p="log1_4_2018_0_35_50.txt" t="Include" />
+              <e p="log1_4_2018_20_31_49.txt" t="Include" />
+              <e p="log20_3_2018_18_1_1.txt" t="Include" />
+              <e p="log20_3_2018_2_38_1.txt" t="Include" />
+              <e p="log21_3_2018_18_19_3.txt" t="Include" />
+              <e p="log21_3_2018_18_22_1.txt" t="Include" />
+              <e p="log21_3_2018_18_4_5.txt" t="Include" />
+              <e p="log21_3_2018_1_49_2.txt" t="Include" />
+              <e p="log22_3_2018_0_48_4.txt" t="Include" />
+              <e p="log22_3_2018_20_20_1.txt" t="Include" />
+              <e p="log22_3_2018_23_23_2.txt" t="Include" />
+              <e p="log23_3_2018_17_1_2.txt" t="Include" />
+              <e p="log23_3_2018_23_15_2.txt" t="Include" />
+              <e p="log24_3_2018_18_56_1.txt" t="Include" />
+              <e p="log25_3_2018_0_19_2.txt" t="Include" />
+              <e p="log25_3_2018_21_0_8.txt" t="Include" />
+              <e p="log26_2_2018_14_5_31.txt" t="Include" />
+              <e p="log26_2_2018_18_1_26.txt" t="Include" />
+              <e p="log26_2_2018_22_43_27.txt" t="Include" />
+              <e p="log26_2_2018_23_16_26.txt" t="Include" />
+              <e p="log26_3_2018_0_32_31.txt" t="Include" />
+              <e p="log26_3_2018_18_5_8.txt" t="Include" />
+              <e p="log26_3_2018_21_3_3.txt" t="Include" />
+              <e p="log27_2_2018_3_33_27.txt" t="Include" />
+              <e p="log27_3_2018_0_28_51.txt" t="Include" />
+              <e p="log27_3_2018_13_41_45.txt" t="Include" />
+              <e p="log27_3_2018_17_35_45.txt" t="Include" />
+              <e p="log27_3_2018_17_59_44.txt" t="Include" />
+              <e p="log27_3_2018_20_36_46.txt" t="Include" />
+              <e p="log27_3_2018_20_40_20.txt" t="Include" />
+              <e p="log27_3_2018_23_15_45.txt" t="Include" />
+              <e p="log28_2_2018_17_57_26.txt" t="Include" />
+              <e p="log28_2_2018_21_54_28.txt" t="Include" />
+              <e p="log28_3_2018_15_11_45.txt" t="Include" />
+              <e p="log28_3_2018_18_21_6.txt" t="Include" />
+              <e p="log28_3_2018_21_7_45.txt" t="Include" />
+              <e p="log29_3_2018_1_38_45.txt" t="Include" />
+              <e p="log29_3_2018_20_22_45.txt" t="Include" />
+              <e p="log2_3_2018_17_59_0.txt" t="Include" />
+              <e p="log2_3_2018_3_35_0.txt" t="Include" />
+              <e p="log2_4_2018_16_6_45.txt" t="Include" />
+              <e p="log2_4_2018_1_19_46.txt" t="Include" />
+              <e p="log2_4_2018_20_23_46.txt" t="Include" />
+              <e p="log2_4_2018_20_58_45.txt" t="Include" />
+              <e p="log30_3_2018_13_28_45.txt" t="Include" />
+              <e p="log30_3_2018_16_34_45.txt" t="Include" />
+              <e p="log30_3_2018_19_22_44.txt" t="Include" />
+              <e p="log30_3_2018_1_13_45.txt" t="Include" />
+              <e p="log30_3_2018_23_37_45.txt" t="Include" />
+              <e p="log31_3_2018_16_57_45.txt" t="Include" />
+              <e p="log31_3_2018_21_27_45.txt" t="Include" />
+              <e p="log31_3_2018_21_43_55.txt" t="Include" />
+              <e p="log3_3_2018_15_30_0.txt" t="Include" />
+              <e p="log3_3_2018_19_53_0.txt" t="Include" />
+              <e p="log3_3_2018_20_33_29.txt" t="Include" />
+              <e p="log3_3_2018_21_10_13.txt" t="Include" />
+              <e p="log3_3_2018_21_9_17.txt" t="Include" />
+              <e p="log3_3_2018_3_23_1.txt" t="Include" />
+              <e p="log3_4_2018_0_57_45.txt" t="Include" />
+              <e p="log3_4_2018_13_3_45.txt" t="Include" />
+              <e p="log3_4_2018_17_1_45.txt" t="Include" />
+              <e p="log3_4_2018_19_57_45.txt" t="Include" />
+              <e p="log4_3_2018_23_48_0.txt" t="Include" />
+              <e p="log4_3_2018_2_18_1.txt" t="Include" />
+              <e p="log4_4_2018_18_1_5.txt" t="Include" />
+              <e p="log4_4_2018_21_56_40.txt" t="Include" />
+              <e p="log5_3_2018_21_44_0.txt" t="Include" />
+              <e p="log5_3_2018_3_30_0.txt" t="Include" />
+              <e p="log5_4_2018_16_13_45.txt" t="Include" />
+              <e p="log5_4_2018_20_11_44.txt" t="Include" />
+              <e p="log6_3_2018_14_15_0.txt" t="Include" />
+              <e p="log6_3_2018_18_49_3.txt" t="Include" />
+              <e p="log6_3_2018_20_21_2.txt" t="Include" />
+              <e p="log6_3_2018_2_31_1.txt" t="Include" />
+              <e p="log6_4_2018_0_41_49.txt" t="Include" />
+              <e p="log6_4_2018_18_0_45.txt" t="Include" />
+              <e p="log6_4_2018_21_23_53.txt" t="Include" />
+              <e p="log7_3_2018_2_1_1.txt" t="Include" />
+              <e p="log8_3_2018_23_8_3.txt" t="Include" />
+              <e p="log9_3_2018_14_57_1.txt" t="Include" />
+              <e p="log9_3_2018_16_49_1.txt" t="Include" />
+              <e p="log9_3_2018_17_57_0.txt" t="Include" />
+              <e p="log9_3_2018_2_37_0.txt" t="Include" />
+            </e>
+            <e p="blackufa_twitch" t="Include">
+              <e p="log10_3_2018_19_33_19.txt" t="Include" />
+              <e p="log10_3_2018_21_26_19.txt" t="Include" />
+              <e p="log10_3_2018_21_27_21.txt" t="Include" />
+              <e p="log10_3_2018_21_37_18.txt" t="Include" />
+              <e p="log10_3_2018_21_38_18.txt" t="Include" />
+              <e p="log11_3_2018_20_44_20.txt" t="Include" />
+              <e p="log13_3_2018_16_59_21.txt" t="Include" />
+              <e p="log15_3_2018_17_56_21.txt" t="Include" />
+              <e p="log15_3_2018_19_10_17.txt" t="Include" />
+              <e p="log15_3_2018_19_2_39.txt" t="Include" />
+              <e p="log15_3_2018_19_38_11.txt" t="Include" />
+              <e p="log15_3_2018_19_39_17.txt" t="Include" />
+              <e p="log15_3_2018_19_9_13.txt" t="Include" />
+              <e p="log15_3_2018_20_12_35.txt" t="Include" />
+              <e p="log15_3_2018_20_13_39.txt" t="Include" />
+              <e p="log15_3_2018_23_11_39.txt" t="Include" />
+              <e p="log16_3_2018_17_57_40.txt" t="Include" />
+              <e p="log16_3_2018_22_11_39.txt" t="Include" />
+              <e p="log17_3_2018_16_58_40.txt" t="Include" />
+              <e p="log17_3_2018_22_39_12.txt" t="Include" />
+              <e p="log19_3_2018_17_25_47.txt" t="Include" />
+              <e p="log19_3_2018_22_20_32.txt" t="Include" />
+              <e p="log19_3_2018_22_21_36.txt" t="Include" />
+              <e p="log19_3_2018_22_26_46.txt" t="Include" />
+              <e p="log1_3_2018_15_0_26.txt" t="Include" />
+              <e p="log1_3_2018_17_58_20.txt" t="Include" />
+              <e p="log1_3_2018_23_21_19.txt" t="Include" />
+              <e p="log1_4_2018_17_0_24.txt" t="Include" />
+              <e p="log1_4_2018_19_10_23.txt" t="Include" />
+              <e p="log20_3_2018_17_58_42.txt" t="Include" />
+              <e p="log21_3_2018_0_10_56.txt" t="Include" />
+              <e p="log21_3_2018_17_57_38.txt" t="Include" />
+              <e p="log21_3_2018_23_33_38.txt" t="Include" />
+              <e p="log23_3_2018_16_59_37.txt" t="Include" />
+              <e p="log23_3_2018_23_20_37.txt" t="Include" />
+              <e p="log25_3_2018_16_59_38.txt" t="Include" />
+              <e p="log26_2_2018_14_5_6.txt" t="Include" />
+              <e p="log26_2_2018_17_3_6.txt" t="Include" />
+              <e p="log26_2_2018_22_14_6.txt" t="Include" />
+              <e p="log27_2_2018_17_2_28.txt" t="Include" />
+              <e p="log27_2_2018_22_3_5.txt" t="Include" />
+              <e p="log27_3_2018_0_28_28.txt" t="Include" />
+              <e p="log27_3_2018_17_0_24.txt" t="Include" />
+              <e p="log27_3_2018_20_41_25.txt" t="Include" />
+              <e p="log27_3_2018_20_42_23.txt" t="Include" />
+              <e p="log27_3_2018_23_21_23.txt" t="Include" />
+              <e p="log28_2_2018_18_38_58.txt" t="Include" />
+              <e p="log2_3_2018_18_1_33.txt" t="Include" />
+              <e p="log2_3_2018_22_41_23.txt" t="Include" />
+              <e p="log31_3_2018_18_3_41.txt" t="Include" />
+              <e p="log31_3_2018_22_39_56.txt" t="Include" />
+              <e p="log3_3_2018_16_57_25.txt" t="Include" />
+              <e p="log3_3_2018_20_35_31.txt" t="Include" />
+              <e p="log3_4_2018_18_2_23.txt" t="Include" />
+              <e p="log3_4_2018_22_4_23.txt" t="Include" />
+              <e p="log4_4_2018_17_57_24.txt" t="Include" />
+              <e p="log4_4_2018_21_58_56.txt" t="Include" />
+              <e p="log6_4_2018_18_1_25.txt" t="Include" />
+              <e p="log7_3_2018_18_0_28.txt" t="Include" />
+              <e p="log7_3_2018_21_52_32.txt" t="Include" />
+              <e p="log9_3_2018_17_43_19.txt" t="Include" />
+              <e p="log9_3_2018_23_58_31.txt" t="Include" />
+            </e>
+            <e p="customstories" t="Include">
+              <e p="log10_3_2018_0_29_43.txt" t="Include" />
+              <e p="log10_3_2018_20_21_42.txt" t="Include" />
+              <e p="log10_3_2018_21_33_42.txt" t="Include" />
+              <e p="log10_3_2018_21_34_42.txt" t="Include" />
+              <e p="log10_3_2018_21_36_42.txt" t="Include" />
+              <e p="log10_3_2018_21_38_42.txt" t="Include" />
+              <e p="log11_3_2018_20_44_32.txt" t="Include" />
+              <e p="log11_3_2018_20_56_32.txt" t="Include" />
+              <e p="log12_3_2018_0_30_32.txt" t="Include" />
+              <e p="log13_3_2018_20_37_32.txt" t="Include" />
+              <e p="log14_3_2018_20_45_34.txt" t="Include" />
+              <e p="log15_3_2018_20_13_52.txt" t="Include" />
+              <e p="log19_3_2018_20_8_52.txt" t="Include" />
+              <e p="log19_3_2018_22_20_45.txt" t="Include" />
+              <e p="log19_3_2018_22_21_49.txt" t="Include" />
+              <e p="log19_3_2018_23_27_49.txt" t="Include" />
+              <e p="log1_3_2018_15_0_48.txt" t="Include" />
+              <e p="log1_3_2018_20_12_44.txt" t="Include" />
+              <e p="log1_3_2018_23_44_42.txt" t="Include" />
+              <e p="log1_4_2018_0_34_36.txt" t="Include" />
+              <e p="log20_3_2018_20_3_49.txt" t="Include" />
+              <e p="log20_3_2018_22_55_49.txt" t="Include" />
+              <e p="log22_3_2018_20_9_49.txt" t="Include" />
+              <e p="log23_3_2018_0_12_49.txt" t="Include" />
+              <e p="log23_3_2018_17_15_49.txt" t="Include" />
+              <e p="log24_3_2018_19_59_49.txt" t="Include" />
+              <e p="log25_3_2018_0_29_49.txt" t="Include" />
+              <e p="log25_3_2018_20_10_50.txt" t="Include" />
+              <e p="log26_2_2018_14_5_24.txt" t="Include" />
+              <e p="log26_3_2018_20_24_53.txt" t="Include" />
+              <e p="log27_2_2018_20_1_17.txt" t="Include" />
+              <e p="log27_3_2018_0_27_32.txt" t="Include" />
+              <e p="log27_3_2018_0_28_43.txt" t="Include" />
+              <e p="log27_3_2018_1_27_38.txt" t="Include" />
+              <e p="log27_3_2018_20_2_36.txt" t="Include" />
+              <e p="log27_3_2018_20_38_36.txt" t="Include" />
+              <e p="log27_3_2018_20_39_36.txt" t="Include" />
+              <e p="log27_3_2018_20_40_36.txt" t="Include" />
+              <e p="log27_3_2018_20_41_36.txt" t="Include" />
+              <e p="log28_3_2018_0_20_36.txt" t="Include" />
+              <e p="log2_3_2018_20_14_42.txt" t="Include" />
+              <e p="log2_3_2018_23_48_42.txt" t="Include" />
+              <e p="log2_4_2018_20_28_36.txt" t="Include" />
+              <e p="log30_3_2018_20_11_49.txt" t="Include" />
+              <e p="log31_3_2018_0_12_36.txt" t="Include" />
+              <e p="log31_3_2018_20_40_39.txt" t="Include" />
+              <e p="log7_3_2018_19_59_42.txt" t="Include" />
+              <e p="log8_3_2018_0_9_42.txt" t="Include" />
+              <e p="log8_3_2018_20_46_42.txt" t="Include" />
+              <e p="log9_3_2018_20_28_42.txt" t="Include" />
+            </e>
+            <e p="dariya_willis" t="Include">
+              <e p="log11_3_2018_20_44_29.txt" t="Include" />
+              <e p="log12_3_2018_17_6_30.txt" t="Include" />
+              <e p="log12_3_2018_23_39_31.txt" t="Include" />
+              <e p="log13_3_2018_17_24_29.txt" t="Include" />
+              <e p="log13_3_2018_22_41_29.txt" t="Include" />
+              <e p="log14_3_2018_17_24_31.txt" t="Include" />
+              <e p="log15_3_2018_19_9_23.txt" t="Include" />
+              <e p="log15_3_2018_20_12_45.txt" t="Include" />
+              <e p="log15_3_2018_20_13_49.txt" t="Include" />
+              <e p="log16_3_2018_17_59_11.txt" t="Include" />
+              <e p="log16_3_2018_22_15_48.txt" t="Include" />
+              <e p="log17_3_2018_17_6_48.txt" t="Include" />
+              <e p="log17_3_2018_22_19_48.txt" t="Include" />
+              <e p="log19_3_2018_17_28_4.txt" t="Include" />
+              <e p="log19_3_2018_22_20_41.txt" t="Include" />
+              <e p="log19_3_2018_22_21_45.txt" t="Include" />
+              <e p="log19_3_2018_22_32_45.txt" t="Include" />
+              <e p="log1_3_2018_15_0_43.txt" t="Include" />
+              <e p="log20_3_2018_18_0_45.txt" t="Include" />
+              <e p="log21_3_2018_0_13_45.txt" t="Include" />
+              <e p="log21_3_2018_18_7_45.txt" t="Include" />
+              <e p="log21_3_2018_23_42_45.txt" t="Include" />
+              <e p="log22_3_2018_18_5_46.txt" t="Include" />
+              <e p="log22_3_2018_21_39_47.txt" t="Include" />
+              <e p="log23_3_2018_17_9_45.txt" t="Include" />
+              <e p="log23_3_2018_22_3_3.txt" t="Include" />
+              <e p="log25_3_2018_17_10_45.txt" t="Include" />
+              <e p="log26_2_2018_13_57_1.txt" t="Include" />
+              <e p="log26_2_2018_14_5_14.txt" t="Include" />
+              <e p="log26_2_2018_17_22_14.txt" t="Include" />
+              <e p="log26_2_2018_22_14_14.txt" t="Include" />
+              <e p="log27_2_2018_17_23_14.txt" t="Include" />
+              <e p="log27_2_2018_22_23_15.txt" t="Include" />
+              <e p="log27_3_2018_0_28_41.txt" t="Include" />
+              <e p="log27_3_2018_17_48_34.txt" t="Include" />
+              <e p="log27_3_2018_18_42_32.txt" t="Include" />
+              <e p="log27_3_2018_18_5_44.txt" t="Include" />
+              <e p="log27_3_2018_18_6_37.txt" t="Include" />
+              <e p="log28_2_2018_15_14_15.txt" t="Include" />
+              <e p="log28_2_2018_22_54_15.txt" t="Include" />
+              <e p="log28_2_2018_22_57_14.txt" t="Include" />
+              <e p="log2_3_2018_18_4_35.txt" t="Include" />
+              <e p="log2_3_2018_22_40_6.txt" t="Include" />
+              <e p="log30_3_2018_17_59_33.txt" t="Include" />
+              <e p="log30_3_2018_23_47_32.txt" t="Include" />
+              <e p="log31_3_2018_15_54_32.txt" t="Include" />
+              <e p="log31_3_2018_15_57_33.txt" t="Include" />
+              <e p="log31_3_2018_17_2_32.txt" t="Include" />
+              <e p="log31_3_2018_22_15_32.txt" t="Include" />
+              <e p="log3_3_2018_14_38_35.txt" t="Include" />
+              <e p="log3_3_2018_20_54_37.txt" t="Include" />
+              <e p="log3_3_2018_20_55_35.txt" t="Include" />
+              <e p="log3_3_2018_21_12_35.txt" t="Include" />
+              <e p="log3_3_2018_21_7_35.txt" t="Include" />
+              <e p="log3_3_2018_21_8_35.txt" t="Include" />
+              <e p="log3_4_2018_18_6_32.txt" t="Include" />
+              <e p="log3_4_2018_23_0_34.txt" t="Include" />
+              <e p="log4_4_2018_15_24_32.txt" t="Include" />
+              <e p="log4_4_2018_22_29_32.txt" t="Include" />
+              <e p="log5_3_2018_17_43_35.txt" t="Include" />
+              <e p="log5_3_2018_22_46_50.txt" t="Include" />
+              <e p="log5_4_2018_17_31_32.txt" t="Include" />
+              <e p="log5_4_2018_22_19_35.txt" t="Include" />
+              <e p="log6_3_2018_16_30_42.txt" t="Include" />
+              <e p="log6_3_2018_22_15_36.txt" t="Include" />
+              <e p="log6_4_2018_18_20_32.txt" t="Include" />
+              <e p="log7_3_2018_18_2_35.txt" t="Include" />
+              <e p="log7_3_2018_23_49_40.txt" t="Include" />
+              <e p="log7_3_2018_23_50_35.txt" t="Include" />
+              <e p="log8_3_2018_0_16_35.txt" t="Include" />
+              <e p="log8_3_2018_18_6_50.txt" t="Include" />
+              <e p="log8_3_2018_22_48_35.txt" t="Include" />
+              <e p="log9_3_2018_17_59_39.txt" t="Include" />
+            </e>
+            <e p="pzr_stream" t="Include">
+              <e p="log10_3_2018_0_15_6.txt" t="Include" />
+              <e p="log10_3_2018_12_52_7.txt" t="Include" />
+              <e p="log10_3_2018_16_17_7.txt" t="Include" />
+              <e p="log11_3_2018_0_40_18.txt" t="Include" />
+              <e p="log11_3_2018_14_22_6.txt" t="Include" />
+              <e p="log11_3_2018_20_44_43.txt" t="Include" />
+              <e p="log11_3_2018_3_35_7.txt" t="Include" />
+              <e p="log15_3_2018_0_15_44.txt" t="Include" />
+              <e p="log15_3_2018_11_46_43.txt" t="Include" />
+              <e p="log15_3_2018_20_14_4.txt" t="Include" />
+              <e p="log16_3_2018_16_42_4.txt" t="Include" />
+              <e p="log16_3_2018_19_24_4.txt" t="Include" />
+              <e p="log16_3_2018_22_24_4.txt" t="Include" />
+              <e p="log17_3_2018_22_5_4.txt" t="Include" />
+              <e p="log17_3_2018_3_51_6.txt" t="Include" />
+              <e p="log19_3_2018_22_22_10.txt" t="Include" />
+              <e p="log1_3_2018_15_1_6.txt" t="Include" />
+              <e p="log1_3_2018_15_42_6.txt" t="Include" />
+              <e p="log1_4_2018_0_30_48.txt" t="Include" />
+              <e p="log1_4_2018_15_40_48.txt" t="Include" />
+              <e p="log1_4_2018_17_52_48.txt" t="Include" />
+              <e p="log20_3_2018_13_59_5.txt" t="Include" />
+              <e p="log20_3_2018_15_42_4.txt" t="Include" />
+              <e p="log20_3_2018_21_37_5.txt" t="Include" />
+              <e p="log20_3_2018_2_50_4.txt" t="Include" />
+              <e p="log21_3_2018_15_37_4.txt" t="Include" />
+              <e p="log21_3_2018_18_54_4.txt" t="Include" />
+              <e p="log23_3_2018_18_38_4.txt" t="Include" />
+              <e p="log23_3_2018_22_6_4.txt" t="Include" />
+              <e p="log24_3_2018_14_29_5.txt" t="Include" />
+              <e p="log24_3_2018_17_24_4.txt" t="Include" />
+              <e p="log24_3_2018_20_33_8.txt" t="Include" />
+              <e p="log27_3_2018_0_28_55.txt" t="Include" />
+              <e p="log28_3_2018_19_47_48.txt" t="Include" />
+              <e p="log28_3_2018_21_57_48.txt" t="Include" />
+              <e p="log2_3_2018_12_14_9.txt" t="Include" />
+              <e p="log2_3_2018_15_3_7.txt" t="Include" />
+              <e p="log2_3_2018_17_56_6.txt" t="Include" />
+              <e p="log2_3_2018_21_17_6.txt" t="Include" />
+              <e p="log2_4_2018_19_39_48.txt" t="Include" />
+              <e p="log2_4_2018_21_10_59.txt" t="Include" />
+              <e p="log30_3_2018_14_2_47.txt" t="Include" />
+              <e p="log30_3_2018_18_56_47.txt" t="Include" />
+              <e p="log30_3_2018_21_11_48.txt" t="Include" />
+              <e p="log31_3_2018_20_20_48.txt" t="Include" />
+              <e p="log3_3_2018_16_11_10.txt" t="Include" />
+              <e p="log3_3_2018_19_30_6.txt" t="Include" />
+              <e p="log3_4_2018_20_15_48.txt" t="Include" />
+              <e p="log3_4_2018_23_25_48.txt" t="Include" />
+              <e p="log4_3_2018_12_36_7.txt" t="Include" />
+              <e p="log4_3_2018_14_37_7.txt" t="Include" />
+              <e p="log4_4_2018_19_43_49.txt" t="Include" />
+              <e p="log5_4_2018_15_31_50.txt" t="Include" />
+              <e p="log5_4_2018_18_34_48.txt" t="Include" />
+              <e p="log5_4_2018_1_10_48.txt" t="Include" />
+              <e p="log6_4_2018_15_19_49.txt" t="Include" />
+              <e p="log6_4_2018_17_52_48.txt" t="Include" />
+              <e p="log6_4_2018_18_2_1.txt" t="Include" />
+              <e p="log8_3_2018_18_10_6.txt" t="Include" />
+              <e p="log8_3_2018_20_37_6.txt" t="Include" />
+              <e p="log9_3_2018_0_0_7.txt" t="Include" />
+              <e p="log9_3_2018_21_18_11.txt" t="Include" />
+            </e>
+          </e>
+          <e p="log15_3_2018_19_2_26.txt" t="Include" />
+          <e p="log1_3_2018_14_59_0.txt" t="Include" />
+          <e p="log27_3_2018_0_27_6.txt" t="Include" />
+        </e>
+        <e p="Messages" t="Include">
+          <e p="Message.cs" t="Include" />
+          <e p="Privmsg.cs" t="Include" />
+        </e>
+        <e p="Migrations" t="Include">
+          <e p="20170331124847_Initial.cs" t="Include" />
+          <e p="20170331124847_Initial.Designer.cs" t="Include" />
+          <e p="20170703195218_migration5.cs" t="Include" />
+          <e p="20170703195218_migration5.Designer.cs" t="Include" />
+          <e p="ChatContextModelSnapshot.cs" t="Include" />
+        </e>
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.0" t="Include">
+              <e p="DudelkaBot.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="ProfileChannels" t="Include">
+          <e p="Activities" t="Include">
+            <e p="artgameslp.txt" t="Include" />
+            <e p="blackufa_twitch.txt" t="Include" />
+            <e p="customstories.txt" t="Include" />
+            <e p="dariya_willis.txt" t="Include" />
+            <e p="dudelka_krasnaya.txt" t="Include" />
+            <e p="pzr_stream.txt" t="Include" />
+            <e p="Template.txt" t="Include" />
+          </e>
+          <e p="ChannelsNames.txt" t="Include" />
+          <e p="Commands" t="Include">
+            <e p="artgameslp.txt" t="Include" />
+            <e p="blackufa_twitch.txt" t="Include" />
+            <e p="customstories.txt" t="Include" />
+            <e p="dariya_willis.txt" t="Include" />
+            <e p="dudelka_krasnaya.txt" t="Include" />
+            <e p="pzr_stream.txt" t="Include" />
+            <e p="Template.txt" t="Include" />
+          </e>
+          <e p="ResubAnswers" t="Include">
+            <e p="artgameslp.txt" t="Include" />
+            <e p="blackufa_twitch.txt" t="Include" />
+            <e p="customstories.txt" t="Include" />
+            <e p="dariya_willis.txt" t="Include" />
+            <e p="dudelka_krasnaya.txt" t="Include" />
+            <e p="pzr_stream.txt" t="Include" />
+            <e p="Template.txt" t="Include" />
+          </e>
+          <e p="SubAnswers" t="Include">
+            <e p="artgameslp.txt" t="Include" />
+            <e p="blackufa_twitch.txt" t="Include" />
+            <e p="customstories.txt" t="Include" />
+            <e p="dariya_willis.txt" t="Include" />
+            <e p="dudelka_krasnaya.txt" t="Include" />
+            <e p="pzr_stream.txt" t="Include" />
+            <e p="Template.txt" t="Include" />
+          </e>
+        </e>
+        <e p="Profiller" t="Include">
+          <e p="Activities.cs" t="Include" />
+          <e p="ProfileChannel.cs" t="Include" />
+          <e p="Profiller.cs" t="Include" />
+        </e>
+        <e p="Properties" t="Include">
+          <e p="AssemblyInfo.cs" t="Include" />
+          <e p="launchSettings.json" t="Include" />
+          <e p="Resources.Designer.cs" t="Include" />
+          <e p="Resources.resx" t="Include" />
+        </e>
+        <e p="resources" t="Include">
+          <e p="8ball.txt" t="Include" />
+          <e p="answers" t="Include">
+            <e p="level0.txt" t="Include" />
+            <e p="level10.txt" t="Include" />
+            <e p="level100.txt" t="Include" />
+            <e p="level110.txt" t="Include" />
+            <e p="level120.txt" t="Include" />
+            <e p="level130.txt" t="Include" />
+            <e p="level140.txt" t="Include" />
+            <e p="level150.txt" t="Include" />
+            <e p="level160.txt" t="Include" />
+            <e p="level170.txt" t="Include" />
+            <e p="level180.txt" t="Include" />
+            <e p="level190.txt" t="Include" />
+            <e p="level20.txt" t="Include" />
+            <e p="level200.txt" t="Include" />
+            <e p="level30.txt" t="Include" />
+            <e p="level40.txt" t="Include" />
+            <e p="level50.txt" t="Include" />
+            <e p="level60.txt" t="Include" />
+            <e p="level70.txt" t="Include" />
+            <e p="level80.txt" t="Include" />
+            <e p="level90.txt" t="Include" />
+          </e>
+          <e p="Answers.cs" t="Include" />
+          <e p="commands.txt" t="Include" />
+          <e p="Helper.cs" t="Include" />
+          <e p="info_DB.txt" t="Include" />
+          <e p="photo.jpg" t="Include" />
+          <e p="Resource.Designer.cs" t="Include" />
+          <e p="Resource.resx" t="Include" />
+          <e p="структура1.png" t="Include" />
+          <e p="структура2.png" t="Include" />
+        </e>
+        <e p="system" t="Include">
+          <e p="Advert.cs" t="Include" />
+          <e p="Channel.cs" t="Include" />
+          <e p="Program.cs" t="Include" />
+          <e p="User.cs" t="Include" />
+        </e>
+        <e p="vk" t="Include">
+          <e p="Vkontakte.cs" t="Include" />
+        </e>
+        <e p="Votes" t="Include">
+          <e p="dariya_willis" t="Include">
+            <e p="games.txt" t="Include" />
+          </e>
+        </e>
+        <e p="WebClients" t="Include">
+          <e p="HttpsClient.cs" t="Include" />
+          <e p="SmtpClient.cs" t="Include" />
+          <e p="WebSocketClient.cs" t="Include" />
+        </e>
+      </e>
+      <e p="DudelkaBot.sln" t="IncludeFlat" />
+      <e p="packages" t="ExcludeRecursive" />
+    </e>
+  </component>
+</project>

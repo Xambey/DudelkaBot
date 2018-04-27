@@ -1,7 +1,0 @@
-﻿Subscriptions=1
-Resubscriptions=1
-CheckSubscriptions=0
-ShowQuotes=1
-ShowChangedMusic=1
-Client_ID=11datgm6whw4p5kgt96h1chveoi4vo
-OAuth=nti707m9f3py96px8apkvixa5iuifr
